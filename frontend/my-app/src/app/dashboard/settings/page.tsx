@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import AccountPageClient from "./AccountPageClient";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const baseUrl =
+  process.env.NEXT_PUBLIC_API_URL_CLIENT || "http://localhost:3000";
 
 export const metadata: Metadata = {
   title: "Account Settings | ArcadeStickLabs",

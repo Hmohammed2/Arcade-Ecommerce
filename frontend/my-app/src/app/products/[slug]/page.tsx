@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { fetchProductBySlug } from "@/library/fetchProducts"; // API fetcher
 import ProductPageClient from ".//ProductPageClient";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const baseUrl =
+  process.env.NEXT_PUBLIC_API_URL_CLIENT || "http://localhost:3000";
 
 type Props = {
   params: { slug: string };
