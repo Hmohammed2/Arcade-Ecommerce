@@ -6,6 +6,8 @@ import AuthHydration from "@/components/middleware/AuthHydration"; // 👈 new s
 import QueryProvider from "./providers/providers";
 import "./globals.css";
 
+const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT;
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -17,9 +19,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(`${baseUrl}`),
   title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
   description:
-    "Join the waitlist for curated arcade parts and starter kits. Premium arcade components from Sanwa, Seimitsu, Brook, and more.",
+    "Build your arcade stick with curated Sanwa, Seimitsu, Crown, Brook, and more. UK-based supplier with fast EU shipping.",
   keywords: [
     "arcade parts",
     "fightstick kits",
@@ -34,11 +37,11 @@ export const metadata: Metadata = {
     title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
     description:
       "Build your arcade stick with curated Sanwa, Seimitsu, Brook, and more. UK-based supplier with fast EU shipping.",
-    url: "https://arcadesticklabs.co.uk",
+    url: `${baseUrl}`,
     siteName: "ArcadeStickLabs",
     images: [
       {
-        url: "https://arcadesticklabs.co.uk/og-image.png", // ensure you create/upload this
+        url: `${baseUrl}/og-image.png`, // ensure you create/upload this
         width: 1200,
         height: 630,
         alt: "ArcadeStickLabs Custom Arcade Parts",
@@ -51,8 +54,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@ArcadeStickLabs", // your Twitter handle if available
     title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
-    description: "Join the waitlist for curated arcade parts and starter kits.",
-    images: ["https://arcadesticklabs.co.uk/og-image.png"],
+    description:
+      "Build your arcade stick with curated Sanwa, Seimitsu, Brook, and more. UK-based supplier with fast EU shipping",
+    images: [`${baseUrl}/og-image.png`],
   },
 };
 
