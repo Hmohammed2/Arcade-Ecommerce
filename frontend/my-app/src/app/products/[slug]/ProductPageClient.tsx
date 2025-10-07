@@ -37,13 +37,13 @@ export default function ProductPageClient({ slug }: { slug: string }) {
       </h1>
       {/* Left: Product Image */}
       <div className="md:col-span-5 flex justify-center items-start">
-        <div className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden">
+        <div className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden flex items-center justify-center">
           <Image
             src={getImageUrl(product.image)}
             alt={product.name}
             width={300}
             height={400}
-            className="object-contain mx-auto my-auto"
+            className="object-contain"
           />
         </div>
       </div>

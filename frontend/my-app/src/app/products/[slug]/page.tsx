@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { fetchProductBySlug } from "@/library/fetchProducts"; // API fetcher
-import ProductPageClient from "@/components/ProductPageClient";
+import ProductPageClient from ".//ProductPageClient";
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 type Props = {
   params: { slug: string };
@@ -27,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: product.name,
         description: product.description || product.name,
         type: "product",
-        url: `https://arcadesticklabs.co.uk/products/${product.slug}`,
+        url: `${baseUrl}/products/${product.slug}`,
         images: product.image
           ? [
               {

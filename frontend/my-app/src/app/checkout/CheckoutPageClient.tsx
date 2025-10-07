@@ -2,8 +2,8 @@
 
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import CheckoutForm from "./CheckoutForm";
-import OrderSummary from "./OrderSummary";
+import OrderSummary from "@/components/form/OrderSummary";
+import CheckoutForm from "@/components/form/CheckoutForm";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!

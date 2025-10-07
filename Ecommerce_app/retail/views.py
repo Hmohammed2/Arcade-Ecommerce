@@ -1,5 +1,9 @@
 import logging
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status, permissions
+from rest_framework.decorators import api_view, action, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticatedOrReadOnly , IsAuthenticated, AllowAny
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.response import Response
 from .models import Category, Product, Order, Payment
 from .serializers import (
     CategorySerializer,
@@ -7,10 +11,6 @@ from .serializers import (
     OrderSerializer,
     PaymentSerializer,
 )
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from .services.payment_service import PaymentService
@@ -24,27 +24,77 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     lookup_field = "slug"  # so you can fetch by /categories/sticks/
+    permission_classes = [permissions.AllowAny]  # 👈 public endpoint
 
 
 # Products
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Product.objects.all().order_by("-created_at")
+    queryset = Product.objects.select_related("category").order_by("-created_at")
     serializer_class = ProductSerializer
     lookup_field = "slug"
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description"]
+    permission_classes = [permissions.AllowAny]  # 👈 public endpoint
 
 
 # Orders
+
 class OrderViewSet(viewsets.ModelViewSet):
+    """
+    Handles both authenticated and guest order access:
+    - Authenticated users see their own orders.
+    - Guests can fetch a specific order via ?email=... (GET only).
+    - Staff/admin users can view all orders.
+    """
     serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user)
+        user = self.request.user
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        # 🧑‍💼 Staff or admin → all orders
+        if user.is_staff or user.is_superuser:
+            return Order.objects.all().order_by("-created_at")
 
+        # 👤 Authenticated customer → only their orders
+        if user.is_authenticated:
+            return Order.objects.filter(user=user).order_by("-created_at")
+
+        # 📨 Guest user → filter by email param (optional)
+        email = self.request.query_params.get("email")
+        if email:
+            return Order.objects.filter(email=email).order_by("-created_at")
+
+        # 🚫 Otherwise return nothing
+        return Order.objects.none()
+
+    def retrieve(self, request, *args, **kwargs):
+        """Allow guests to fetch a single order if they know order_id + email"""
+        order = self.get_object()
+
+        # Staff or owner → always allowed
+        if request.user.is_staff or order.user == request.user:
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
+
+        # Guest access → must match email query param
+        email = request.query_params.get("email")
+        if email and order.email.lower() == email.lower():
+            serializer = self.get_serializer(order)
+            return Response(serializer.data)
+
+        return Response(
+            {"error": "You do not have permission to view this order."},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
+    
+    def history(self, request):
+        """Return orders belonging to the authenticated user"""
+        user = request.user
+        orders = Order.objects.filter(user=user).order_by("-created_at")
+        serializer = self.get_serializer(orders, many=True)
+        return Response(serializer.data)
 
 # Payments
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -53,8 +103,9 @@ class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         return Payment.objects.filter(order__user=self.request.user)
 
-
+@csrf_exempt
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def create_payment_intent(request):
     """
     Create Stripe PaymentIntent for an order
@@ -84,6 +135,7 @@ def create_payment_intent(request):
 
 
 @csrf_exempt
+@permission_classes([AllowAny])  # 👈 add this line
 def stripe_webhook(request):
     """
     Stripe webhook
@@ -119,23 +171,42 @@ def stripe_webhook(request):
     return HttpResponse(status=200)
 
 
+@csrf_exempt
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@authentication_classes([JWTAuthentication])
+@permission_classes([AllowAny])
 def checkout(request):
+    
     """
     Create Order + PaymentIntent
     """
     try:
-        user = request.user
-        items = request.data.get("items", [])
+        user = request.user if request.user.is_authenticated else None
+        data = request.data
+
+        items = data.get("items", [])
+        email = data.get("email")
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        phone = data.get("phone", "")
 
         if not items:
-            logger.warning(f"[Checkout] Empty items for user={user.id}")
+            logger.warning("[Checkout] No items provided")
             return Response({"error": "No items provided"}, status=status.HTTP_400_BAD_REQUEST)
+        if not email:
+            logger.warning("[Checkout] Email is required for guest checkout")
+            return Response({"error": "Email is required for guest checkout"}, status=status.HTTP_400_BAD_REQUEST)
 
-        logger.info(f"[Checkout] Creating order + PaymentIntent for user={user.id}")
+        logger.info(f"[Checkout] Creating order + PaymentIntent for user={user} email={email}")
 
-        result = PaymentService.create_order_and_payment(user, items)
+        result = PaymentService.create_order_and_payment(
+            user=user,
+            items=items,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+        )
 
         logger.info(
             f"[Checkout] Order {result['order_id']} created with PaymentIntent {result['clientSecret']}"

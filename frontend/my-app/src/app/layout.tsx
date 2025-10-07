@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import QueryProvider from "./providers";
+import AuthHydration from "@/components/middleware/AuthHydration"; // 👈 new small client wrapper
+import QueryProvider from "./providers/providers";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -69,6 +70,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
+          <AuthHydration /> {/* Runs useAuth() + fetchUser client-side */}
           <Navbar />
           {children}
           <Footer />

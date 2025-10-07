@@ -30,7 +30,7 @@ services:
              python manage.py migrate &&
              python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./Ecommerce_app:/code
+      - ./Ecommerce_app:/backend
     ports:
       - "8000:8000"
     environment:
@@ -42,13 +42,14 @@ services:
       - DJANGO_WATCH=1
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
     depends_on:
       - db
   stripe:
     image: stripe/stripe-cli
     container_name: stripe
     command:
-      ["listen", "--forward-to", "http://django:8000/api/payments/webhook"]
+      ["listen", "--forward-to", "http://django:8000/api/payments/webhook/"]
     volumes:
       - stripe-cli-config:/root/.config/stripe
     depends_on:

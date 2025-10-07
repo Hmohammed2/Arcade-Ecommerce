@@ -1,5 +1,7 @@
-import CheckoutPageClient from "@/components/CheckoutPageClient";
+import CheckoutPageClient from "./CheckoutPageClient";
 import type { Metadata } from "next";
+
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 export const metadata: Metadata = {
   title: "Checkout | ArcadeStickLabs",
@@ -9,7 +11,7 @@ export const metadata: Metadata = {
     title: "Checkout | ArcadeStickLabs",
     description:
       "Complete your purchase at ArcadeStickLabs. Enter your billing details and confirm your order securely.",
-    url: "https://arcadesticklabs.com/checkout",
+    url: `${baseUrl}/checkout`,
     siteName: "ArcadeStickLabs",
     type: "website",
   },

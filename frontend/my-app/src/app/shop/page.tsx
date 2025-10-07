@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ShopPage from "@/components/ShopPage";
+import ShopPage from "./ShopPage";
 
 export const metadata: Metadata = {
   title: "Shop Arcade Parts UK — ArcadeStickLabs",

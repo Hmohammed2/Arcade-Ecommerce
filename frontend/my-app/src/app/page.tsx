@@ -1,5 +1,5 @@
 import { QueryClient, dehydrate } from "@tanstack/react-query";
-import QueryProvider from "./providers";
+import QueryProvider from "./providers/providers";
 import { fetchProducts } from "@/library/fetchProducts";
 import Link from "next/link";
 

@@ -4,7 +4,6 @@ from typing import Dict, Any
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
-
 class StripePaymentFacade:
     """Facade class to interact with Stripe"""
 
@@ -19,7 +18,7 @@ class StripePaymentFacade:
             currency=currency,
             automatic_payment_methods={"enabled": True},
         )
-        return {"clientSecret": intent.client_secret, "id": intent.id}
+        return {"client_secret": intent.client_secret, "id": intent.id}
 
     @staticmethod
     def handle_webhook_event(payload: bytes, sig_header: str) -> Dict[str, Any]:

@@ -1,31 +1,58 @@
 from decimal import Decimal
 from django.db import transaction
-from django.contrib.auth.models import User
-
 from retail.models import Order, OrderItem, Payment, Product
 from retail.facades.stripe_facade import StripePaymentFacade
-
+from django.core.exceptions import ObjectDoesNotExist
 
 class PaymentService:
     """
     Service layer that coordinates Order <-> Payment updates
     """
-
     @staticmethod
     @transaction.atomic
-    def create_order_and_payment(user: User, items: list, currency: str = "GBP"):
+    def create_order_and_payment(
+        *,
+        user=None,
+        items: list,
+        email: str,
+        first_name: str,
+        last_name: str,
+        phone: str = "",
+        currency: str = "GBP",
+    ):
         """
-        Factory method: creates Order, OrderItems, Stripe PaymentIntent, and Payment record.
-        :param user: Django User
-        :param items: list of dicts [{product_id: int, quantity: int}, ...]
+        Creates an Order, its OrderItems, a Stripe PaymentIntent, and a Payment record.
+
+        Supports both guest and authenticated users.
         """
-        # 1. Build order total
-        order = Order.objects.create(user=user, total_price=Decimal("0.00"))
+        if not items:
+            raise ValueError("Cannot create order with no items.")
+        if not email:
+            raise ValueError("Email is required for checkout.")
+
+        # 1️⃣ Create the order (user may be None for guests)
+        order = Order.objects.create(
+            user=user,
+            email=email,
+            first_name=first_name,
+            phone=phone,
+            last_name=last_name,
+            total_price=Decimal("0.00"),
+        )
 
         total_price = Decimal("0.00")
+
+        # 2️⃣ Add each order item and update stock
         for item in items:
-            product = Product.objects.get(id=item["product_id"])
-            quantity = int(item["quantity"])
+            try:
+                product = Product.objects.get(id=item["product_id"])
+            except ObjectDoesNotExist:
+                raise ValueError(f"Product with id {item['product_id']} not found.")
+
+            quantity = int(item.get("quantity", 1))
+            if quantity < 1:
+                raise ValueError("Quantity must be at least 1.")
+
             line_price = product.price * quantity
 
             OrderItem.objects.create(
@@ -35,34 +62,42 @@ class PaymentService:
                 price=product.price,
             )
 
+            # Reduce stock safely
+            if product.stock >= quantity:
+                product.stock -= quantity
+            else:
+                raise ValueError(f"Insufficient stock for {product.name}")
+            product.save(update_fields=["stock"])
+
             total_price += line_price
 
-            # reduce stock
-            product.stock = max(0, product.stock - quantity)
-            product.save()
-
+        # 3️⃣ Update order total
         order.total_price = total_price
-        order.save()
+        order.save(update_fields=["total_price"])
 
-        # 2. Create PaymentIntent in Stripe
+        # 4️⃣ Create PaymentIntent via Stripe
         amount_in_pence = int(total_price * 100)
-        intent_data = StripePaymentFacade.create_payment_intent(amount_in_pence, currency.lower())
+        intent_data = StripePaymentFacade.create_payment_intent(
+            amount=amount_in_pence,
+            currency=currency.lower(),
+        )
 
-        # 3. Create Payment record
+        # 5️⃣ Record Payment in DB
         payment = Payment.objects.create(
             order=order,
-            stripe_payment_intent=intent_data["id"],
+            stripe_payment_intent=intent_data.get("id"),
             amount=total_price,
             currency=currency.upper(),
             status="pending",
         )
 
+        # 6️⃣ Return structured response for frontend
         return {
             "order_id": order.id,
             "payment_id": payment.id,
-            "clientSecret": intent_data["clientSecret"],
+            "clientSecret": intent_data.get("client_secret"),
             "amount": amount_in_pence,
-            "currency": currency,
+            "currency": currency.upper(),
         }
 
     @staticmethod
