@@ -1,4 +1,4 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT || "";
+const baseUrl = process.env.NEXT_PUBLIC_API_URL_SERVER || "";
 
 export function getImageUrl(path?: string | null): string {
   if (!path) {
