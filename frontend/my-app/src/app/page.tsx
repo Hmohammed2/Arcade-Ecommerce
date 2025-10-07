@@ -1,5 +1,8 @@
-import { QueryClient, dehydrate } from "@tanstack/react-query";
-import QueryProvider from "./providers/providers";
+import {
+  HydrationBoundary,
+  QueryClient,
+  dehydrate,
+} from "@tanstack/react-query";
 import { fetchProducts } from "@/library/fetchProducts";
 import Link from "next/link";
 
@@ -15,7 +18,7 @@ export default async function LandingPage() {
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <QueryProvider dehydratedState={dehydratedState}>
+    <HydrationBoundary state={dehydratedState}>
       <div className="min-h-screen text-gray-800 flex flex-col">
         {/* Hero Section */}
         <main className="flex-grow">
@@ -121,7 +124,7 @@ export default async function LandingPage() {
           </section>
         </main>
       </div>
-    </QueryProvider>
+    </HydrationBoundary>
   );
 }
 
