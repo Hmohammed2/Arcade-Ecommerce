@@ -44,19 +44,19 @@ export default function BillingClient() {
   const handleSave = async () => {
     try {
       const payload = {
-        billing_first_name: formData.billingFirstName,
-        billing_last_name: formData.billingLastName,
-        billing_email: formData.billingEmail,
-        billing_phone: formData.billingPhone,
-        billing_address1: formData.billingAddress1,
-        billing_address2: formData.billingAddress2,
-        billing_city: formData.billingCity,
-        billing_postcode: formData.billingPostcode,
-        same_as_billing: formData.sameAsBilling,
-        shipping_address1: formData.shippingAddress1,
-        shipping_address2: formData.shippingAddress2,
-        shipping_city: formData.shippingCity,
-        shipping_postcode: formData.shippingPostcode,
+        billing_first_name: formData.billingFirstName ?? "",
+        billing_last_name: formData.billingLastName ?? "",
+        billing_email: formData.billingEmail ?? "",
+        billing_phone: formData.billingPhone ?? "",
+        billing_address1: formData.billingAddress1 ?? "",
+        billing_address2: formData.billingAddress2 ?? "",
+        billing_city: formData.billingCity ?? "",
+        billing_postcode: formData.billingPostcode ?? "",
+        same_as_billing: formData.sameAsBilling || false,
+        shipping_address1: formData.shippingAddress1 ?? "",
+        shipping_address2: formData.shippingAddress2 ?? "",
+        shipping_city: formData.shippingCity ?? "",
+        shipping_postcode: formData.shippingPostcode ?? "",
       };
 
       await updateAddresses(payload);

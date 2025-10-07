@@ -1,5 +1,6 @@
 "use client";
 import { useOrders } from "@/hooks/useOrders";
+import type { Order } from "@/types/order";
 
 export default function OrderHistoryPageClient() {
   const { data: orders, isLoading } = useOrders();
@@ -11,7 +12,7 @@ export default function OrderHistoryPageClient() {
     <div className="max-w-4xl mx-auto py-10">
       <h1 className="text-2xl font-bold mb-6">Your Orders</h1>
       <div className="space-y-6">
-        {orders.map((order) => (
+        {orders.map((order: Order) => (
           <div
             key={order.id}
             className="border rounded-lg p-4 bg-white shadow-sm"

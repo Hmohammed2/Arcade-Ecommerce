@@ -135,7 +135,6 @@ def create_payment_intent(request):
 
 
 @csrf_exempt
-@permission_classes([AllowAny])  # 👈 add this line
 def stripe_webhook(request):
     """
     Stripe webhook

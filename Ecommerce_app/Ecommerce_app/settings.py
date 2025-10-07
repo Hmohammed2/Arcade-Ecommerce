@@ -20,17 +20,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-if os.getenv("DJANGO_ENV") == "production":
-    DEBUG = False
-else:
-    DEBUG = True
+DJANGO_ENV = os.getenv("DJANGO_ENV", "development")
 
-if DEBUG == "False":
-    ALLOWED_HOSTS = ["arcadesticklabs"]
+DEBUG = DJANGO_ENV != "production"
+
+if not DEBUG:
     SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+    ALLOWED_HOSTS = [
+        "arcadesticklabs.co.uk",
+        "arcadesticklabs-test.ddns.net",
+        "arcadesticklabs",
+        "arcadesticklabs-test",
+        "localhost",
+        "127.0.0.1"
+    ]
 else:
-    ALLOWED_HOSTS = ["*"]
     SECRET_KEY = 'django-insecure-zqh17d!1+t@2jvh7=jxry$s4^ivbyrh-$)4@%r!44%vgrw#zdq'
+    ALLOWED_HOSTS = ["*"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -43,6 +49,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Next.js dev server
     "http://127.0.0.1:3000",  # Sometimes needed for local dev
     "https://arcadesticklabs.co.uk",  # Production frontend
+    "https://arcadesticklabs-test.ddns.net",  # UAT frontend
 ]
 
 # Allow cookies/authorization headers in cross-origin requests
@@ -51,7 +58,8 @@ CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://arcadesticklabs.co.uk",  # prod
+    "https://arcadesticklabs.co.uk", # prod
+    "https://arcadesticklabs-test.ddns.net" # UAT
 ]
 
 # Logging configuration
@@ -80,7 +88,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework_simplejwt.token_blacklist",
     "rest_framework_simplejwt",
-    "debug_toolbar",
+    'import_export',
     "rest_framework",
     "corsheaders",
     'marketing',
@@ -98,7 +106,6 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -108,6 +115,10 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    INSTALLED_APPS += ["debug_toolbar"]
+    MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': ( 
@@ -155,7 +166,7 @@ DATABASES = {
         'NAME': os.getenv("POSTGRES_DB"),
         'USER': os.getenv("POSTGRES_USER"),
         'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
-        'HOST': 'db',  # this matches the docker-compose service name
+        'HOST': 'db-uat',  # this matches the docker-compose service name
         'PORT': '5432',
     }
 }

@@ -1,50 +1,65 @@
 services:
-  db:
-    container_name: postgres_db
+  db-uat:
+    container_name: postgres_db_uat
     image: postgres:15
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      DJANGO_ENV: production
+    ports:
+      - "7014:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data_uat:/var/lib/postgresql/data
     networks:
       - app_net
-
-  django-app-prod:
-    container_name: django-backend-prod
+  django-app-uat:
+    container_name: django-backend-uat
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
     command: gunicorn Ecommerce_app.wsgi:application --bind 0.0.0.0:8000 --workers=4
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DJANGO_ENV: ${DJANGO_ENV}
     volumes:
-      - ./Ecommerce_app:/code
-      - static_volume:/code/static
-      - media_volume:/code/media
+      - ./Ecommerce_app/static:/code/static
+      - ./Ecommerce_app/media:/code/media
     depends_on:
-      - db
-    expose:
-      - "7011:8000"
+      - db-uat
+    ports:
+      - "7013:8000"
     networks:
       - app_net
-
-  frontend-prod:
-    container_name: Nextjs_frontend_prod
+  frontend-uat:
+    container_name: Nextjs_frontend_uat
     build:
       context: ./frontend/my-app
       dockerfile: Dockerfile.prod
     ports:
-      - "7010:3000"
+      - "7012:3000"
     environment:
       - NODE_ENV=production
     networks:
       - app_net
-
+  stripe:
+    image: stripe/stripe-cli
+    container_name: stripe
+    command:
+      [
+        "listen",
+        "--forward-to",
+        "http://django-app-uat:8000/api/payments/webhook/",
+      ]
+    volumes:
+      - stripe-cli-config:/root/.config/stripe
+    depends_on:
+      - django-app-uat
 volumes:
-  postgres_data:
-  static_volume:
-  media_volume:
+  postgres_data_uat:
+  stripe-cli-config:
 
 networks:
   app_net:
