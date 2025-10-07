@@ -50,6 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     };
   } catch (error) {
+    console.error("generateMetadata error:", error); // 👈 add this
     return {
       title: "Product not found — ArcadeStickLabs",
       description: "The product you are looking for could not be found.",
