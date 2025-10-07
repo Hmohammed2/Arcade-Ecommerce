@@ -19,7 +19,7 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "arcadesticklabs-test",
-        port: "7012",
+        port: "7013",
         pathname: "/media/**",
       },
     ],

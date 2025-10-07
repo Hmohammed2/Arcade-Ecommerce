@@ -30,7 +30,7 @@ services:
     depends_on:
       - db-uat
     ports:
-      - "7013:8000"
+      - "7014:8000"
     networks:
       - app_net
   frontend-uat:
@@ -39,7 +39,7 @@ services:
       context: ./frontend/my-app
       dockerfile: Dockerfile.prod
     ports:
-      - "7012:3000"
+      - "7013:3000"
     environment:
       - NODE_ENV=production
     networks:
