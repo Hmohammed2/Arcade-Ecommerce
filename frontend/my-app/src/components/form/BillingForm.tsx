@@ -5,7 +5,13 @@ import { useCheckoutForm } from "@/store/useCheckoutForm";
 import { useAuth } from "@/store/useAuth";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
 
-export default function BillingForm() {
+interface BillingFormProps {
+  showUseAccountCheckbox?: boolean;
+}
+
+export default function BillingForm({
+  showUseAccountCheckbox = true,
+}: BillingFormProps) {
   const { formData, updateField } = useCheckoutForm();
   const { isAuthenticated } = useAuth();
   const { addresses, isLoading } = useUserAddresses();
@@ -39,7 +45,7 @@ export default function BillingForm() {
       <h2 className="text-xl font-semibold mb-4">Billing Information</h2>
 
       {/* ✅ Checkbox */}
-      {isAuthenticated && (
+      {isAuthenticated && !showUseAccountCheckbox && (
         <label className="flex items-center space-x-2 mb-4">
           <input
             type="checkbox"

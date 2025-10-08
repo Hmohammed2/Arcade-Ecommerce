@@ -71,7 +71,7 @@ export default function BillingClient() {
 
   return (
     <div className="space-y-10">
-      <BillingForm />
+      <BillingForm showUseAccountCheckbox={false} />
       <ShippingForm />
       <div className="flex justify-end">
         <button
