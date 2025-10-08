@@ -10,7 +10,7 @@ router.register(r"orders", OrderViewSet, basename="order")
 router.register(r"payments", PaymentViewSet, basename="payment")
 
 urlpatterns = [
-    path("", include(router.urls)),
+    path("payments/webhook/", views.stripe_webhook, name="stripe_webhook"),
     path("checkout/", views.checkout, name="checkout"),
-    path("payments/webhook", views.stripe_webhook, name="stripe_webhook"),
+    path("", include(router.urls)),
 ]

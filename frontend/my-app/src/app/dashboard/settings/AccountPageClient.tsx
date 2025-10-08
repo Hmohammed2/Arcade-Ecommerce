@@ -132,7 +132,7 @@ export default function AccountPageClient() {
           <button
             type="submit"
             disabled={isUpdating}
-            className={`px-5 py-2 rounded-md text-white font-medium ${
+            className={`px-5 py-2 rounded-md text-white font-medium w-full ${
               isUpdating
                 ? "bg-pink-400 cursor-not-allowed"
                 : "bg-pink-600 hover:bg-pink-700 transition"
@@ -186,7 +186,7 @@ export default function AccountPageClient() {
           <button
             type="submit"
             disabled={isChangingPassword}
-            className={`px-5 py-2 rounded-md text-white font-medium ${
+            className={`w-full px-5 py-2 rounded-md text-white font-medium ${
               isChangingPassword
                 ? "bg-pink-400 cursor-not-allowed"
                 : "bg-pink-600 hover:bg-pink-700 transition"
@@ -208,7 +208,7 @@ export default function AccountPageClient() {
         </p>
         <button
           onClick={() => setShowConfirm(true)}
-          className="bg-red-600 text-white px-5 py-2 rounded-md font-medium hover:bg-red-700 transition"
+          className="bg-red-600 text-white px-5 py-2 rounded-md font-medium hover:bg-red-700 transition w-full"
         >
           Delete My Account
         </button>

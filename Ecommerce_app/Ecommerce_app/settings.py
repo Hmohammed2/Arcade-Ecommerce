@@ -120,14 +120,11 @@ if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
     MIDDLEWARE.insert(0, "debug_toolbar.middleware.DebugToolbarMiddleware")
 
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': ( 
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-        "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': ( 
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+# }
 
 ROOT_URLCONF = 'Ecommerce_app.urls'
 

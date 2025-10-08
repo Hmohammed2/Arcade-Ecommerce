@@ -1,6 +1,6 @@
 import logging
 from rest_framework import viewsets, filters, status, permissions
-from rest_framework.decorators import api_view, action, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, action, permission_classes
 from rest_framework.permissions import IsAuthenticatedOrReadOnly , IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
@@ -135,6 +135,8 @@ def create_payment_intent(request):
 
 
 @csrf_exempt
+@api_view(["POST"])  # 👈 add this line
+@permission_classes([AllowAny])
 def stripe_webhook(request):
     """
     Stripe webhook
@@ -172,7 +174,6 @@ def stripe_webhook(request):
 
 @csrf_exempt
 @api_view(["POST"])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def checkout(request):
     
