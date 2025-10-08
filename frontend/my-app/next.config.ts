@@ -6,7 +6,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        hostname: "django-backend-uat",
+        hostname: "django-backend",
         port: "8000",
         pathname: "/media/**",
       },

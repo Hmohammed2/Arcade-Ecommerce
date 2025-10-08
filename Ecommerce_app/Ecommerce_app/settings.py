@@ -166,7 +166,7 @@ DATABASES = {
         'NAME': os.getenv("POSTGRES_DB"),
         'USER': os.getenv("POSTGRES_USER"),
         'PASSWORD': os.getenv("POSTGRES_PASSWORD"),
-        'HOST': 'db-uat',  # this matches the docker-compose service name
+        'HOST': os.getenv("POSTGRES_HOST"),  # this matches the docker-compose service name
         'PORT': '5432',
     }
 }
