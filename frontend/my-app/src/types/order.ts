@@ -1,14 +1,4 @@
-export interface Product {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  stock: number;
-  image: string;
-  created_at: string;
-  updated_at: string;
-}
+import type { Product } from "./product";
 
 export interface OrderItem {
   id: number;

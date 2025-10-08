@@ -23,12 +23,17 @@ export default function ShopPage() {
   const [availability, setAvailability] = useState<string>("all");
 
   // Extract categories dynamically
-  const categories: string[] = ["all", "sticks", "buttons"];
+  const categories = [
+    "all",
+    ...Array.from(new Set(products.map((p) => p.category?.name))).filter(
+      Boolean
+    ),
+  ];
 
   // Apply filters
   const filteredProducts = products.filter((p: Product) => {
     const inCategory =
-      selectedCategory === "all" ? true : p.category === selectedCategory;
+      selectedCategory === "all" ? true : p.category?.name === selectedCategory;
 
     const inPriceRange = p.price >= priceRange[0] && p.price <= priceRange[1];
 

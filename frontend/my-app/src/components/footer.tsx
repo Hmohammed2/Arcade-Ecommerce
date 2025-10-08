@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram } from "lucide-react";
+import { useAuth } from "@/store/useAuth"; // ✅ import your existing store
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -12,11 +13,13 @@ const Footer = () => {
     "idle" | "loading" | "success" | "error"
   >("idle");
 
+  // ✅ Zustand auth state
+  const { isAuthenticated, user, logout } = useAuth();
+
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
 
-    // Simulate async request (replace with actual API call)
     setTimeout(() => {
       if (email.includes("@")) {
         setStatus("success");
@@ -62,22 +65,55 @@ const Footer = () => {
                   Shop
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/login"
-                  className="hover:text-pink-600 transition-colors duration-200"
-                >
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/register"
-                  className="hover:text-pink-600 transition-colors duration-200"
-                >
-                  Register
-                </Link>
-              </li>
+
+              {/* 👇 Conditionally render based on Zustand auth */}
+              {!isAuthenticated ? (
+                <>
+                  <li>
+                    <Link
+                      href="/login"
+                      className="hover:text-pink-600 transition-colors duration-200"
+                    >
+                      Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/register"
+                      className="hover:text-pink-600 transition-colors duration-200"
+                    >
+                      Register
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link
+                      href="dashboard/orders"
+                      className="hover:text-pink-600 transition-colors duration-200"
+                    >
+                      My Orders
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      href="/dashboard"
+                      className="hover:text-pink-600 transition-colors duration-200"
+                    >
+                      Account ({user?.first_name || user?.email})
+                    </Link>
+                  </li>
+                  <li>
+                    <button
+                      onClick={logout}
+                      className="hover:text-pink-600 transition-colors duration-200"
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 
@@ -115,7 +151,6 @@ const Footer = () => {
               </p>
             )}
 
-            {/* 🌐 Social Icons */}
             <div className="flex space-x-4 mt-6">
               <a
                 href="https://www.instagram.com/arcadesticklabs/"
