@@ -87,8 +87,8 @@ class OrderViewSet(viewsets.ModelViewSet):
             {"error": "You do not have permission to view this order."},
             status=status.HTTP_403_FORBIDDEN,
         )
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
-    
+        
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes = [JWTAuthentication])
     def history(self, request):
         """Return orders belonging to the authenticated user"""
         user = request.user
