@@ -27,6 +27,7 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      POSTGRES_HOST: ${POSTGRES_HOST}
     volumes:
       - ./Ecommerce_app/static:/code/static
       - ./Ecommerce_app/media:/code/media
