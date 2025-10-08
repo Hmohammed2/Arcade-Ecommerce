@@ -83,7 +83,7 @@ export default function PaymentForm() {
         clearCart();
         toast.success("Payment successful! 🎉");
         // ✅ Include email in the redirect
-        localStorage.setItem("guest_email", formData.billingEmail);
+        localStorage.setItem("guest_email", formData.billingEmail ?? "");
         router.push(`/checkout-success/${order_id}`);
       }
     } catch (err: any) {

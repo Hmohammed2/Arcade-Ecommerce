@@ -22,7 +22,10 @@ interface CheckoutFormData {
 
 interface CheckoutFormState {
   formData: Partial<CheckoutFormData>;
-  updateField: (field: keyof CheckoutFormData, value: any) => void;
+  updateField: (
+    field: keyof CheckoutFormData,
+    value: string | boolean | undefined
+  ) => void;
   setSameAsBilling: (value: boolean) => void;
   resetForm: () => void;
 }
