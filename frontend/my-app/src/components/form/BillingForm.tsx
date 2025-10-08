@@ -45,7 +45,7 @@ export default function BillingForm({
       <h2 className="text-xl font-semibold mb-4">Billing Information</h2>
 
       {/* ✅ Checkbox */}
-      {isAuthenticated && !showUseAccountCheckbox && (
+      {isAuthenticated && showUseAccountCheckbox && (
         <label className="flex items-center space-x-2 mb-4">
           <input
             type="checkbox"
