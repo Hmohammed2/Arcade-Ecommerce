@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import status
@@ -15,6 +16,7 @@ from django.contrib.auth.models import User
 
 class UserAddressView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def get(self, request):
         # Retrieve or create an address record
@@ -37,6 +39,7 @@ class RegisterView(generics.CreateAPIView):
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
     
     def _get_user_with_address(self, request):
         # fetch the current user + join the one-to-one address in ONE query
@@ -59,6 +62,7 @@ class UserProfileView(APIView):
     
 class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request):
         user = request.user
@@ -79,6 +83,7 @@ class PasswordChangeView(APIView):
     
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
 
     def post(self, request):
         try:
