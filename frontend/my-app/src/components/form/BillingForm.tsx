@@ -68,7 +68,7 @@ export default function BillingForm() {
             value={formData.billingFirstName || ""}
             onChange={(e) => updateField("billingFirstName", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div>
@@ -80,7 +80,7 @@ export default function BillingForm() {
             value={formData.billingLastName || ""}
             onChange={(e) => updateField("billingLastName", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div className="md:col-span-2">
@@ -92,7 +92,7 @@ export default function BillingForm() {
             value={formData.billingEmail || ""}
             onChange={(e) => updateField("billingEmail", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div className="md:col-span-2">
@@ -104,7 +104,7 @@ export default function BillingForm() {
             value={formData.billingPhone || ""}
             onChange={(e) => updateField("billingPhone", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div className="md:col-span-2">
@@ -116,7 +116,7 @@ export default function BillingForm() {
             value={formData.billingAddress1 || ""}
             onChange={(e) => updateField("billingAddress1", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div className="md:col-span-2">
@@ -128,7 +128,7 @@ export default function BillingForm() {
             value={formData.billingAddress2 || ""}
             onChange={(e) => updateField("billingAddress2", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div>
@@ -140,7 +140,7 @@ export default function BillingForm() {
             value={formData.billingCity || ""}
             onChange={(e) => updateField("billingCity", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
         <div>
@@ -152,7 +152,7 @@ export default function BillingForm() {
             value={formData.billingPostcode || ""}
             onChange={(e) => updateField("billingPostcode", e.target.value)}
             disabled={useAccountBilling}
-            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600"
+            className="mt-1 w-full border-gray-300 rounded-md shadow-sm focus:ring-pink-600 focus:border-pink-600 py-2 px-3"
           />
         </div>
       </div>
