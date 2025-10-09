@@ -122,7 +122,7 @@ export default function OrderHistoryPageClient() {
                   >
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-800">
-                        {item.product.name}
+                        {item.product.name} - {item.colour}
                       </span>
                       <span className="text-gray-500 text-xs">
                         Quantity: {item.quantity}

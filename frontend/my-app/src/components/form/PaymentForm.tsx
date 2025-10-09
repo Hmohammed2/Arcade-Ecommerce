@@ -34,6 +34,7 @@ export default function PaymentForm() {
       const items = getCartItems().map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
+        colour: item.colour,
       }));
 
       const payload = {

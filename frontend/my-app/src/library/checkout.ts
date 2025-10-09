@@ -7,7 +7,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT;
  */
 export async function checkout(
   payload: {
-    items: { product_id: number; quantity: number }[];
+    items: { product_id: number; quantity: number; colour: string }[];
     email: string;
     first_name: string;
     last_name: string;

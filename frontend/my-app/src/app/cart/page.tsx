@@ -65,16 +65,21 @@ export default function CartPage() {
                   className="rounded-md border object-contain w-32 h-32 sm:w-40 sm:h-40"
                 />
               )}
-
-              <div>
-                <p className="font-medium text-base sm:text-lg">{item.title}</p>
-                {item.variantId && (
-                  <p className="text-sm text-gray-500 mt-1">{item.variantId}</p>
-                )}
-                <p className="text-gray-700 mt-1 font-semibold">
-                  £{item.price}
-                </p>
-              </div>
+              <li key={`${item.id}-${item.colour || "default"}`}>
+                <div className="flex flex-col">
+                  <span className="text-base font-medium text-gray-800">
+                    {item.title}
+                    {item.colour && (
+                      <span className="text-gray-500 text-sm ml-1">
+                        ({item.colour})
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-pink-600 font-semibold mt-1">
+                    £{item.price}
+                  </span>
+                </div>
+              </li>
             </div>
 
             {/* Quantity + Remove */}
@@ -89,7 +94,11 @@ export default function CartPage() {
                   min={1}
                   value={item.quantity}
                   onChange={(e) =>
-                    updateQuantity(item.id, Number(e.target.value) || 1)
+                    updateQuantity(
+                      item.id,
+                      item.colour || "",
+                      Number(e.target.value) || 1
+                    )
                   }
                   className="w-16 border rounded px-2 py-1 text-center text-sm"
                 />

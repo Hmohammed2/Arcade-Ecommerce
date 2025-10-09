@@ -52,6 +52,10 @@ class PaymentService:
             quantity = int(item.get("quantity", 1))
             if quantity < 1:
                 raise ValueError("Quantity must be at least 1.")
+            
+            colour = item.get("colour") 
+            if colour and colour not in (product.colours or []):
+                raise ValueError(f"Colour '{colour}' not available for {product.name}")
 
             line_price = product.price * quantity
 
@@ -60,6 +64,7 @@ class PaymentService:
                 product=product,
                 quantity=quantity,
                 price=product.price,
+                colour=colour
             )
 
             # Reduce stock safely

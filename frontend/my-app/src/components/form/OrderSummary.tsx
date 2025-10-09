@@ -23,7 +23,7 @@ export default function OrderSummary() {
         {cartItems.map((item) => (
           <li key={item.id} className="flex justify-between py-2 text-sm">
             <span>
-              {item.title} × {item.quantity}
+              {item.title} × {item.quantity} - {item.colour}
             </span>
             <span>£{(item.price * item.quantity).toFixed(2)}</span>
           </li>

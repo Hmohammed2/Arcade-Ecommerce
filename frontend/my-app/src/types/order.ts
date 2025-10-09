@@ -5,6 +5,7 @@ export interface OrderItem {
   product: Product;
   quantity: number;
   price: number;
+  colour: string;
 }
 
 export interface Order {
