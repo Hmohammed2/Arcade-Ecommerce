@@ -15,10 +15,12 @@ import { useCart } from "@/store/useCart";
 import { useAuth } from "@/store/useAuth";
 import { useSearchProducts } from "@/hooks/useSearchProducts";
 import { getImageUrl } from "@/library/getImageUrl";
+import { useRouter } from "next/router";
 
 const Navbar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const router = useRouter();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -47,7 +49,10 @@ const Navbar = () => {
     if (query.trim()) console.log("Searching for:", query);
   };
 
-  const handleLogout = () => logout();
+  const handleLogout = () => {
+    logout();
+    router.replace("/login"); // 👈 redirect after logout
+  };
 
   return (
     <header className="bg-white shadow-sm w-full top-0 left-0 z-50">
