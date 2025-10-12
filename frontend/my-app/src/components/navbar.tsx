@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   LogOut,
   LayoutDashboard,
+  LogOutIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,7 +16,7 @@ import { useCart } from "@/store/useCart";
 import { useAuth } from "@/store/useAuth";
 import { useSearchProducts } from "@/hooks/useSearchProducts";
 import { getImageUrl } from "@/library/getImageUrl";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -47,11 +48,6 @@ const Navbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) console.log("Searching for:", query);
-  };
-
-  const handleLogout = () => {
-    logout();
-    router.replace("/login"); // 👈 redirect after logout
   };
 
   return (
@@ -188,15 +184,17 @@ const Navbar = () => {
                   >
                     <LayoutDashboard className="w-4 h-4" /> Dashboard
                   </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsDropdownOpen(false);
+                  <Link
+                    href="/login"
+                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
+                    onClick={(e) => {
+                      e.preventDefault(); // stop immediate nav
+                      logout();
+                      router.replace("/login"); // then navigate
                     }}
-                    className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition"
                   >
-                    <LogOut className="w-4 h-4" /> Logout
-                  </button>
+                    <LogOutIcon className="w-4 h-4" /> Logout
+                  </Link>
                 </div>
               )}
             </div>
@@ -346,15 +344,17 @@ const Navbar = () => {
                 >
                   <LayoutDashboard className="w-4 h-4" /> Dashboard
                 </Link>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    setIsMobileOpen(false);
-                  }}
+                <Link
+                  href="/login"
                   className="py-2 flex items-center gap-2 text-gray-700 hover:text-pink-600 transition"
+                  onClick={(e) => {
+                    e.preventDefault(); // stop immediate nav
+                    logout();
+                    router.replace("/login"); // then navigate
+                  }}
                 >
-                  <LogOut className="w-4 h-4" /> Logout
-                </button>
+                  <LogOutIcon className="w-4 h-4" /> Logout
+                </Link>
               </>
             )}
           </nav>
