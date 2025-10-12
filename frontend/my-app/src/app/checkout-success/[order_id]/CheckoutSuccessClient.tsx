@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/store/useAuth"; // ✅ import Zustand auth store
+import { getColourTextClass } from "@/app/utils/colour-text";
 
 interface Props {
   orderId: string;
@@ -109,7 +110,16 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
             {order.items?.map((item: any) => (
               <li key={item.id} className="flex justify-between pb-2">
                 <span>
-                  {item.quantity} × {item.product.name} - {item.colour}
+                  {item.quantity} × {item.product?.name}
+                  {item.colour && (
+                    <>
+                      {" "}
+                      -{" "}
+                      <span className={getColourTextClass(item.colour)}>
+                        {item.colour}
+                      </span>
+                    </>
+                  )}
                 </span>
                 <span>£{item.price}</span>
               </li>

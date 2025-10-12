@@ -3,6 +3,7 @@
 import { useOrders } from "@/hooks/useOrders";
 import type { Order, OrderItem } from "@/types/order";
 import { motion } from "framer-motion";
+import { getColourTextClass } from "@/app/utils/colour-text";
 
 export default function OrderHistoryPageClient() {
   const { data: orders, isLoading } = useOrders();
@@ -122,7 +123,16 @@ export default function OrderHistoryPageClient() {
                   >
                     <div className="flex flex-col">
                       <span className="font-medium text-gray-800">
-                        {item.product.name} - {item.colour}
+                        {item.product.name}
+                        {item.colour && (
+                          <>
+                            {" "}
+                            -{" "}
+                            <span className={getColourTextClass(item.colour)}>
+                              {item.colour}
+                            </span>
+                          </>
+                        )}
                       </span>
                       <span className="text-gray-500 text-xs">
                         Quantity: {item.quantity}

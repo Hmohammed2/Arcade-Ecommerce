@@ -1,5 +1,6 @@
 "use client";
 
+import { getColourTextClass } from "@/app/utils/colour-text";
 import { useCart } from "@/store/useCart";
 import { useState } from "react";
 
@@ -23,7 +24,16 @@ export default function OrderSummary() {
         {cartItems.map((item) => (
           <li key={item.id} className="flex justify-between py-2 text-sm">
             <span>
-              {item.title} × {item.quantity} - {item.colour}
+              {item.title} × {item.quantity}{" "}
+              {item.colour && (
+                <>
+                  {" "}
+                  -{" "}
+                  <span className={getColourTextClass(item.colour)}>
+                    {item.colour}
+                  </span>
+                </>
+              )}
             </span>
             <span>£{(item.price * item.quantity).toFixed(2)}</span>
           </li>

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/store/useCart";
 import { getImageUrl } from "@/library/getImageUrl";
+import { getColourTextClass } from "../utils/colour-text";
 
 export default function CartPage() {
   const { items, removeItem, clearCart, updateQuantity, getTotalPrice } =
@@ -70,7 +71,9 @@ export default function CartPage() {
                   <span className="text-base font-medium text-gray-800">
                     {item.title}
                     {item.colour && (
-                      <span className="text-gray-500 text-sm ml-1">
+                      <span
+                        className={`${getColourTextClass(item.colour)} text-sm ml-1`}
+                      >
                         ({item.colour})
                       </span>
                     )}
