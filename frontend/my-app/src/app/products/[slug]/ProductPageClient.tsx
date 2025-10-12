@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCart } from "@/store/useCart";
 import { useProductBySlug } from "@/hooks/useProductsBySlug";
 import { getImageUrl } from "@/library/getImageUrl";
+import { ZoomModal } from "@/components/ZoomModal";
 
 type Props = { slug: string };
 
@@ -12,10 +13,8 @@ export default function ProductPageClient({ slug }: Props) {
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const addItem = useCart((s) => s.addItem);
 
-  // Quantity is independent of product fetch state
   const [quantity, setQuantity] = useState<number>(1);
 
-  // ✅ Normalize colours safely after data arrives
   const colours: string[] = useMemo(() => {
     const raw = product?.colours ?? [];
     return Array.isArray(raw)
@@ -25,13 +24,22 @@ export default function ProductPageClient({ slug }: Props) {
       : [];
   }, [product]);
 
-  // ✅ Selected colour: start empty, then set first when colours available
+  const featureList = useMemo(() => {
+    const raw = product?.features ?? [];
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .map((f: any) =>
+        typeof f === "string"
+          ? { label: f }
+          : { label: f?.label, value: f?.value }
+      )
+      .filter((f) => !!f.label);
+  }, [product]);
+
   const [selectedColour, setSelectedColour] = useState<string>("");
 
   useEffect(() => {
-    if (!selectedColour && colours.length > 0) {
-      setSelectedColour(colours[0]);
-    }
+    if (!selectedColour && colours.length > 0) setSelectedColour(colours[0]);
   }, [colours, selectedColour]);
 
   if (isLoading) return <p>Loading product...</p>;
@@ -45,7 +53,7 @@ export default function ProductPageClient({ slug }: Props) {
   const handleAddToCart = () => {
     addItem({
       id: product.id,
-      title: product.name, // keep raw title; show colour in UI
+      title: product.name,
       price: numericPrice,
       quantity,
       image: product.image,
@@ -65,12 +73,26 @@ export default function ProductPageClient({ slug }: Props) {
       {/* Left: Image */}
       <div className="md:col-span-5 flex justify-center items-start">
         <div className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden flex items-center justify-center">
-          <Image
+          <ZoomModal
             src={getImageUrl(product.image)}
             alt={product.name}
-            width={300}
-            height={400}
-            className="object-contain"
+            trigger={(open) => (
+              <button
+                type="button"
+                onClick={open}
+                className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden"
+              >
+                <Image
+                  src={getImageUrl(product.image)}
+                  alt={product.name}
+                  fill
+                  className="object-contain"
+                />
+                <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded">
+                  Tap to zoom
+                </span>
+              </button>
+            )}
           />
         </div>
       </div>
@@ -148,6 +170,78 @@ export default function ProductPageClient({ slug }: Props) {
           />
         </div>
       </div>
+
+      {/* Full-width Overview & Specs */}
+      {(product.overview || featureList.length > 0) && (
+        <section className="md:col-span-12 space-y-4">
+          {product.overview && (
+            <details className="group border rounded-lg shadow-sm bg-white">
+              <summary className="flex items-center justify-between cursor-pointer list-none p-4">
+                <span className="text-lg font-semibold text-gray-900">
+                  Overview
+                </span>
+                {/* optional icon rotation */}
+                <svg
+                  className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.207l3.71-3.976a.75.75 0 111.08 1.04l-4.243 4.54a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </summary>
+              <div className="px-4 pb-4 pt-0">
+                <p className="text-gray-700 whitespace-pre-line">
+                  {product.overview}
+                </p>
+              </div>
+            </details>
+          )}
+
+          {featureList.length > 0 && (
+            <details className="group border rounded-lg shadow-sm bg-white">
+              <summary className="flex items-center justify-between cursor-pointer list-none p-4">
+                <span className="text-lg font-semibold text-gray-900">
+                  Specifications
+                </span>
+                <svg
+                  className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.207l3.71-3.976a.75.75 0 111.08 1.04l-4.243 4.54a.75.75 0 01-1.08 0L5.25 8.27a.75.75 0 01-.02-1.06z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </summary>
+
+              {/* list style #1: definition list (spec sheet) */}
+              <dl className="px-4 pb-4 divide-y divide-gray-100">
+                {featureList.map((f, i) => (
+                  <div key={i} className="py-3 grid grid-cols-3 gap-4">
+                    <dt className="text-sm text-gray-500">{f.label}</dt>
+                    <dd className="col-span-2 text-sm text-gray-900">
+                      {f.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+
+              {/* or list style #2: bullets
+        <ul className="px-4 pb-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {featureList.map((f, i) => (
+            <li key={i} className="text-sm text-gray-800">{f.label}{f.value ? ` — ${f.value}` : ""}</li>
+          ))}
+        </ul> */}
+            </details>
+          )}
+        </section>
+      )}
     </div>
   );
 }

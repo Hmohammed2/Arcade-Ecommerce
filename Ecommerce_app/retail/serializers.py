@@ -21,6 +21,8 @@ class ProductSerializer(serializers.ModelSerializer):
             "category",
             "colours",
             "description",
+            "overview",
+            "features",
             "price",
             "stock",
             "image",

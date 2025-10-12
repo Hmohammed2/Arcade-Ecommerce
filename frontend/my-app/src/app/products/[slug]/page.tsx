@@ -9,18 +9,19 @@ export default async function ProductPage({
 }: {
   params: { slug: string };
 }) {
+  const { slug } = await params;
   const queryClient = new QueryClient();
 
   await queryClient.prefetchQuery({
-    queryKey: ["product", params.slug],
-    queryFn: () => fetchProductBySlug(params.slug),
+    queryKey: ["product", slug],
+    queryFn: () => fetchProductBySlug(slug),
   });
 
   const dehydratedState = dehydrate(queryClient);
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ProductPageClient slug={params.slug} />
+      <ProductPageClient slug={slug} />
     </HydrationBoundary>
   );
 }

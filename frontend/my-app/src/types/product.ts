@@ -1,3 +1,5 @@
+export type FeatureItem = string | { label: string; value?: string };
+
 export type Category = {
   id: number;
   name: string;
@@ -15,6 +17,8 @@ export type Product = {
   slug: string;
   category: Category; // nested object
   description?: string; // can be blank
+  overview?: string;
+  features?: FeatureItem[];
   price: number;
   stock: number; // PositiveIntegerField
   image: string;

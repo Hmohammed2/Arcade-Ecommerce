@@ -107,7 +107,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
           <h3 className="font-medium text-gray-800 mb-2">Items:</h3>
           <ul className="space-y-2">
             {order.items?.map((item: any) => (
-              <li key={item.id} className="flex justify-between border-b pb-2">
+              <li key={item.id} className="flex justify-between pb-2">
                 <span>
                   {item.quantity} × {item.product.name} - {item.colour}
                 </span>

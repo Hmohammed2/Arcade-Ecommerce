@@ -16,6 +16,8 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     description = models.TextField(blank=True)
     colours = ArrayField(models.CharField(max_length=50),blank=True,default=list)
+    overview = models.TextField(blank=True)  # rich/long form description
+    features = models.JSONField(blank=True, default=list)  # e.g. ["Low latency", ...] or [{"label":"Shell","value":"Aluminum"}]
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to="products/", blank=True, null=True)

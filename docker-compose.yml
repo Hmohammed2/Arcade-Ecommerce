@@ -19,7 +19,7 @@ services:
     build:
       context: "./frontend/my-app"
       dockerfile: Dockerfile
-    command: npm run dev -- --turbo
+    command: npm run dev
   django:
     container_name: django-backend
     build:

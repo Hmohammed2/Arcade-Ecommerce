@@ -12,14 +12,7 @@ const stripePromise = loadStripe(
 export default function CheckoutPageClient() {
   return (
     <Elements stripe={stripePromise}>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        <div className="lg:col-span-2">
-          <CheckoutForm /> {/* this contains PaymentForm inside */}
-        </div>
-        <aside className="lg:col-span-1">
-          <OrderSummary />
-        </aside>
-      </div>
+      <CheckoutForm /> {/* this contains PaymentForm inside */}
     </Elements>
   );
 }
