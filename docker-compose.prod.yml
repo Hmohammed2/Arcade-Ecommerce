@@ -55,12 +55,14 @@ services:
       [
         "listen",
         "--forward-to",
-        "http://django-app-uat:8000/api/payments/webhook/",
+        "http://django-backend-uat:8000/api/payments/webhook/",
       ]
     volumes:
       - stripe-cli-config:/root/.config/stripe
     depends_on:
       - django-app-uat
+    networks:
+      - app_net
 volumes:
   postgres_data_uat:
   stripe-cli-config:
