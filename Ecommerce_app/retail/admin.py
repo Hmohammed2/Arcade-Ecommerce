@@ -9,7 +9,6 @@ class ProductAdmin(admin.ModelAdmin):
     
 # Register your models here.
 admin.site.register(Category)
-admin.site.register(Product)
 admin.site.register(Payment)
 
 class OrderItemResource(resources.ModelResource):
@@ -21,6 +20,10 @@ class OrderResource(resources.ModelResource):
         model = Order
         fields = ('id', 'status', 'created_at', 'total_price',)
 
+class ProductResource(resources.ModelResource):
+    class Meta:
+        model = Product
+
 @admin.register(OrderItem)
 class OrderItemAdmin(ImportExportModelAdmin):
     resource_class = OrderItemResource
@@ -28,3 +31,7 @@ class OrderItemAdmin(ImportExportModelAdmin):
 @admin.register(Order)
 class OrderAdmin(ImportExportModelAdmin):
     resource_class = OrderResource
+
+@admin.register(Product)
+class ProductAdmin(ImportExportModelAdmin):
+    resource_class = ProductResource
