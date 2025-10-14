@@ -32,11 +32,13 @@ export const metadata: Metadata = {
 
 export default async function AccountSettingsPage() {
   return (
-    <div className="max-w-3xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">
+    <div className="mx-auto px-6 py-12 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10 text-center">
         Account Settings
       </h1>
-      <AccountPageClient />
+      <div className="flex justify-center">
+        <AccountPageClient />
+      </div>
     </div>
   );
 }

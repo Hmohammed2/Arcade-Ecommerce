@@ -6,16 +6,17 @@ export default function ShippingForm() {
   const { formData, updateField, setSameAsBilling } = useCheckoutForm();
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-gray-800">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
           Shipping Details
         </h2>
-        <label className="flex items-center space-x-2 text-sm text-gray-700">
+        <label className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={formData.sameAsBilling}
             onChange={(e) => setSameAsBilling(e.target.checked)}
+            className="accent-pink-600 dark:accent-pink-500 w-4 h-4"
           />
           <span>Same as billing</span>
         </label>
@@ -28,7 +29,7 @@ export default function ShippingForm() {
           <div>
             <label
               htmlFor="shippingAddress1"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Address Line 1
             </label>
@@ -38,14 +39,14 @@ export default function ShippingForm() {
               value={formData.shippingAddress1 || ""}
               onChange={(e) => updateField("shippingAddress1", e.target.value)}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300"
             />
           </div>
 
           <div>
             <label
               htmlFor="shippingAddress2"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Address Line 2 (optional)
             </label>
@@ -54,7 +55,7 @@ export default function ShippingForm() {
               type="text"
               value={formData.shippingAddress2 || ""}
               onChange={(e) => updateField("shippingAddress2", e.target.value)}
-              className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300"
             />
           </div>
 
@@ -63,7 +64,7 @@ export default function ShippingForm() {
             <div>
               <label
                 htmlFor="shippingCity"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 City
               </label>
@@ -73,14 +74,14 @@ export default function ShippingForm() {
                 value={formData.shippingCity || ""}
                 onChange={(e) => updateField("shippingCity", e.target.value)}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300"
               />
             </div>
 
             <div>
               <label
                 htmlFor="shippingPostcode"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Postcode
               </label>
@@ -92,7 +93,7 @@ export default function ShippingForm() {
                   updateField("shippingPostcode", e.target.value)
                 }
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300"
               />
             </div>
           </div>
@@ -101,7 +102,7 @@ export default function ShippingForm() {
           <div>
             <label
               htmlFor="shippingCountry"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300"
             >
               Country / Region
             </label>
@@ -109,8 +110,8 @@ export default function ShippingForm() {
               id="shippingCountry"
               value="United Kingdom"
               disabled
-              className="mt-1 py-2 px-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm"
-            ></input>
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300 disabled:opacity-60"
+            />
           </div>
         </div>
       )}

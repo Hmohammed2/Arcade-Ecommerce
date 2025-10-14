@@ -12,5 +12,9 @@ export default function LogoutPage() {
     router.replace("/login");
   }, [logout, router]);
 
-  return <p className="p-4 text-sm text-gray-500">Signing you out…</p>;
+  return (
+    <p className="p-4 text-sm text-gray-500 dark:bg-gray-900 dark:text-gray-100">
+      Signing you out…
+    </p>
+  );
 }

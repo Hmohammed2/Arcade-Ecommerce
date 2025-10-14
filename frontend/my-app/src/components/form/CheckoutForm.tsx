@@ -7,7 +7,7 @@ import OrderSummary from "./OrderSummary";
 
 export default function CheckoutForm() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 dark:bg-gray-900 dark:text-gray-100">
       {/* Left column (desktop): stack Billing + Shipping */}
       <section
         aria-labelledby="checkout-details"

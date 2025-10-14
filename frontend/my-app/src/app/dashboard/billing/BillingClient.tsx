@@ -67,22 +67,31 @@ export default function BillingClient() {
     }
   };
 
-  if (isLoading) return <p>Loading your saved addresses...</p>;
+  if (isLoading)
+    return (
+      <p className="text-center text-gray-700 dark:text-gray-300 transition-colors duration-300">
+        Loading your saved addresses...
+      </p>
+    );
 
   return (
-    <div className="space-y-10">
-      <BillingForm showUseAccountCheckbox={false} />
-      <ShippingForm />
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          disabled={isUpdating}
-          className={`bg-pink-600 text-white px-6 py-2 rounded-md font-medium transition ${
-            isUpdating ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-700"
-          }`}
-        >
-          {isUpdating ? "Saving..." : "Save Information"}
-        </button>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300 px-6 py-12">
+      <div className="w-full max-w-3xl space-y-10">
+        <BillingForm showUseAccountCheckbox={false} />
+        <ShippingForm />
+        <div className="flex justify-center">
+          <button
+            onClick={handleSave}
+            disabled={isUpdating}
+            className={`bg-pink-600 text-white px-6 py-2 rounded-md font-medium transition-colors duration-300 ${
+              isUpdating
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-pink-700 dark:hover:bg-pink-500"
+            }`}
+          >
+            {isUpdating ? "Saving..." : "Save Information"}
+          </button>
+        </div>
       </div>
     </div>
   );

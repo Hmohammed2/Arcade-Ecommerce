@@ -10,9 +10,9 @@ export default function OrderHistoryPageClient() {
 
   if (isLoading)
     return (
-      <div className="flex items-center justify-center min-h-[50vh] text-gray-600">
+      <div className="flex items-center justify-center min-h-[50vh] text-gray-600 dark:text-gray-300 transition-colors duration-300">
         <svg
-          className="animate-spin h-5 w-5 mr-2 text-gray-500"
+          className="animate-spin h-5 w-5 mr-2 text-gray-500 dark:text-gray-400"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -40,11 +40,11 @@ export default function OrderHistoryPageClient() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center min-h-[50vh] text-gray-600"
+        className="flex flex-col items-center justify-center min-h-[50vh] text-gray-600 dark:text-gray-300 transition-colors duration-300"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="h-10 w-10 mb-3 text-gray-400"
+          className="h-10 w-10 mb-3 text-gray-400 dark:text-gray-500"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -63,18 +63,18 @@ export default function OrderHistoryPageClient() {
           />
         </svg>
         <p className="text-lg font-semibold">No orders found</p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           When you place an order, it will appear here.
         </p>
       </motion.div>
     );
 
   return (
-    <div className="max-w-5xl mx-auto py-12 px-4">
+    <div className="max-w-5xl mx-auto py-12 px-4 bg-white dark:bg-gray-900 transition-colors duration-300 min-h-screen">
       <motion.h1
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-3xl font-bold mb-10 text-gray-900 tracking-tight"
+        className="text-3xl font-bold mb-10 text-center text-gray-900 dark:text-gray-100 tracking-tight"
       >
         Your Orders
       </motion.h1>
@@ -86,26 +86,28 @@ export default function OrderHistoryPageClient() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.1 }}
-            className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300"
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-300"
           >
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-100 px-6 py-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-100 dark:border-gray-700 px-6 py-4">
               <div>
-                <p className="font-semibold text-gray-900">Order #{order.id}</p>
-                <p className="text-sm text-gray-500">
+                <p className="font-semibold text-gray-900 dark:text-gray-100">
+                  Order #{order.id}
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Placed on{" "}
-                  <span className="font-medium text-gray-700">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">
                     {new Date(order.created_at).toLocaleDateString()}
                   </span>
                 </p>
               </div>
               <span
-                className={`mt-3 sm:mt-0 px-3 py-1 text-sm rounded-full font-medium capitalize ${
+                className={`mt-3 sm:mt-0 px-3 py-1 text-sm rounded-full font-medium capitalize transition-colors duration-300 ${
                   order.status === "completed"
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
                     : order.status === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-gray-100 text-gray-600"
+                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300"
+                      : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300"
                 }`}
               >
                 {order.status}
@@ -114,7 +116,7 @@ export default function OrderHistoryPageClient() {
 
             {/* Items */}
             <div className="px-6 py-4">
-              <ul className="divide-y divide-gray-100">
+              <ul className="divide-y divide-gray-100 dark:divide-gray-700">
                 {order.items.map((item: OrderItem) => (
                   <motion.li
                     key={item.id}
@@ -122,7 +124,7 @@ export default function OrderHistoryPageClient() {
                     className="py-2 flex justify-between items-center text-sm"
                   >
                     <div className="flex flex-col">
-                      <span className="font-medium text-gray-800">
+                      <span className="font-medium text-gray-800 dark:text-gray-200">
                         {item.product.name}
                         {item.colour && (
                           <>
@@ -134,11 +136,11 @@ export default function OrderHistoryPageClient() {
                           </>
                         )}
                       </span>
-                      <span className="text-gray-500 text-xs">
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">
                         Quantity: {item.quantity}
                       </span>
                     </div>
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-gray-700 dark:text-gray-200 font-medium">
                       £{item.price}
                     </span>
                   </motion.li>
@@ -146,9 +148,11 @@ export default function OrderHistoryPageClient() {
               </ul>
 
               {/* Total */}
-              <div className="border-t border-gray-200 mt-4 pt-3 flex justify-between items-center">
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-lg font-semibold text-gray-900">
+              <div className="border-t border-gray-200 dark:border-gray-700 mt-4 pt-3 flex justify-between items-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Total
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   £{order.total_price}
                 </p>
               </div>

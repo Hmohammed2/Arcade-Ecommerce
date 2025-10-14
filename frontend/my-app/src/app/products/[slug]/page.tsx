@@ -21,7 +21,9 @@ export default async function ProductPage({
 
   return (
     <HydrationBoundary state={dehydratedState}>
-      <ProductPageClient slug={slug} />
+      <div className="dark:bg-gray-900">
+        <ProductPageClient slug={slug} />
+      </div>
     </HydrationBoundary>
   );
 }

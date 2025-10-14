@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useAuth } from "@/store/useAuth"; // ✅ import Zustand auth store
+import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
 
 interface Props {
@@ -14,7 +14,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isAuthenticated, accessToken, user } = useAuth(); // ✅ read Zustand store
+  const { isAuthenticated, accessToken } = useAuth();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -22,15 +22,12 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         let endpoint = "";
         let headers: HeadersInit = { "Content-Type": "application/json" };
 
-        // ✅ If logged in, use authenticated endpoint
         if (isAuthenticated && accessToken) {
           endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/`;
           headers["Authorization"] = `Bearer ${accessToken}`;
         } else {
-          // ✅ Guest checkout → use stored email
           const email = localStorage.getItem("guest_email");
           if (!email) throw new Error("No guest email found.");
-
           endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/?email=${email}`;
         }
 
@@ -46,7 +43,6 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         const data = await res.json();
         setOrder(data);
 
-        // Optional: clear guest email after fetch for privacy
         if (!isAuthenticated) localStorage.removeItem("guest_email");
       } catch (err: any) {
         console.error(err);
@@ -62,20 +58,22 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
   // ✅ Loading state
   if (loading)
     return (
-      <div className="text-center py-20">
-        <p className="text-gray-600">Loading your order...</p>
+      <div className="text-center py-20 text-gray-700 dark:text-gray-300 transition-colors duration-300">
+        <p>Loading your order...</p>
       </div>
     );
 
   // ✅ Error state
   if (error)
     return (
-      <div className="min-h-screen max-w-4xl mx-auto text-center py-16">
-        <h1 className="text-2xl font-bold text-red-600">Order not found</h1>
-        <p className="mt-4 text-gray-600">{error}</p>
+      <div className="min-h-screen max-w-4xl mx-auto text-center py-16 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+        <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">
+          Order not found
+        </h1>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">{error}</p>
         <Link
           href="/"
-          className="mt-6 inline-block bg-pink-600 text-white px-4 py-2 rounded-md hover:bg-pink-700"
+          className="mt-6 inline-block bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white px-4 py-2 rounded-md font-medium transition-colors"
         >
           Back to Shop
         </Link>
@@ -84,14 +82,16 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
 
   // ✅ Success view
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-6 py-16 text-center">
-      <h1 className="text-3xl font-bold text-green-600">
+    <div className="min-h-screen max-w-7xl mx-auto px-6 py-16 text-center text-gray-800 dark:text-gray-100 transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-green-600 dark:text-green-400">
         Payment Successful ✅
       </h1>
-      <p className="mt-4 text-lg">Thank you for your order!</p>
+      <p className="mt-4 text-lg text-gray-700 dark:text-gray-300">
+        Thank you for your order!
+      </p>
 
-      <div className="mt-8 bg-white shadow rounded-lg p-6 text-left">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+      <div className="mt-8 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow rounded-lg p-6 text-left transition-colors duration-300">
+        <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-4">
           Order Summary
         </h2>
         <p>
@@ -105,10 +105,15 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         </p>
 
         <div className="mt-6">
-          <h3 className="font-medium text-gray-800 mb-2">Items:</h3>
+          <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
+            Items:
+          </h3>
           <ul className="space-y-2">
             {order.items?.map((item: any) => (
-              <li key={item.id} className="flex justify-between pb-2">
+              <li
+                key={item.id}
+                className="flex justify-between pb-2 border-b border-gray-200 dark:border-gray-700"
+              >
                 <span>
                   {item.quantity} × {item.product?.name}
                   {item.colour && (
@@ -131,13 +136,13 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
       <div className="flex flex-col md:flex-row justify-center gap-4">
         <Link
           href="/"
-          className="mt-8 inline-block bg-pink-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-pink-700"
+          className="mt-8 inline-block bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white px-6 py-3 rounded-md font-semibold transition-colors"
         >
           Continue Shopping
         </Link>
         <button
           onClick={() => window.print()}
-          className="mt-8 inline-block bg-gray-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-gray-800"
+          className="mt-8 inline-block bg-gray-700 hover:bg-gray-800 dark:bg-gray-800 dark:hover:bg-gray-700 text-white px-6 py-3 rounded-md font-semibold transition-colors"
         >
           Print Receipt
         </button>

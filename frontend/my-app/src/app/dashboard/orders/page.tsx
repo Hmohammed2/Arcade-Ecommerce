@@ -40,8 +40,10 @@ export const metadata: Metadata = {
 
 export default async function OrdersPage() {
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-6 py-12">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Order History</h1>
+    <div className="min-h-screen mx-auto px-6 py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <h1 className="text-3xl font-bold text-center text-gray-900 dark:text-gray-100 mb-10">
+        Order History
+      </h1>
       <OrderHistoryPageClient />
     </div>
   );

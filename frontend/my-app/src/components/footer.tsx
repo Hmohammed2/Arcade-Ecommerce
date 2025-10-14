@@ -5,15 +5,13 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Instagram } from "lucide-react";
-import { useAuth } from "@/store/useAuth"; // ✅ import your existing store
+import { useAuth } from "@/store/useAuth";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<
     "idle" | "loading" | "success" | "error"
   >("idle");
-
-  // ✅ Zustand auth state
   const { isAuthenticated, user, logout } = useAuth();
 
   const handleSubscribe = (e: React.FormEvent) => {
@@ -31,7 +29,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="border-t shadow-md mx-auto px-6 py-10 bg-white text-gray-800">
+    <footer className="border-t shadow-md mx-auto px-6 py-10 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -47,7 +45,7 @@ const Footer = () => {
               height={128}
               className="w-32 mb-4 rounded-lg"
             />
-            <p className="text-gray-600 text-sm leading-relaxed">
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
               Custom arcade sticks built with passion and precision. Designed to
               enhance your gameplay.
             </p>
@@ -56,23 +54,22 @@ const Footer = () => {
           {/* 🧭 Explore Links */}
           <div>
             <h4 className="text-xl font-semibold mb-4">Explore</h4>
-            <ul className="space-y-2 text-gray-700">
+            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
               <li>
                 <Link
                   href="/shop"
-                  className="hover:text-pink-600 transition-colors duration-200"
+                  className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                 >
                   Shop
                 </Link>
               </li>
 
-              {/* 👇 Conditionally render based on Zustand auth */}
               {!isAuthenticated ? (
                 <>
                   <li>
                     <Link
                       href="/login"
-                      className="hover:text-pink-600 transition-colors duration-200"
+                      className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                     >
                       Login
                     </Link>
@@ -80,7 +77,7 @@ const Footer = () => {
                   <li>
                     <Link
                       href="/register"
-                      className="hover:text-pink-600 transition-colors duration-200"
+                      className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                     >
                       Register
                     </Link>
@@ -91,7 +88,7 @@ const Footer = () => {
                   <li>
                     <Link
                       href="dashboard/orders"
-                      className="hover:text-pink-600 transition-colors duration-200"
+                      className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                     >
                       My Orders
                     </Link>
@@ -99,7 +96,7 @@ const Footer = () => {
                   <li>
                     <Link
                       href="/dashboard"
-                      className="hover:text-pink-600 transition-colors duration-200"
+                      className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                     >
                       Account ({user?.first_name || user?.email})
                     </Link>
@@ -107,7 +104,7 @@ const Footer = () => {
                   <li>
                     <button
                       onClick={logout}
-                      className="hover:text-pink-600 transition-colors duration-200"
+                      className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
                     >
                       Logout
                     </button>
@@ -120,7 +117,7 @@ const Footer = () => {
           {/* ✉️ Newsletter & Social */}
           <div>
             <h4 className="text-xl font-semibold mb-4">Stay Connected</h4>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               Subscribe to our newsletter for updates and product launches.
             </p>
 
@@ -130,23 +127,25 @@ const Footer = () => {
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-l-full text-gray-800 focus:outline-pink-600 border border-gray-300"
+                className="w-full px-4 py-2 rounded-l-full text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-pink-600 border border-gray-300 dark:border-gray-600"
                 required
               />
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="bg-pink-600 text-white px-6 rounded-r-full font-semibold hover:bg-pink-700 transition-colors duration-200 disabled:opacity-50"
+                className="bg-pink-600 text-white px-6 rounded-r-full font-semibold hover:bg-pink-700 dark:hover:bg-pink-500 transition-colors duration-200 disabled:opacity-50"
               >
                 {status === "loading" ? "…" : "Subscribe"}
               </button>
             </form>
 
             {status === "success" && (
-              <p className="text-green-600 mt-2">Thanks for subscribing! 🎉</p>
+              <p className="text-green-600 dark:text-green-400 mt-2">
+                Thanks for subscribing! 🎉
+              </p>
             )}
             {status === "error" && (
-              <p className="text-red-600 mt-2">
+              <p className="text-red-600 dark:text-red-400 mt-2">
                 Please enter a valid email address.
               </p>
             )}
@@ -156,7 +155,7 @@ const Footer = () => {
                 href="https://www.instagram.com/arcadesticklabs/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-pink-600 transition-colors duration-200"
+                className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
               >
                 <Instagram className="w-6 h-6" />
               </a>
@@ -168,27 +167,27 @@ const Footer = () => {
         <div className="container mx-auto px-4 mt-10 text-center space-x-6 text-sm">
           <Link
             href="/terms"
-            className="text-gray-500 hover:text-pink-600 transition-colors duration-200"
+            className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
           >
             Terms &amp; Conditions
           </Link>
           <Link
             href="/privacy"
-            className="text-gray-500 hover:text-pink-600 transition-colors duration-200"
+            className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
           >
             Privacy Policy
           </Link>
           <Link
             href="/cookies"
-            className="text-gray-500 hover:text-pink-600 transition-colors duration-200"
+            className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
           >
             Cookies Policy
           </Link>
         </div>
 
         {/* © Copyright */}
-        <div className="border-t border-gray-200 mt-6 pt-6">
-          <p className="text-center text-gray-500 text-sm">
+        <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
+          <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
             &copy; {new Date().getFullYear()} ArcadeStickLabs. All rights
             reserved.
           </p>

@@ -12,7 +12,6 @@ type Props = { slug: string };
 export default function ProductPageClient({ slug }: Props) {
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const addItem = useCart((s) => s.addItem);
-
   const [quantity, setQuantity] = useState<number>(1);
 
   const colours: string[] = useMemo(() => {
@@ -42,8 +41,18 @@ export default function ProductPageClient({ slug }: Props) {
     if (!selectedColour && colours.length > 0) setSelectedColour(colours[0]);
   }, [colours, selectedColour]);
 
-  if (isLoading) return <p>Loading product...</p>;
-  if (isError || !product) return <p>Product not found.</p>;
+  if (isLoading)
+    return (
+      <p className="text-gray-800 dark:text-gray-200 transition-colors duration-300">
+        Loading product...
+      </p>
+    );
+  if (isError || !product)
+    return (
+      <p className="text-gray-800 dark:text-gray-200 transition-colors duration-300">
+        Product not found.
+      </p>
+    );
 
   const numericPrice =
     typeof product.price === "string"
@@ -64,7 +73,7 @@ export default function ProductPageClient({ slug }: Props) {
   const maxQty = Math.min(Math.max(product.stock ?? 0, 0), 10);
 
   return (
-    <div className="min-h-screen max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
+    <div className="min-h-screen max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {/* Mobile title */}
       <h1 className="text-2xl font-bold text-center md:hidden">
         {product.name}
@@ -72,7 +81,7 @@ export default function ProductPageClient({ slug }: Props) {
 
       {/* Left: Image */}
       <div className="md:col-span-5 flex justify-center items-start">
-        <div className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden flex items-center justify-center">
+        <div className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-800">
           <ZoomModal
             src={getImageUrl(product.image)}
             alt={product.name}
@@ -80,7 +89,7 @@ export default function ProductPageClient({ slug }: Props) {
               <button
                 type="button"
                 onClick={open}
-                className="relative w-full max-w-md h-[400px] border rounded-lg shadow-sm overflow-hidden"
+                className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800"
               >
                 <Image
                   src={getImageUrl(product.image)}
@@ -101,14 +110,17 @@ export default function ProductPageClient({ slug }: Props) {
       <div className="md:col-span-4 space-y-4">
         <h1 className="text-3xl font-bold hidden md:block">{product.name}</h1>
         <p className="text-[#E01D42] text-2xl font-semibold">£{numericPrice}</p>
+
         {product.description && (
-          <p className="text-gray-700">{product.description}</p>
+          <p className="text-gray-700 dark:text-gray-300">
+            {product.description}
+          </p>
         )}
 
         {/* Colours */}
         {colours.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">
+            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
               Available Colours
             </h3>
             <div className="flex gap-2 flex-wrap">
@@ -119,7 +131,7 @@ export default function ProductPageClient({ slug }: Props) {
                   className={`px-3 py-1 rounded-md border text-sm transition ${
                     selectedColour === colour
                       ? "bg-[#14485A] text-white border-[#14485A]"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   {colour}
@@ -131,7 +143,9 @@ export default function ProductPageClient({ slug }: Props) {
 
         <p
           className={`text-sm font-medium ${
-            (product.stock ?? 0) > 0 ? "text-green-600" : "text-red-500"
+            (product.stock ?? 0) > 0
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-500 dark:text-red-400"
           }`}
         >
           {(product.stock ?? 0) > 0
@@ -156,7 +170,7 @@ export default function ProductPageClient({ slug }: Props) {
 
       {/* Right: Buy box */}
       <div className="hidden md:block md:col-span-3">
-        <div className="border rounded-lg shadow-md p-4 space-y-4">
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-md p-4 space-y-4 bg-white dark:bg-gray-800 transition-colors duration-300">
           <p className="text-2xl font-bold text-[#E01D42]">£{numericPrice}</p>
           <QuantitySelect
             id="quantity"
@@ -171,18 +185,17 @@ export default function ProductPageClient({ slug }: Props) {
         </div>
       </div>
 
-      {/* Full-width Overview & Specs */}
+      {/* Overview & Specs */}
       {(product.overview || featureList.length > 0) && (
         <section className="md:col-span-12 space-y-4">
           {product.overview && (
-            <details className="group border rounded-lg shadow-sm bg-white">
+            <details className="group border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 transition-colors duration-300">
               <summary className="flex items-center justify-between cursor-pointer list-none p-4">
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Overview
                 </span>
-                {/* optional icon rotation */}
                 <svg
-                  className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180"
+                  className="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform group-open:rotate-180"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -194,7 +207,7 @@ export default function ProductPageClient({ slug }: Props) {
                 </svg>
               </summary>
               <div className="px-4 pb-4 pt-0">
-                <p className="text-gray-700 whitespace-pre-line">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
                   {product.overview}
                 </p>
               </div>
@@ -202,13 +215,13 @@ export default function ProductPageClient({ slug }: Props) {
           )}
 
           {featureList.length > 0 && (
-            <details className="group border rounded-lg shadow-sm bg-white">
+            <details className="group border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm bg-white dark:bg-gray-800 transition-colors duration-300">
               <summary className="flex items-center justify-between cursor-pointer list-none p-4">
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Specifications
                 </span>
                 <svg
-                  className="h-5 w-5 text-gray-500 transition-transform group-open:rotate-180"
+                  className="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform group-open:rotate-180"
                   viewBox="0 0 20 20"
                   fill="currentColor"
                 >
@@ -220,24 +233,18 @@ export default function ProductPageClient({ slug }: Props) {
                 </svg>
               </summary>
 
-              {/* list style #1: definition list (spec sheet) */}
-              <dl className="px-4 pb-4 divide-y divide-gray-100">
+              <dl className="px-4 pb-4 divide-y divide-gray-100 dark:divide-gray-700">
                 {featureList.map((f, i) => (
                   <div key={i} className="py-3 grid grid-cols-3 gap-4">
-                    <dt className="text-sm text-gray-500">{f.label}</dt>
-                    <dd className="col-span-2 text-sm text-gray-900">
+                    <dt className="text-sm text-gray-500 dark:text-gray-400">
+                      {f.label}
+                    </dt>
+                    <dd className="col-span-2 text-sm text-gray-900 dark:text-gray-200">
                       {f.value}
                     </dd>
                   </div>
                 ))}
               </dl>
-
-              {/* or list style #2: bullets
-        <ul className="px-4 pb-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {featureList.map((f, i) => (
-            <li key={i} className="text-sm text-gray-800">{f.label}{f.value ? ` — ${f.value}` : ""}</li>
-          ))}
-        </ul> */}
             </details>
           )}
         </section>
@@ -246,7 +253,7 @@ export default function ProductPageClient({ slug }: Props) {
   );
 }
 
-/* ----------------- small subcomponents (no hooks) ----------------- */
+/* ----------------- small subcomponents ----------------- */
 
 function QuantitySelect({
   id,
@@ -263,7 +270,7 @@ function QuantitySelect({
     <div>
       <label
         htmlFor={id}
-        className="block text-sm font-medium text-gray-700 mb-1"
+        className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
       >
         Quantity
       </label>
@@ -271,7 +278,7 @@ function QuantitySelect({
         id={id}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full border rounded-md p-2"
+        className="w-full border border-gray-300 dark:border-gray-600 rounded-md p-2 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 transition-colors"
       >
         {Array.from({ length: Math.max(maxQty, 0) }, (_, i) => i + 1).map(
           (num) => (
@@ -299,7 +306,7 @@ function AddToCartButton({
       className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
         !disabled
           ? "bg-[#14485A] text-white hover:bg-[#0e2f3d]"
-          : "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed"
       }`}
     >
       Add to Basket

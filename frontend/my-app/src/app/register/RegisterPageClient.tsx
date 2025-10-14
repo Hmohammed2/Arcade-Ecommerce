@@ -59,16 +59,17 @@ export default function RegisterPageClient() {
   };
 
   return (
-    <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+    <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-md dark:shadow-lg rounded-lg p-8 transition-colors duration-300 text-gray-800 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
         Create an Account
       </h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Username */}
         <div>
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             User Name
           </label>
@@ -79,14 +80,15 @@ export default function RegisterPageClient() {
             value={formData.username}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
+
         {/* First Name */}
         <div>
           <label
             htmlFor="first_name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             First Name
           </label>
@@ -97,7 +99,7 @@ export default function RegisterPageClient() {
             value={formData.first_name}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -105,7 +107,7 @@ export default function RegisterPageClient() {
         <div>
           <label
             htmlFor="last_name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Last Name
           </label>
@@ -116,7 +118,7 @@ export default function RegisterPageClient() {
             value={formData.last_name}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -124,7 +126,7 @@ export default function RegisterPageClient() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Email Address
           </label>
@@ -135,7 +137,7 @@ export default function RegisterPageClient() {
             value={formData.email}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -143,7 +145,7 @@ export default function RegisterPageClient() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Password
           </label>
@@ -154,7 +156,7 @@ export default function RegisterPageClient() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -162,7 +164,7 @@ export default function RegisterPageClient() {
         <div>
           <label
             htmlFor="confirmPassword"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Confirm Password
           </label>
@@ -173,24 +175,25 @@ export default function RegisterPageClient() {
             value={formData.confirmPassword}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
+        {/* Submit */}
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-md font-semibold shadow-sm transition-colors disabled:opacity-50"
+          className="w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white rounded-md font-semibold shadow-sm transition-colors disabled:opacity-50"
         >
           {isLoading ? "Creating account..." : "Register"}
         </button>
       </form>
 
-      <p className="text-sm text-gray-600 mt-6 text-center">
+      <p className="text-sm text-gray-600 dark:text-gray-400 mt-6 text-center">
         Already have an account?{" "}
         <Link
           href="/login"
-          className="text-pink-600 hover:text-pink-800 font-medium"
+          className="text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-300 font-medium"
         >
           Log in
         </Link>

@@ -9,7 +9,7 @@ import { useAuth } from "@/store/useAuth"; // ✅ import your store
 
 export default function LoginPageClient() {
   const router = useRouter();
-  const login = useAuth((s) => s.login); // ✅ get login from Zustand
+  const login = useAuth((s) => s.login);
 
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +24,7 @@ export default function LoginPageClient() {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password); // ✅ use Zustand
+      await login(formData.username, formData.password);
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
@@ -39,8 +39,8 @@ export default function LoginPageClient() {
   };
 
   return (
-    <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 text-center">
+    <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-md dark:shadow-lg rounded-lg p-8 transition-colors duration-300 text-gray-800 dark:text-gray-100">
+      <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6 text-center">
         Sign In
       </h1>
 
@@ -49,7 +49,7 @@ export default function LoginPageClient() {
         <div>
           <label
             htmlFor="username"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Username
           </label>
@@ -59,7 +59,7 @@ export default function LoginPageClient() {
             value={formData.username}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -67,7 +67,7 @@ export default function LoginPageClient() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Password
           </label>
@@ -78,7 +78,7 @@ export default function LoginPageClient() {
             value={formData.password}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3"
+            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
 
@@ -86,7 +86,7 @@ export default function LoginPageClient() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 text-white rounded-md font-semibold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
+          className="w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white rounded-md font-semibold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
         >
           {isLoading ? (
             <>
@@ -105,7 +105,7 @@ export default function LoginPageClient() {
         <button
           onClick={() => handleOAuthLogin("google")}
           disabled={!!isOAuthLoading}
-          className="w-full py-2 px-4 border border-gray-300 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 bg-white dark:bg-gray-900"
         >
           {isOAuthLoading === "google" ? (
             <Loader2 className="animate-spin w-5 h-5" />
@@ -118,7 +118,7 @@ export default function LoginPageClient() {
         <button
           onClick={() => handleOAuthLogin("github")}
           disabled={!!isOAuthLoading}
-          className="w-full py-2 px-4 border border-gray-300 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 bg-white dark:bg-gray-900"
         >
           {isOAuthLoading === "github" ? (
             <Loader2 className="animate-spin w-5 h-5" />
@@ -129,12 +129,12 @@ export default function LoginPageClient() {
         </button>
       </div>
 
-      <div className="mt-6 text-center text-sm text-gray-600">
+      <div className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
         <p>
           Don’t have an account?{" "}
           <Link
             href="/register"
-            className="text-pink-600 hover:text-pink-800 font-medium"
+            className="text-pink-600 dark:text-pink-400 hover:text-pink-800 dark:hover:text-pink-300 font-medium"
           >
             Register
           </Link>
@@ -142,7 +142,7 @@ export default function LoginPageClient() {
         <p className="mt-3">
           <Link
             href="/forgot-password"
-            className="text-gray-500 hover:text-pink-600"
+            className="text-gray-500 dark:text-gray-400 hover:text-pink-600 dark:hover:text-pink-400"
           >
             Forgot your password?
           </Link>

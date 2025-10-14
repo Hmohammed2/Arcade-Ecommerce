@@ -1,4 +1,3 @@
-// app/dashboard/billing/page.tsx
 import { Suspense } from "react";
 import BillingClient from "./BillingClient";
 
@@ -11,16 +10,24 @@ export default async function BillingPage() {
   // const userData = await getUserBillingInfo();
 
   return (
-    <section className="max-w-4xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">
-        Billing & Shipping Information
-      </h1>
+    <section className="dark:bg-gray-900 bg-white min-h-screen py-10 px-4 transition-colors duration-300">
+      <div className="max-w-3xl mx-auto text-center">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          Billing & Shipping Information
+        </h1>
 
-      <p className="text-gray-600 mb-10">
-        Manage your saved billing and shipping addresses for faster checkout.
-      </p>
+        <p className="text-gray-600 dark:text-gray-300 mb-10">
+          Manage your saved billing and shipping addresses for faster checkout.
+        </p>
+      </div>
 
-      <Suspense fallback={<p>Loading billing information...</p>}>
+      <Suspense
+        fallback={
+          <p className="text-center text-gray-700 dark:text-gray-300">
+            Loading billing information...
+          </p>
+        }
+      >
         {/* Client component boundary */}
         <BillingClient />
       </Suspense>

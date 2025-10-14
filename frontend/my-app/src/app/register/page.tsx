@@ -31,7 +31,7 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <main className="min-h-screen flex items-center justify-center px-4 py-12 dark:bg-gray-900 ">
       <RegisterPageClient />
     </main>
   );

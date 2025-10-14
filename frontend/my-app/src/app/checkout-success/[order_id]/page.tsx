@@ -29,5 +29,10 @@ export default async function CheckoutSuccessPage({
 
   // This runs on the server — no browser access
   // Pass order_id down to the client component
-  return <CheckoutSuccessClient orderId={order_id} />;
+  return (
+    <div className="dark:bg-gray-900">
+      {" "}
+      <CheckoutSuccessClient orderId={order_id} />{" "}
+    </div>
+  );
 }
