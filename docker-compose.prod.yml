@@ -12,12 +12,17 @@ services:
       - postgres_data_uat:/var/lib/postgresql/data
     networks:
       - app_net
-  django-app-uat:
+  django-backend-uat:
     container_name: django-backend-uat
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
-    command: gunicorn Ecommerce_app.wsgi:application --bind 0.0.0.0:8000 --workers=4
+    command: >
+      sh -c "
+        python manage.py makemigrations &&
+        python manage.py migrate &&
+        gunicorn Ecommerce_app.wsgi:application --bind 0.0.0.0:8000 --workers=4
+      "
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -47,7 +52,7 @@ services:
     networks:
       - app_net
   frontend-uat:
-    container_name: Nextjs_frontend_uat
+    container_name: frontend-uat
     build:
       context: ./frontend/my-app
       dockerfile: Dockerfile.prod
