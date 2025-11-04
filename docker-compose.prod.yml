@@ -74,7 +74,7 @@ services:
     volumes:
       - stripe-cli-config:/root/.config/stripe
     depends_on:
-      - django-app-uat
+      - django-backend-uat
     networks:
       - app_net
 volumes:
