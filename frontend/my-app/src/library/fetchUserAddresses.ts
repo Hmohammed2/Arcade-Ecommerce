@@ -1,7 +1,7 @@
 // lib/fetchUserAddresses.ts
 export async function fetchUserAddresses(accessToken: string) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/addresses/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
     {
       headers: {
         "Content-Type": "application/json",

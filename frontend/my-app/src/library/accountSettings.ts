@@ -1,7 +1,7 @@
 // lib/api/account.ts
 export const getAccountInfo = async (accessToken: string) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/user/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -26,7 +26,7 @@ export const updateAccountInfo = async ({
   };
 }) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/user/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       method: "PUT",
       headers: {
@@ -51,7 +51,7 @@ export const changePassword = async ({
   new_password: string;
 }) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/password-change/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/password-change/`,
     {
       method: "POST",
       headers: {
@@ -71,7 +71,7 @@ export const changePassword = async ({
 
 export const deleteAccount = async (accessToken: string) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/user/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       method: "DELETE",
       headers: {

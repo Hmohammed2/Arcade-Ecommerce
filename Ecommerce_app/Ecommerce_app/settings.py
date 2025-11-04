@@ -52,6 +52,26 @@ CORS_ALLOWED_ORIGINS = [
     "https://arcadesticklabs-test.ddns.net",  # UAT frontend
 ]
 
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "APP": {
+            "client_id": os.environ.get("GOOGLE_CLIENT_ID"),
+            "secret": os.environ.get("GOOGLE_CLIENT_SECRET"),
+            "key": "",
+        },
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    },
+    "github": {
+        "APP": {
+            "client_id": os.environ.get("GITHUB_CLIENT_ID"),
+            "secret": os.environ.get("GITHUB_CLIENT_SECRET"),
+        },
+        "SCOPE": ["user", "user:email"],
+    },
+}
+
+
 # Allow cookies/authorization headers in cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
 
@@ -80,21 +100,36 @@ LOGGING = {
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    "rest_framework_simplejwt.token_blacklist",
-    "rest_framework_simplejwt",
-    'import_export',
+    # Django core
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.sites",
+
+    # 3rd-party: REST & Auth
     "rest_framework",
+    "rest_framework.authtoken",
+    "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.github",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
     "corsheaders",
-    'marketing',
+    "import_export",
+
+    # Local apps
+    "marketing",
     "retail",
     "users",
 ]
+
 
 from datetime import timedelta
 
@@ -107,6 +142,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "allauth.account.middleware.AccountMiddleware", 
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -115,6 +151,11 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+REST_AUTH_SERIALIZERS = {
+    "JWT_SERIALIZER": "users.serializers.CustomJWTSerializer",
+}
+
 
 if DEBUG:
     INSTALLED_APPS += ["debug_toolbar"]
@@ -169,6 +210,28 @@ DATABASES = {
 }
 
 
+# Authentication backends
+# https://docs.djangoproject.com/en/5.1/topics/auth/customizing/#authentication-backends
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",  # standard login
+    "allauth.account.auth_backends.AuthenticationBackend",  # for social
+)
+
+# Redirects after login/logout
+LOGIN_REDIRECT_URL = "http://localhost:3000/dashboard"
+LOGOUT_REDIRECT_URL = "http://localhost:3000/login"
+
+# Allow these frontend domains to receive redirects after OAuth login
+ACCOUNT_ALLOWED_REDIRECT_DOMAINS = [
+    "localhost:3000",
+    "127.0.0.1:3000",
+    "arcadesticklabs.co.uk",
+]
+
+# Required by django-allauth
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "http"
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -216,3 +279,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET")
 STRIPE_PUBLISHABLE_KEY = os.getenv("STRIPE_PUBLISHABLE_KEY")
+
+# Slack webhook URL
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL")
+
+# Paypal settings
+PAYPAL_CLIENT_ID = os.getenv("PAYPAL_CLIENT_ID")
+PAYPAL_SECRET = os.getenv("PAYPAL_SECRET")
+PAYPAL_API_BASE = os.getenv("PAYPAL_API_BASE")
+
+# Required by django-allauth
+SITE_ID = 1
+
+# dj-rest-auth + allauth integration
+REST_USE_JWT = True
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_SIGNUP_FIELDS = {
+    "username": {"required": True},
+    "email": {"required": True},
+}

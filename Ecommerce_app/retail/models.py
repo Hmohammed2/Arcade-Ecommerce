@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
+from decimal import Decimal
 # Create your models here.
 
 class Category(models.Model):
@@ -45,6 +46,12 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    delivery_method = models.CharField(
+        max_length=20,
+        choices=[("standard", "Standard"), ("express", "Express")],
+        default="standard",
+    )
+    delivery_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal("0.00"))
 
     def __str__(self):
         return f"Order #{self.id} by {self.first_name} {self.last_name} - {self.status}"

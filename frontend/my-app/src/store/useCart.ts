@@ -3,8 +3,13 @@ import { persist } from "zustand/middleware";
 import { toast } from "react-hot-toast";
 import { cartItem } from "@/types/cart";
 
+type DeliveryType = "standard" | "express";
+
 interface CartState {
   items: cartItem[];
+  delivery: DeliveryType;
+  setDelivery: (type: DeliveryType) => void;
+  getDelivery: () => DeliveryType;
 
   addItem: (item: cartItem) => void;
   removeItem: (id: number, colour?: string | null) => void;
@@ -22,6 +27,10 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+
+      delivery: "standard",
+      setDelivery: (type) => set({ delivery: type }),
+      getDelivery: () => get().delivery,
 
       // ✅ Add or increment item (unique by id + colour)
       addItem: (item) => {
@@ -52,14 +61,17 @@ export const useCart = create<CartState>()(
       },
 
       // ✅ Remove specific item (id + colour)
+      // ✅ Normalize colour for comparison
       removeItem: (id, colour = null) => {
+        const normalizedColour = colour || ""; // treat null as empty string
         const item = get().items.find(
-          (i) => i.id === id && i.colour === colour
+          (i) => i.id === id && (i.colour || "") === normalizedColour
         );
+
         if (item) {
           set({
             items: get().items.filter(
-              (i) => !(i.id === id && i.colour === colour)
+              (i) => !(i.id === id && (i.colour || "") === normalizedColour)
             ),
           });
           toast.success(
@@ -70,18 +82,23 @@ export const useCart = create<CartState>()(
 
       // ✅ Update quantity or remove if 0
       updateQuantity: (id, colour = null, quantity) => {
+        const normalizedColour = colour || "";
+
         if (quantity <= 0) {
-          get().removeItem(id, colour);
+          get().removeItem(id, normalizedColour);
           return;
         }
 
-        const items = get().items.map((i) =>
-          i.id === id && i.colour === colour ? { ...i, quantity } : i
+        const updatedItems = get().items.map((i) =>
+          i.id === id && (i.colour || "") === normalizedColour
+            ? { ...i, quantity }
+            : i
         );
 
-        set({ items });
-        const item = get().items.find(
-          (i) => i.id === id && i.colour === colour
+        set({ items: updatedItems });
+
+        const item = updatedItems.find(
+          (i) => i.id === id && (i.colour || "") === normalizedColour
         );
         if (item)
           toast.success(
@@ -108,8 +125,9 @@ export const useCart = create<CartState>()(
         ),
 
       getItemCount: (id, colour = null) => {
+        const normalizedColour = colour || "";
         const item = get().items.find(
-          (i) => i.id === id && i.colour === colour
+          (i) => i.id === id && (i.colour || "") === normalizedColour
         );
         return item ? item.quantity : 0;
       },
@@ -117,9 +135,14 @@ export const useCart = create<CartState>()(
       getCartItems: () => get().items,
 
       // ✅ Check if item (with colour) exists
-      isInCart: (id, colour = null) =>
-        !!get().items.find((i) => i.id === id && i.colour === colour),
+      isInCart: (id, colour = null) => {
+        const normalizedColour = colour || "";
+        return !!get().items.find(
+          (i) => i.id === id && (i.colour || "") === normalizedColour
+        );
+      },
     }),
+
     {
       name: "cart-storage", // ✅ persists in localStorage
       partialize: (state) => ({ items: state.items }), // only persist cart items

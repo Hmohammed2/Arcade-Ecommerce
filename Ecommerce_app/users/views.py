@@ -1,65 +1,96 @@
-from rest_framework import generics
-from rest_framework.permissions import AllowAny
+import os
+import json
+import requests
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from rest_framework import status
+from rest_framework import generics
+from django.contrib.auth.models import User
 from .serializers import UserSerializer, RegisterSerializer, UserAddressSerializer
 from .models import UserAddress
-from django.contrib.auth.models import User
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
+from dj_rest_auth.registration.views import SocialLoginView
 
-# Create your views here.
+class TurnstileVerifyView(APIView):
+    permission_classes = [AllowAny]  # anyone can verify before login
+
+    def post(self, request):
+        token = request.data.get("token")
+        if not token:
+            return Response({"error": "Missing Turnstile token"}, status=status.HTTP_400_BAD_REQUEST)
+
+        secret_key = os.environ.get("TURNSTILE_SECRET_KEY", "1x0000000000000000000000000000000AA")
+
+        resp = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": secret_key,
+                "response": token,
+                "remoteip": request.META.get("REMOTE_ADDR"),
+            },
+        )
+
+        verification = resp.json()
+        if verification.get("success"):
+            return Response({"success": True})
+        else:
+            return Response(
+                {"success": False, "errors": verification.get("error-codes", [])},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
 class UserAddressView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
 
     def get(self, request):
-        # Retrieve or create an address record
-        address, created = UserAddress.objects.get_or_create(user=request.user)
+        address, _ = UserAddress.objects.get_or_create(user=request.user)
         serializer = UserAddressSerializer(address)
         return Response(serializer.data)
 
     def put(self, request):
-        address, created = UserAddress.objects.get_or_create(user=request.user)
+        address, _ = UserAddress.objects.get_or_create(user=request.user)
         serializer = UserAddressSerializer(address, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
 
+
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
-    
-    def _get_user_with_address(self, request):
-        # fetch the current user + join the one-to-one address in ONE query
-        return User.objects.select_related("useraddress").get(pk=request.user.pk)
 
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
-    
+
     def put(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
-    
+
     def delete(self, request):
-        user = request.user
-        user.delete()
-        return Response(status=204)
-    
+        request.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class PasswordChangeView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
@@ -80,7 +111,8 @@ class PasswordChangeView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({"detail": "Password updated successfully"}, status=200)
-    
+
+
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [JWTAuthentication]
@@ -94,3 +126,60 @@ class LogoutView(APIView):
         except Exception:
             return Response({"detail": "Invalid token"}, status=400)
 
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+    
+    def get_response(self):
+        user = self.user
+        if not user or not user.is_authenticated:
+            return Response({"error": "Authentication failed"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Generate JWT tokens manually
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+
+        # ✅ Optionally get social data (Google profile)
+        social = user.socialaccount_set.first()
+        picture = social.extra_data.get("picture") if social else None
+
+        data = {
+            "access": str(access),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "avatar": picture,
+            },
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
+
+class GitHubLogin(SocialLoginView):
+    adapter_class = GitHubOAuth2Adapter
+
+    def get_response(self):
+        user = self.user
+        if not user or not user.is_authenticated:
+            return Response({"error": "Authentication failed"}, status=status.HTTP_400_BAD_REQUEST)
+
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+
+        social = user.socialaccount_set.first()
+        avatar = social.extra_data.get("avatar_url") if social else None
+
+        data = {
+            "access": str(access),
+            "refresh": str(refresh),
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username,
+                "avatar": avatar,
+            },
+        }
+
+        return Response(data, status=status.HTTP_200_OK)

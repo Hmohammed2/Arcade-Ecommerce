@@ -18,12 +18,20 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from users.views import GoogleLogin, GitHubLogin
 
 urlpatterns = [
-    path('api/', include('retail.urls')),
-    path('admin/', admin.site.urls),
+    path("api/", include("retail.urls")),
+    path("admin/", admin.site.urls),
     path("marketing/", include("marketing.urls")),
-    path("auth/", include("users.urls")),
+    path("users/", include("users.urls")),
+
+    # Authentication (dj-rest-auth + allauth)
+    path("auth/", include("dj_rest_auth.urls")),
+    path("auth/google/", GoogleLogin.as_view(), name="google_login"),
+    path("auth/github/", GitHubLogin.as_view(), name="github_login"),
+    path("auth/registration/", include("dj_rest_auth.registration.urls")),
+    path("auth/", include("allauth.urls")),  # must come last
 ]
 
 #👇 add this only in dev

@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,  # login
     TokenRefreshView,     # refresh
 )
-from .views import RegisterView, UserProfileView, LogoutView, UserAddressView, PasswordChangeView
+from .views import RegisterView, UserProfileView, LogoutView, UserAddressView, PasswordChangeView, TurnstileVerifyView, GoogleLogin
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
@@ -14,4 +14,5 @@ urlpatterns = [
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("addresses/", UserAddressView.as_view(), name="user_addresses"),
     path("password-change/", PasswordChangeView.as_view(), name="password_change"),
+    path("verify-turnstile/", TurnstileVerifyView.as_view(), name="verify_turnstile"),
 ]

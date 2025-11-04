@@ -190,6 +190,7 @@ def checkout(request):
         first_name = data.get("first_name")
         last_name = data.get("last_name")
         phone = data.get("phone", "")
+        delivery_method = data.get("delivery_method", "standard")
 
         if not items:
             logger.warning("[Checkout] No items provided")
@@ -207,6 +208,7 @@ def checkout(request):
             first_name=first_name,
             last_name=last_name,
             phone=phone,
+            delivery_method=delivery_method,
         )
 
         logger.info(
@@ -216,4 +218,31 @@ def checkout(request):
 
     except Exception as e:
         logger.exception("[Checkout] Failed to create order + payment")
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def paypal_checkout(request):
+    try:
+        user = request.user if request.user.is_authenticated else None
+        data = request.data
+        items = data.get("items", [])
+        email = data.get("email")
+        first_name = data.get("first_name")
+        last_name = data.get("last_name")
+        phone = data.get("phone", "")
+        delivery_method = data.get("delivery_method", "standard")
+
+        result = PaymentService.create_paypal_order(
+            user=user,
+            items=items,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            delivery_method=delivery_method,
+        )
+
+        return Response(result, status=status.HTTP_201_CREATED)
+    except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

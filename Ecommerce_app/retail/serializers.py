@@ -56,6 +56,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "user",
             "status",
             "total_price",
+            "delivery_method",
+            "delivery_fee",
             "created_at",
             "updated_at",
             "items",

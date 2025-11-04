@@ -18,7 +18,7 @@ class OrderItemResource(resources.ModelResource):
 class OrderResource(resources.ModelResource):
     class Meta:
         model = Order
-        fields = ('id', 'status', 'created_at', 'total_price',)
+        fields = ('id', 'status', 'created_at', 'total_price', "delivery_method", "delivery_fee",)
 
 class ProductResource(resources.ModelResource):
     class Meta:

@@ -11,6 +11,8 @@ export interface OrderItem {
 export interface Order {
   id: number;
   status: string;
+  delivery_method?: "standard" | "express";
+  delivery_fee?: string;
   created_at: string;
   items: OrderItem[];
   total_price: number;

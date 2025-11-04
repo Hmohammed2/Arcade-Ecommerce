@@ -7,34 +7,21 @@ import OrderSummary from "./OrderSummary";
 
 export default function CheckoutForm() {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 dark:bg-gray-900 dark:text-gray-100">
-      {/* Left column (desktop): stack Billing + Shipping */}
-      <section
-        aria-labelledby="checkout-details"
-        className="lg:col-span-8 space-y-8"
-      >
-        <h2 id="checkout-details" className="sr-only">
-          Checkout details
-        </h2>
+    <div className="flex flex-col lg:flex-row lg:items-start gap-8 dark:bg-gray-900 dark:text-gray-100">
+      {/* Left side */}
+      <div className="flex-1 space-y-8 min-w-0">
         <BillingForm />
         <ShippingForm />
-      </section>
-
-      {/* Right column (desktop): Order Summary
-          Mobile: appears after Shipping, before Payment */}
-      <aside
-        aria-labelledby="order-summary"
-        className="lg:col-span-4 lg:sticky lg:top-6"
-      >
-        <h2 id="order-summary" className="sr-only">
-          Order summary
-        </h2>
-        <OrderSummary />
-      </aside>
-
-      {/* Bottom (both mobile & desktop): Payment */}
-      <div className="lg:col-span-12">
+        <div className="lg:hidden">
+          {/* Show order summary below shipping on mobile */}
+          <OrderSummary />
+        </div>
         <PaymentForm />
+      </div>
+
+      {/* Right side (desktop sticky order summary) */}
+      <div className="hidden lg:block w-full max-w-md sticky top-6 self-start">
+        <OrderSummary />
       </div>
     </div>
   );

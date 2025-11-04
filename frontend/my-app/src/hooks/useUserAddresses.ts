@@ -30,7 +30,7 @@ export function useUserAddresses() {
     queryKey: ["user-addresses"],
     queryFn: async () => {
       const res = await authorizedFetch(
-        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/addresses/`
+        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`
       );
       if (!res.ok) throw new Error("Failed to fetch addresses");
       return res.json();

@@ -5,14 +5,36 @@ import { useCart } from "@/store/useCart";
 import { useState } from "react";
 
 export default function OrderSummary() {
-  const { getCartItems, getTotalItems, getTotalPrice } = useCart();
+  const {
+    getCartItems,
+    getTotalItems,
+    getTotalPrice,
+    getDelivery,
+    setDelivery,
+  } = useCart();
+  const delivery = getDelivery();
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
 
   const cartItems = getCartItems();
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
-  const finalPrice = totalPrice - discount;
+
+  // --- Delivery fee calculation ---
+  const isFreeStandard = totalPrice >= 15;
+  const smallOrderFee = totalPrice < 15 ? 2.99 : 0;
+  const expressFee = 1.99;
+
+  let deliveryFee = 0;
+  if (delivery === "standard") {
+    deliveryFee = smallOrderFee;
+  } else if (delivery === "express") {
+    // Express adds 1.99 on top, plus small order fee if under £15
+    deliveryFee = expressFee + smallOrderFee;
+  }
+
+  // --- Final total ---
+  const finalPrice = totalPrice - discount + deliveryFee;
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md p-6 space-y-4 text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -20,6 +42,7 @@ export default function OrderSummary() {
         Order Summary
       </h2>
 
+      {/* Cart items */}
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
         {cartItems.map((item) => (
           <li
@@ -68,6 +91,72 @@ export default function OrderSummary() {
         </div>
       </div>
 
+      {/* Delivery Options */}
+      <div className="mt-4">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Delivery Method
+        </label>
+
+        <div className="flex flex-col gap-2">
+          {/* Standard Delivery */}
+          <label
+            className={`flex justify-between items-start border rounded-md p-3 cursor-pointer transition-colors ${
+              delivery === "standard"
+                ? "border-pink-500 bg-pink-50 dark:bg-pink-900/20"
+                : "border-gray-300 dark:border-gray-700"
+            }`}
+          >
+            <div>
+              <span className="font-medium">Standard Delivery</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Royal Mail (2–4 working days)
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                {isFreeStandard
+                  ? "Free on orders over £15"
+                  : "£2.99 small order fee under £15"}
+              </p>
+            </div>
+            <input
+              type="radio"
+              name="delivery"
+              value="standard"
+              checked={delivery === "standard"}
+              onChange={() => setDelivery("standard")}
+              className="mt-1 accent-pink-600"
+            />
+          </label>
+
+          {/* Express Delivery */}
+          <label
+            className={`flex justify-between items-start border rounded-md p-3 cursor-pointer transition-colors ${
+              delivery === "express"
+                ? "border-pink-500 bg-pink-50 dark:bg-pink-900/20"
+                : "border-gray-300 dark:border-gray-700"
+            }`}
+          >
+            <div>
+              <span className="font-medium">Express Delivery</span>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Royal Mail Tracked 24 (1–2 working days)
+              </p>
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                + £1.99 express fee
+                {totalPrice < 15 && " + £2.99 small order fee"}
+              </p>
+            </div>
+            <input
+              type="radio"
+              name="delivery"
+              value="express"
+              checked={delivery === "express"}
+              onChange={() => setDelivery("express")}
+              className="mt-1 accent-pink-600"
+            />
+          </label>
+        </div>
+      </div>
+
       {/* Totals */}
       <div className="flex justify-between font-semibold text-gray-900 dark:text-gray-100 pt-4 border-t border-gray-200 dark:border-gray-700">
         <span>Subtotal ({totalItems} items)</span>
@@ -80,6 +169,11 @@ export default function OrderSummary() {
           <span>-£{discount.toFixed(2)}</span>
         </div>
       )}
+
+      <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+        <span>Delivery</span>
+        <span>{deliveryFee > 0 ? `£${deliveryFee.toFixed(2)}` : "Free"}</span>
+      </div>
 
       <div className="flex justify-between font-bold text-lg text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-gray-700 pt-2">
         <span>Total</span>

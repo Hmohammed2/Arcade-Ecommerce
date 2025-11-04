@@ -18,7 +18,11 @@ interface AuthState {
   refreshToken: string | null;
   isAuthenticated: boolean;
 
-  login: (identifier: string, password: string) => Promise<void>;
+  login: (
+    identifier: string,
+    password: string,
+    turnstileToken: string
+  ) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
@@ -34,16 +38,20 @@ export const useAuth = create<AuthState>()(
         refreshToken: null,
         isAuthenticated: false,
 
-        // ✅ Login flow
-        login: async (identifier, password) => {
+        login: async (identifier, password, turnstileToken) => {
           try {
+            if (!turnstileToken) throw new Error("Please complete the CAPTCHA");
+
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/login/`,
+              `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/login/`,
               {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                // Django SimpleJWT expects "username"
-                body: JSON.stringify({ username: identifier, password }),
+                body: JSON.stringify({
+                  username: identifier,
+                  password,
+                  token: turnstileToken,
+                }),
               }
             );
 
@@ -54,11 +62,12 @@ export const useAuth = create<AuthState>()(
             set({
               accessToken: data.access,
               refreshToken: data.refresh,
+              user: data.user,
+              isAuthenticated: true,
             });
 
             toast.success("Logged in successfully 🎉");
 
-            // Fetch user data next
             await get().fetchUser();
           } catch (err: any) {
             console.error("Login error:", err);
@@ -86,7 +95,7 @@ export const useAuth = create<AuthState>()(
 
           try {
             const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/user/`,
+              `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
               {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import LoginPageClient from "./LoginPageClient";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 const baseUrl =
   process.env.NEXT_PUBLIC_API_URL_CLIENT || "http://localhost:3000";
@@ -33,7 +34,9 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-4 py-12">
-      <LoginPageClient />
+      <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}>
+        <LoginPageClient />
+      </GoogleOAuthProvider>
     </main>
   );
 }

@@ -2,7 +2,9 @@ from decimal import Decimal
 from django.db import transaction
 from retail.models import Order, OrderItem, Payment, Product
 from retail.facades.stripe_facade import StripePaymentFacade
+from retail.facades.paypal_facade import PayPalFacade
 from django.core.exceptions import ObjectDoesNotExist
+from retail.utils.slack_notifications import send_slack_message
 
 class PaymentService:
     """
@@ -19,6 +21,7 @@ class PaymentService:
         last_name: str,
         phone: str = "",
         currency: str = "GBP",
+        delivery_method: str = "standard",
     ):
         """
         Creates an Order, its OrderItems, a Stripe PaymentIntent, and a Payment record.
@@ -75,10 +78,26 @@ class PaymentService:
             product.save(update_fields=["stock"])
 
             total_price += line_price
+            
+        # Calculate delivery fee
+        delivery_fee = Decimal("0.00")
+        if delivery_method == "standard":
+            if total_price < Decimal("15.00"):
+                delivery_fee = Decimal("2.99")
+        elif delivery_method == "express":
+            delivery_fee = Decimal("1.99")
+            if total_price < Decimal("15.00"):
+                # Express stacks with small order fee
+                delivery_fee += Decimal("2.99")
+
+        total_with_delivery = total_price + delivery_fee
 
         # 3️⃣ Update order total
-        order.total_price = total_price
-        order.save(update_fields=["total_price"])
+        order.total_price = total_with_delivery
+        order.delivery_method = delivery_method
+        order.delivery_fee = delivery_fee
+        
+        order.save(update_fields=["total_price", "delivery_method", "delivery_fee"])
 
         # 4️⃣ Create PaymentIntent via Stripe
         amount_in_pence = int(total_price * 100)
@@ -91,9 +110,15 @@ class PaymentService:
         payment = Payment.objects.create(
             order=order,
             stripe_payment_intent=intent_data.get("id"),
-            amount=total_price,
+            amount=total_with_delivery,
             currency=currency.upper(),
             status="pending",
+        )
+        
+        # ✅ Notify Slack
+        send_slack_message(
+            f"💸 Order created #{order.id} "
+            f"({order.first_name} {order.last_name}, £{payment.amount})."
         )
 
         # 6️⃣ Return structured response for frontend
@@ -103,6 +128,41 @@ class PaymentService:
             "clientSecret": intent_data.get("client_secret"),
             "amount": amount_in_pence,
             "currency": currency.upper(),
+        }
+    
+    @staticmethod
+    @transaction.atomic
+    def create_paypal_order(user, items, email, first_name, last_name, phone="", currency="GBP", delivery_method="standard"):
+        """
+        Creates a PayPal order and a local Payment record.
+        """
+        # 👇 reuse your order-creation logic
+        order_data = PaymentService.create_order_and_payment(
+            user=user,
+            items=items,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            currency=currency,
+            delivery_method=delivery_method,
+        )
+
+        order = Order.objects.get(id=order_data["order_id"])
+        paypal_order = PayPalFacade.create_order(order.total_price, currency)
+        paypal_order_id = paypal_order["id"]
+
+        # update payment record to reflect PayPal
+        payment = order.payment
+        payment.payment_method = "paypal"
+        payment.stripe_payment_intent = paypal_order_id  # reuse field
+        payment.status = "pending"
+        payment.save()
+
+        return {
+            "order_id": order.id,
+            "paypal_order_id": paypal_order_id,
+            "approval_url": paypal_order["links"][1]["href"],  # where customer approves
         }
 
     @staticmethod
@@ -117,7 +177,13 @@ class PaymentService:
             order = payment.order
             order.status = "processing"
             order.save()
-
+        
+            # ✅ Notify Slack
+            send_slack_message(
+                f"💸 Payment succeeded for Order #{order.id} "
+                f"({order.first_name} {order.last_name}, £{payment.amount})."
+            )
+            
         except Payment.DoesNotExist:
             pass
 
@@ -127,5 +193,15 @@ class PaymentService:
             payment = Payment.objects.get(stripe_payment_intent=intent["id"])
             payment.status = "failed"
             payment.save()
+            
+            order = payment.order
+            order.status = "pending"
+            order.save()
+
+            # ✅ Notify Slack
+            send_slack_message(
+                f"💸 Payment failed for Order #{order.id} "
+                f"({order.first_name} {order.last_name}, £{payment.amount})."
+            )
         except Payment.DoesNotExist:
             pass

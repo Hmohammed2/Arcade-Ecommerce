@@ -11,6 +11,7 @@ router.register(r"payments", PaymentViewSet, basename="payment")
 
 urlpatterns = [
     path("payments/webhook/", views.stripe_webhook, name="stripe_webhook"),
+    path("paypal/checkout/", views.paypal_checkout, name="paypal_checkout"),
     path("checkout/", views.checkout, name="checkout"),
     path("", include(router.urls)),
 ]

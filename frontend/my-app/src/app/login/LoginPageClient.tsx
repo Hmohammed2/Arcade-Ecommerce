@@ -6,10 +6,13 @@ import Link from "next/link";
 import { toast } from "react-hot-toast";
 import { LogIn, Loader2 } from "lucide-react";
 import { useAuth } from "@/store/useAuth"; // ✅ import your store
+import { useGoogleLogin } from "@react-oauth/google";
+import Turnstile from "react-turnstile";
 
 export default function LoginPageClient() {
   const router = useRouter();
   const login = useAuth((s) => s.login);
+  const [token, setToken] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -24,7 +27,7 @@ export default function LoginPageClient() {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password);
+      await login(formData.username, formData.password, token ?? "");
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
@@ -33,10 +36,39 @@ export default function LoginPageClient() {
     }
   };
 
-  const handleOAuthLogin = (provider: "google" | "github") => {
-    setIsOAuthLoading(provider);
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/${provider}/login/`;
-  };
+  const setAccessToken = useAuth((s) => s.setAccessToken);
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsOAuthLoading("google");
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/google/`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: tokenResponse.access_token }),
+          }
+        );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Google login failed");
+
+        // store tokens in Zustand
+        setAccessToken(data.access);
+        localStorage.setItem("refreshToken", data.refresh);
+        toast.success("Logged in with Google 🎉");
+
+        await useAuth.getState().fetchUser();
+        router.push("/dashboard");
+      } catch (err: any) {
+        toast.error(err.message || "Google login failed");
+      } finally {
+        setIsOAuthLoading(null);
+      }
+    },
+    onError: () => toast.error("Google login cancelled"),
+  });
 
   return (
     <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-md dark:shadow-lg rounded-lg p-8 transition-colors duration-300 text-gray-800 dark:text-gray-100">
@@ -82,6 +114,11 @@ export default function LoginPageClient() {
           />
         </div>
 
+        <Turnstile
+          sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
+          onVerify={(token) => setToken(token)}
+        />
+
         {/* Login button */}
         <button
           type="submit"
@@ -103,29 +140,16 @@ export default function LoginPageClient() {
       {/* OAuth Buttons */}
       <div className="flex flex-col space-y-3 mt-6">
         <button
-          onClick={() => handleOAuthLogin("google")}
+          onClick={() => googleLogin()}
           disabled={!!isOAuthLoading}
           className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 bg-white dark:bg-gray-900"
         >
           {isOAuthLoading === "google" ? (
             <Loader2 className="animate-spin w-5 h-5" />
           ) : (
-            <img src="/google-icon.svg" alt="Google" className="w-5 h-5" />
+            <img src="/google-icon.png" alt="Google" className="w-5 h-5" />
           )}
           Continue with Google
-        </button>
-
-        <button
-          onClick={() => handleOAuthLogin("github")}
-          disabled={!!isOAuthLoading}
-          className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md font-medium flex items-center justify-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 bg-white dark:bg-gray-900"
-        >
-          {isOAuthLoading === "github" ? (
-            <Loader2 className="animate-spin w-5 h-5" />
-          ) : (
-            <img src="/github-icon.svg" alt="GitHub" className="w-5 h-5" />
-          )}
-          Continue with GitHub
         </button>
       </div>
 

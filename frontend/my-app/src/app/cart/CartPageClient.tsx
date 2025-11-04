@@ -109,8 +109,8 @@ export default function CartPage() {
                 />
               </div>
               <button
-                onClick={() => removeItem(item.id)}
-                className="text-red-600 dark:text-red-400 hover:underline text-sm mt-1 sm:mt-0"
+                onClick={() => removeItem(item.id, item.colour || "")}
+                className="text-red-600 dark:text-red-400 hover:underline text-sm mt-1 sm:mt-0 hover:cursor-pointer"
               >
                 Remove
               </button>
