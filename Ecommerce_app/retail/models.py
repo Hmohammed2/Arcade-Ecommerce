@@ -20,6 +20,9 @@ class Product(models.Model):
     overview = models.TextField(blank=True)  # rich/long form description
     features = models.JSONField(blank=True, default=list)  # e.g. ["Low latency", ...] or [{"label":"Shell","value":"Aluminum"}]
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    short_description = models.TextField(blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_new = models.BooleanField(default=False)
     stock = models.PositiveIntegerField(default=0)
     image = models.ImageField(upload_to="products/", blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

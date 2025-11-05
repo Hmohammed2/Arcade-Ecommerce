@@ -7,6 +7,7 @@ import {
   CardExpiryElement,
   CardCvcElement,
 } from "@stripe/react-stripe-js";
+import { Lock } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useCart } from "@/store/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
@@ -29,6 +30,16 @@ export default function PaymentForm() {
   const [method, setMethod] = useState<"stripe" | "paypal">("stripe");
   const paypalRef = useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
+  const [cardBrand, setCardBrand] = useState<string | null>(null);
+  const [cardError, setCardError] = useState<string | null>(null);
+
+  const handleCardChange = (event: any) => {
+    // event.brand => "visa", "mastercard", "amex", etc.
+    setCardBrand(event.brand);
+
+    // event.error?.message => validation errors
+    setCardError(event.error ? event.error.message : null);
+  };
 
   // 🌈 Stripe Element styling
   const elementStyle = {
@@ -207,9 +218,16 @@ export default function PaymentForm() {
     }
   };
 
+  console.log(cardBrand);
+
   // 🧾 Render
   return (
-    <section className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+    <section className="relative bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
+      <div className="absolute top-3 right-3 flex items-center text-green-600 dark:text-green-400 animate-pulse">
+        <Lock size={18} className="mr-1" />
+        <span className="text-xs font-medium">Secure</span>
+      </div>
+
       <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
 
       {/* Payment Method Toggle */}
@@ -245,9 +263,25 @@ export default function PaymentForm() {
             <label className="block text-sm font-medium mb-1">
               Card Number
             </label>
-            <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 px-3">
-              <CardNumberElement options={{ style: elementStyle }} />
+            <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 px-3 flex items-center justify-between">
+              <CardNumberElement
+                options={{ style: elementStyle }}
+                onChange={handleCardChange}
+                className="flex-1"
+              />
+              {cardBrand && (
+                <Image
+                  src={`/icons/${cardBrand}.png`}
+                  alt={cardBrand}
+                  width={36}
+                  height={24}
+                  className="ml-2"
+                />
+              )}
             </div>
+            {cardError && (
+              <p className="text-xs text-red-500 mt-1">{cardError}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -5,32 +5,36 @@ import {
 } from "@tanstack/react-query";
 import { fetchProducts } from "@/library/fetchProducts";
 import Link from "next/link";
+import { Package, Box, Truck } from "lucide-react";
+import { ProductCarousel } from "@/components/ProductCarousel";
 
+// --- Landing Page ---
 export default async function LandingPage() {
   const queryClient = new QueryClient();
 
-  // Prefetch products server-side
+  // Prefetch all products server-side
   await queryClient.prefetchQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
   });
 
   const dehydratedState = dehydrate(queryClient);
+  const products = await fetchProducts();
+
+  // Filter featured items (backend marks them via a boolean field or tag)
+  const featuredProducts = products.filter((p: any) => p.is_featured);
 
   return (
     <HydrationBoundary state={dehydratedState}>
       <div className="min-h-screen text-gray-800 dark:text-gray-100 flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
-        {/* Hero Section */}
         <main className="flex-grow">
+          {/* ================= HERO SECTION ================= */}
           <section className="relative overflow-hidden">
-            {/* Background image */}
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: "url('/arcade-image.png')" }}
             />
-            {/* Dark overlay gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-black/70 to-pink-900/70" />
-            {/* Grid overlay */}
             <div
               className="absolute inset-0 opacity-20"
               style={{
@@ -39,8 +43,6 @@ export default async function LandingPage() {
                 backgroundSize: "40px 40px",
               }}
             />
-
-            {/* Hero content */}
             <div className="relative max-w-4xl mx-auto px-6 py-32 text-center text-white">
               <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
                 Build Your Arcade Stick The Right Way
@@ -61,62 +63,39 @@ export default async function LandingPage() {
             </div>
           </section>
 
-          {/* About us */}
-          <section
-            className="bg-white dark:bg-gray-900 transition-colors duration-300"
-            id="about"
-          >
-            <div className="max-w-7xl mx-auto px-6 py-16 text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                About ArcadeStickLabs
-              </h2>
-              <p className="mt-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                At ArcadeStickLabs, we set out to solve a challenge every UK
-                fightstick builder knows too well: finding reliable arcade parts
-                without waiting weeks for international shipping. For years,
-                enthusiasts across the UK and Europe have had to import
-                components from Japan or the US, often facing high costs,
-                customs delays, and uncertainty about compatibility.
-              </p>
-              <p className="mt-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                We built ArcadeStickLabs to change that. Based here in the UK,
-                we supply curated, tournament-grade parts from trusted brands
-                like Sanwa, Seimitsu, Brook, and Crown, all stocked locally and
-                ready to ship quickly. Whether you’re a casual player looking to
-                customise your first stick, a competitor chasing precision, or a
-                modder experimenting with new builds, we make it simple to get
-                the right parts when you need them.
-              </p>
-              <p className="mt-4 text-gray-700 dark:text-gray-300 leading-relaxed">
-                No more expensive overseas orders or long waits at customs—just
-                quality arcade gear, fast UK delivery, and the confidence that
-                you’re building with components the fighting game community
-                relies on. ArcadeStickLabs exists to support the FGC here at
-                home and help you craft your perfect stick without compromise.
-              </p>
-            </div>
-          </section>
+          {/* ================= FEATURED PRODUCTS ================= */}
+          <ProductCarousel featuredProducts={featuredProducts} />
 
-          {/* Features */}
+          {/* ================= WHY CHOOSE US ================= */}
           <section
             id="products"
             className="bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-colors duration-300"
           >
             <div className="max-w-7xl mx-auto px-6 py-16">
               <h2 className="text-2xl font-semibold text-center text-gray-900 dark:text-gray-100">
-                Why choose us
+                Why Choose Us
               </h2>
+
               <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Feature
-                  title="Curated parts"
+                  icon={
+                    <Package className="w-8 h-8 text-pink-600 dark:text-pink-500" />
+                  }
+                  title="Curated Parts"
                   desc="Only trusted brands, tested for compatibility."
                 />
                 <Feature
-                  title="Small minimums"
+                  icon={
+                    <Box className="w-8 h-8 text-pink-600 dark:text-pink-500" />
+                  }
+                  title="Small Minimums"
                   desc="Buy exactly what you need — no bulk required."
                 />
                 <Feature
-                  title="Fast shipping"
+                  icon={
+                    <Truck className="w-8 h-8 text-pink-600 dark:text-pink-500" />
+                  }
+                  title="Fast Shipping"
                   desc="Local UK/EU warehousing for quick delivery."
                 />
               </div>
@@ -128,10 +107,20 @@ export default async function LandingPage() {
   );
 }
 
-function Feature({ title, desc }: { title: string; desc: string }) {
+// --- Feature Card ---
+function Feature({
+  title,
+  desc,
+  icon,
+}: {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+}) {
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200">
-      <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 text-center">
+      <div className="flex justify-center mb-4">{icon}</div>
+      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
         {title}
       </h4>
       <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{desc}</p>
