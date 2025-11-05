@@ -1,8 +1,7 @@
 import os
-import json
 import requests
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,7 +15,6 @@ from django.contrib.auth.models import User
 from .serializers import UserSerializer, RegisterSerializer, UserAddressSerializer
 from .models import UserAddress
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.github.views import GitHubOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 
 class TurnstileVerifyView(APIView):
@@ -126,6 +124,7 @@ class LogoutView(APIView):
         except Exception:
             return Response({"detail": "Invalid token"}, status=400)
 
+@method_decorator(csrf_exempt, name="dispatch")
 class GoogleLogin(SocialLoginView):
     adapter_class = GoogleOAuth2Adapter
     
@@ -152,33 +151,6 @@ class GoogleLogin(SocialLoginView):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "avatar": picture,
-            },
-        }
-
-        return Response(data, status=status.HTTP_200_OK)
-
-class GitHubLogin(SocialLoginView):
-    adapter_class = GitHubOAuth2Adapter
-
-    def get_response(self):
-        user = self.user
-        if not user or not user.is_authenticated:
-            return Response({"error": "Authentication failed"}, status=status.HTTP_400_BAD_REQUEST)
-
-        refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
-
-        social = user.socialaccount_set.first()
-        avatar = social.extra_data.get("avatar_url") if social else None
-
-        data = {
-            "access": str(access),
-            "refresh": str(refresh),
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "username": user.username,
-                "avatar": avatar,
             },
         }
 
