@@ -45,6 +45,7 @@ services:
     volumes:
       - ./Ecommerce_app/static:/code/static
       - ./Ecommerce_app/media:/code/media
+      - ./Ecommerce_app:/code
     depends_on:
       - db-uat
     ports:
