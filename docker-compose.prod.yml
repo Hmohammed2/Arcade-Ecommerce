@@ -70,7 +70,7 @@ services:
       [
         "listen",
         "--forward-to",
-        "http://django-backend-uat:8000/api/payments/webhook/",
+        "https://arcadesticklabs-test.ddns.net/api/payments/webhook/",
       ]
     volumes:
       - stripe-cli-config:/root/.config/stripe
