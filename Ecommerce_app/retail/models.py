@@ -49,6 +49,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    coupon = models.ForeignKey('Coupon', on_delete=models.SET_NULL, null=True, blank=True)
     delivery_method = models.CharField(
         max_length=20,
         choices=[("standard", "Standard"), ("express", "Express")],
@@ -98,3 +99,34 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment {self.stripe_payment_intent} - {self.status}. Order ID: #{self.order.id}"
+
+class Coupon(models.Model):
+    code = models.CharField(max_length=50, unique=True)
+    discount_percent = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+    whitelisted_emails = models.JSONField(default=list, blank=True)  # list of allowed emails
+
+    valid_from = models.DateTimeField(null=True, blank=True)
+    valid_to = models.DateTimeField(null=True, blank=True)
+    usage_limit = models.PositiveIntegerField(null=True, blank=True)
+    usage_count = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.code} ({self.discount_percent}% off)"
+
+    def is_valid_for_user(self, email):
+        """Return True if this coupon can be used by this email."""
+        from django.utils import timezone
+
+        now = timezone.now()
+        if not self.is_active:
+            return False
+        if self.valid_from and now < self.valid_from:
+            return False
+        if self.valid_to and now > self.valid_to:
+            return False
+        if self.usage_limit and self.usage_count >= self.usage_limit:
+            return False
+        if self.whitelisted_emails and email.lower() not in [e.lower() for e in self.whitelisted_emails]:
+            return False
+        return True

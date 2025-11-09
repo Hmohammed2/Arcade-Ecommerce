@@ -13,15 +13,23 @@ import { useCart } from "@/store/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
 import { useCheckoutForm } from "@/store/useCheckoutForm";
+import { useCoupon } from "@/store/useCoupon";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import { toast } from "react-hot-toast";
+
+declare global {
+  interface Window {
+    paypal: any;
+  }
+}
 
 // 🧩 PaymentForm Component
 export default function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
+  const { code: couponCode, discountPercent, isValid } = useCoupon();
   const { getCartItems, clearCart, getDelivery } = useCart();
   const delivery = getDelivery();
   const { formData } = useCheckoutForm();
@@ -84,6 +92,7 @@ export default function PaymentForm() {
       last_name: formData.billingLastName,
       phone: formData.billingPhone,
       delivery_method: delivery,
+      coupon_code: isValid ? couponCode : null,
     };
 
     // Render PayPal Buttons
@@ -173,7 +182,7 @@ export default function PaymentForm() {
           ? `${formData.billingAddress1}, ${formData.billingCity}, ${formData.billingPostcode}`
           : `${formData.shippingAddress1}, ${formData.shippingCity}, ${formData.shippingPostcode}`,
         same_as_billing: formData.sameAsBilling,
-        coupon_code: formData.couponCode || null,
+        coupon_code: isValid ? couponCode : null,
         delivery_method: delivery,
       };
 
@@ -217,8 +226,6 @@ export default function PaymentForm() {
       setProcessing(false);
     }
   };
-
-  console.log(cardBrand);
 
   // 🧾 Render
   return (

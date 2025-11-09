@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, action, permission_classes, auth
 from rest_framework.permissions import IsAuthenticatedOrReadOnly , IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
-from .models import Category, Product, Order, Payment
+from .models import Category, Product, Order, Payment, Coupon
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -200,6 +200,8 @@ def checkout(request):
             return Response({"error": "Email is required for guest checkout"}, status=status.HTTP_400_BAD_REQUEST)
 
         logger.info(f"[Checkout] Creating order + PaymentIntent for user={user} email={email}")
+        
+        coupon_code = data.get("coupon_code")
 
         result = PaymentService.create_order_and_payment(
             user=user,
@@ -209,6 +211,7 @@ def checkout(request):
             last_name=last_name,
             phone=phone,
             delivery_method=delivery_method,
+            coupon_code=coupon_code
         )
 
         logger.info(
@@ -246,3 +249,32 @@ def paypal_checkout(request):
         return Response(result, status=status.HTTP_201_CREATED)
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def validate_coupon(request):
+    """
+    Validates a coupon code and returns its discount if valid.
+    """
+    code = request.data.get("code", "").strip()
+    email = request.data.get("email", "").strip()
+
+    if not code or not email:
+        return Response({"error": "Code and email are required."}, status=400)
+
+    try:
+        coupon = Coupon.objects.get(code__iexact=code)
+    except Coupon.DoesNotExist:
+        return Response({"valid": False, "message": "Invalid coupon code."}, status=404)
+
+    if coupon.is_valid_for_user(email):
+        return Response({
+            "valid": True,
+            "discount_percent": coupon.discount_percent,
+            "message": f"{coupon.discount_percent}% discount applied!",
+        })
+    else:
+        return Response({
+            "valid": False,
+            "message": "Coupon not valid for this account or expired.",
+        }, status=400)

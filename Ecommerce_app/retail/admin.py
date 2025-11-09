@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Category, Product, Order, OrderItem, Payment
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from .models import Coupon
 
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'stock')
@@ -23,6 +24,11 @@ class OrderResource(resources.ModelResource):
 class ProductResource(resources.ModelResource):
     class Meta:
         model = Product
+
+@admin.register(Coupon)
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ("code", "discount_percent", "is_active", "usage_count", "usage_limit")
+    search_fields = ("code",)
 
 @admin.register(OrderItem)
 class OrderItemAdmin(ImportExportModelAdmin):
