@@ -185,11 +185,20 @@ const Footer = () => {
           </Link>
         </div>
 
-        {/* © Copyright */}
-        <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6">
-          <p className="text-center text-gray-500 dark:text-gray-400 text-sm">
+        {/* © Copyright + Support */}
+        <div className="border-t border-gray-200 dark:border-gray-700 mt-6 pt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <p>
             &copy; {new Date().getFullYear()} ArcadeStickLabs. All rights
             reserved.
+          </p>
+          <p className="mt-2">
+            For support contact{" "}
+            <a
+              href="mailto:support@arcadesticklabs.co.uk"
+              className="text-pink-600 dark:text-pink-400 hover:underline"
+            >
+              support@arcadesticklabs.co.uk
+            </a>
           </p>
         </div>
       </motion.div>
