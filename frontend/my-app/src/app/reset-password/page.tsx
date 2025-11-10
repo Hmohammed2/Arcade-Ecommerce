@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import ResetPasswordClient from "./ResetPasswordClient";
 
 export default function ResetPasswordPage() {
@@ -10,7 +11,10 @@ export default function ResetPasswordPage() {
         <p className="text-gray-500 mb-6">
           Enter your new password below to reset your account.
         </p>
-        <ResetPasswordClient />
+        {/* ✅ Wrap in Suspense */}
+        <Suspense fallback={<p>Loading reset form...</p>}>
+          <ResetPasswordClient />
+        </Suspense>
       </div>
     </main>
   );
