@@ -137,7 +137,7 @@ GitHub.sublime-settings
 !.vscode/extensions.json 
 .history
 
-# Python migrations
+# Django migration files
 */migrations/*.pyc
 */migrations/__pycache__/
 */migrations/*.py

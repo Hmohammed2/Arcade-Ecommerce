@@ -4,7 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.conf import settings
 
-from retail.models import Order, OrderItem, Payment, Product, Coupon
+from retail.models import Order, OrderItem, Payment, Product, Coupon, ProductVariant
 from retail.facades.stripe_facade import StripePaymentFacade
 from retail.facades.paypal_facade import PayPalFacade
 from retail.utils.slack_notifications import send_slack_message
@@ -65,11 +65,28 @@ class PaymentService:
                 raise ValueError("Quantity must be at least 1.")
 
             colour = item.get("colour")
-            if colour and colour not in (product.colours or []):
-                raise ValueError(f"Colour '{colour}' not available for {product.name}")
 
+            # 🧠 Smart stock validation — variant or fallback
+            if colour:
+                variant = ProductVariant.objects.filter(
+                    product=product, colour__iexact=colour
+                ).first()
+                if not variant:
+                    raise ValueError(f"Colour '{colour}' not available for {product.name}")
+                if variant.stock < quantity:
+                    raise ValueError(f"Insufficient stock for {product.name} ({colour})")
+
+                variant.stock -= quantity
+                variant.save(update_fields=["stock"])
+            else:
+                if product.stock < quantity:
+                    raise ValueError(f"Insufficient stock for {product.name}")
+                product.stock -= quantity
+                product.save(update_fields=["stock"])
+                
             # Calculate line total
             line_price = product.price * quantity
+            subtotal += line_price
 
             OrderItem.objects.create(
                 order=order,
@@ -78,15 +95,7 @@ class PaymentService:
                 price=product.price,
                 colour=colour,
             )
-
-            # Update stock safely
-            if product.stock < quantity:
-                raise ValueError(f"Insufficient stock for {product.name}")
-            product.stock -= quantity
-            product.save(update_fields=["stock"])
-
-            subtotal += line_price
-
+            
         # ✅ Step 3: Apply coupon (if valid)
         discount_percent = Decimal("0.00")
         coupon_obj = None
@@ -227,6 +236,8 @@ class PaymentService:
         """
         Marks a payment as succeeded and updates the related order.
         """
+        from retail.models import CouponUsage  # ✅ Import here to avoid circular import
+        
         try:
             payment = Payment.objects.get(stripe_payment_intent=intent["id"])
         except Payment.DoesNotExist:
@@ -239,9 +250,51 @@ class PaymentService:
         order = payment.order
         order.status = "processing"
         order.save()
+        
+        # ✅ If the order had a coupon, mark it as used
+        if order.coupon and order.email:
+            CouponUsage.objects.get_or_create(
+                coupon=order.coupon,
+                email=order.email,
+            )
 
         send_slack_message(
             f"✅ Payment succeeded for Order #{order.id} "
+            f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
+        )
+        
+     # ✅ PAYPAL PAYMENT SUCCESS
+    @staticmethod
+    @transaction.atomic
+    def mark_paypal_payment_succeeded(order_id: str) -> None:
+        """
+        Marks a PayPal payment as succeeded, updates the related order,
+        and records coupon usage for that email.
+        """
+        from retail.models import CouponUsage  # ✅ Import here to avoid circular import
+        
+        try:
+            payment = Payment.objects.get(stripe_payment_intent=order_id)
+        except Payment.DoesNotExist:
+            return
+
+        payment.status = "succeeded"
+        payment.payment_method = "paypal"
+        payment.save()
+
+        order = payment.order
+        order.status = "processing"
+        order.save()
+
+        # ✅ Record coupon usage
+        if order.coupon and order.email:
+            CouponUsage.objects.get_or_create(
+                coupon=order.coupon,
+                email=order.email,
+            )
+
+        send_slack_message(
+            f"✅ PayPal Payment succeeded for Order #{order.id} "
             f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
 

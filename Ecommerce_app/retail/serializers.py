@@ -1,37 +1,29 @@
 from rest_framework import serializers
-from .models import Category, Product, Order, OrderItem, Payment
-
+from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name", "slug"]
 
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = ["id", "image", "alt_text"]
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductVariant
+        fields = ["id", "colour", "stock"]
 
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    image = serializers.SerializerMethodField()
+    images = ProductImageSerializer(many=True, read_only=True)
+    variants = ProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
-        fields = [
-            "id",
-            "name",
-            "slug",
-            "category",
-            "colours",
-            "description",
-            "overview",
-            "features",
-            "price",
-            "short_description",
-            "is_featured",
-            "is_new",
-            "stock",
-            "image",
-            "created_at",
-            "updated_at",
-        ]
+        fields = "__all__"
         read_only_fields = ["created_at", "updated_at"]
     
     def get_image(self, obj):

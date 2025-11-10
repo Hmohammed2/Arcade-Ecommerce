@@ -304,3 +304,15 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = "None"
 SESSION_COOKIE_SAMESITE = "None"
+
+# Email settings
+GRAPH_TENANT_ID = os.getenv("GRAPH_TENANT_ID")
+GRAPH_CLIENT_ID = os.getenv("GRAPH_CLIENT_ID")
+GRAPH_CLIENT_SECRET = os.getenv("GRAPH_CLIENT_SECRET")
+GRAPH_SHARED_MAILBOX="no-reply@arcadesticklabs.co.uk"
+
+# Frontend URL for email links
+if DEBUG:
+    frontendURL = "http://localhost:3000"
+else:
+    frontendURL = "https://arcadesticklabs-test.ddns.net"

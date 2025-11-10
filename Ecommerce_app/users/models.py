@@ -1,5 +1,27 @@
 from django.db import models
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+from datetime import timedelta
 from django.contrib.auth.models import User
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="password_reset_tokens")
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def is_expired(self):
+        return timezone.now() > self.expires_at
+
+    @classmethod
+    def create_token(cls, user):
+        """Generates a secure, time-limited reset token for the given user."""
+        token = get_random_string(length=48)
+        expires_at = timezone.now() + timedelta(hours=1)  # token valid for 1 hour
+        return cls.objects.create(user=user, token=token, expires_at=expires_at)
+
+    def __str__(self):
+        return f"PasswordResetToken(user={self.user.email}, expires_at={self.expires_at})"
 
 class UserAddress(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="address")

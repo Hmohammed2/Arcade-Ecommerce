@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.postgres.fields import ArrayField
 from decimal import Decimal
 # Create your models here.
 
@@ -10,13 +9,22 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
+    
+class ProductImage(models.Model):
+    product = models.ForeignKey(
+        'Product', on_delete=models.CASCADE, related_name='images'
+    )
+    image = models.ImageField(upload_to='products/gallery/')
+    alt_text = models.CharField(max_length=255, blank=True)
+
+    def __str__(self):
+        return f"{self.product.name} Image"
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     description = models.TextField(blank=True)
-    colours = ArrayField(models.CharField(max_length=50),blank=True,default=list)
     overview = models.TextField(blank=True)  # rich/long form description
     features = models.JSONField(blank=True, default=list)  # e.g. ["Low latency", ...] or [{"label":"Shell","value":"Aluminum"}]
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -30,6 +38,17 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.category.name} - £{self.price} - Stock: {self.stock}'
+
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
+    colour = models.CharField(max_length=50)
+    stock = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("product", "colour")
+
+    def __str__(self):
+        return f"{self.product.name} ({self.colour}) - Stock: {self.stock}"
 
 class Order(models.Model):
     STATUS_CHOICES = (
@@ -129,4 +148,19 @@ class Coupon(models.Model):
             return False
         if self.whitelisted_emails and email.lower() not in [e.lower() for e in self.whitelisted_emails]:
             return False
+            # Has this email already used it?
+        if CouponUsage.objects.filter(coupon=self, email__iexact=email).exists():
+            return False
+    
         return True
+
+class CouponUsage(models.Model):
+    coupon = models.ForeignKey('Coupon', on_delete=models.CASCADE, related_name='usages')
+    email = models.EmailField()
+    used_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('coupon', 'email')
+
+    def __str__(self):
+        return f"{self.email} used {self.coupon.code}"

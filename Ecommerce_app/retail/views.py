@@ -15,6 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from .services.payment_service import PaymentService
 from .facades.stripe_facade import StripePaymentFacade
+from .facades.paypal_facade import PayPalFacade
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -25,7 +26,6 @@ class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = CategorySerializer
     lookup_field = "slug"  # so you can fetch by /categories/sticks/
     permission_classes = [permissions.AllowAny]  # 👈 public endpoint
-
 
 # Products
 class ProductViewSet(viewsets.ReadOnlyModelViewSet):
@@ -247,6 +247,47 @@ def paypal_checkout(request):
         )
 
         return Response(result, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def paypal_capture(request):
+    """
+    Capture a PayPal order after user approval.
+    Verifies payment and updates local order/payment status.
+    """
+    try:
+        order_id = request.data.get("order_id")
+        if not order_id:
+            return Response({"error": "Missing order_id"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 🧩 Step 1: Capture the payment via PayPal
+        capture_data = PayPalFacade.capture_order(order_id)
+
+        if capture_data.get("status") in ["COMPLETED", "captured"]:
+            # 🧩 Step 2: Mark payment succeeded in our database
+            PaymentService.mark_paypal_payment_succeeded(order_id)
+
+            return Response(
+                {
+                    "id": capture_data.get("id"),
+                    "status": capture_data.get("status"),
+                    "payer": capture_data.get("payer", {}),
+                    "amount": capture_data.get("purchase_units", [{}])[0]
+                    .get("payments", {})
+                    .get("captures", [{}])[0]
+                    .get("amount", {}),
+                    "message": "PayPal payment captured successfully.",
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": "Payment not completed", "details": capture_data},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     

@@ -1,12 +1,16 @@
 from django.contrib import admin
-from .models import Category, Product, Order, OrderItem, Payment
+from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .models import Coupon
 
-class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price', 'stock')
-    prepopulated_fields = {"slug": ("name",)}
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 1  # allows adding new ones quickly
+
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
     
 # Register your models here.
 admin.site.register(Category)
@@ -41,3 +45,6 @@ class OrderAdmin(ImportExportModelAdmin):
 @admin.register(Product)
 class ProductAdmin(ImportExportModelAdmin):
     resource_class = ProductResource
+    inlines = [ProductImageInline, ProductVariantInline]
+    list_display = ('name', 'price', 'stock')
+    prepopulated_fields = {"slug": ("name",)}

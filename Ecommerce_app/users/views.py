@@ -2,18 +2,24 @@ import os
 import requests
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from rest_framework import generics
 from django.contrib.auth.models import User
+from django.utils import timezone
 from .serializers import UserSerializer, RegisterSerializer, UserAddressSerializer
-from .models import UserAddress
+from .models import UserAddress, PasswordResetToken
+from .services.SendEmail import send_graph_email
+from django.conf import settings
+
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 
@@ -87,6 +93,34 @@ class UserProfileView(APIView):
     def delete(self, request):
         request.user.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class ResetPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get("token")
+        new_password = request.data.get("new_password")
+
+        if not token or not new_password:
+            return Response({"detail": "Missing fields."}, status=400)
+
+        try:
+            # Example: store token in DB along with user when sending email
+            reset_entry = PasswordResetToken.objects.get(token=token)
+            user = reset_entry.user
+
+            # Optional: verify expiration
+            if reset_entry.expires_at < timezone.now():
+                return Response({"detail": "Token expired."}, status=400)
+
+            user.set_password(new_password)
+            user.save()
+            reset_entry.delete()
+
+            return Response({"detail": "Password reset successfully."}, status=200)
+
+        except PasswordResetToken.DoesNotExist:
+            return Response({"detail": "Invalid or expired token."}, status=400)
 
 
 class PasswordChangeView(APIView):
@@ -155,3 +189,39 @@ class GoogleLogin(SocialLoginView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+class PasswordResetEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        if not email:
+            return Response({"error": "Email is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            pass
+
+        # Create token
+        reset_token = PasswordResetToken.create_token(user)
+        token = reset_token.token
+        
+        reset_link = f"{settings.frontendURL}/reset-password?token={token}"
+
+            # Send password reset email via Microsoft Graph
+        send_graph_email(
+            to_email=user.email,
+            subject="Password Reset Request",
+            body=f"""
+                <p>Hi {user.username},</p>
+                <p>Click the link below to reset your password:</p>
+                <p><a href="{reset_link}">Reset Password</a></p>
+                <p>If you didn’t request this, please ignore this email.</p>
+            """,
+            )
+
+        # optionally save the token in a model for later validation
+        # e.g., PasswordResetToken.objects.create(user=user, token=token)
+
+        return Response({"detail": "If an account exists a password reset email has been sent"}, status=status.HTTP_200_OK)
