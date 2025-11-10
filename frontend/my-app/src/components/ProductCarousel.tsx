@@ -92,7 +92,7 @@ export function ProductCarousel({
                   {isSoldOut ? (
                     <div className="cursor-not-allowed">{Card}</div>
                   ) : (
-                    <Link href={`/product/${product.slug}`}>{Card}</Link>
+                    <Link href={`/products/${product.slug}`}>{Card}</Link>
                   )}
                 </SwiperSlide>
               );

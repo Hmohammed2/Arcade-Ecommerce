@@ -29,7 +29,12 @@ export default function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const { code: couponCode, discountPercent, isValid } = useCoupon();
+  const {
+    code: couponCode,
+    discountPercent,
+    isValid,
+    clearCoupon,
+  } = useCoupon();
   const { getCartItems, clearCart, getDelivery } = useCart();
   const delivery = getDelivery();
   const { formData } = useCheckoutForm();
@@ -136,6 +141,7 @@ export default function PaymentForm() {
               capture.status === "captured"
             ) {
               clearCart();
+              clearCoupon(); // ✅ Reset coupon after success
               toast.success("PayPal payment successful! 🎉");
               router.push(`/checkout-success/${capture.id}`);
             } else {
@@ -215,6 +221,7 @@ export default function PaymentForm() {
         toast.error(result.error.message || "Payment failed ❌");
       } else if (result.paymentIntent?.status === "succeeded") {
         clearCart();
+        clearCoupon(); // ✅ Reset coupon after success
         toast.success("Payment successful! 🎉");
         localStorage.setItem("guest_email", formData.billingEmail ?? "");
         router.push(`/checkout-success/${order_id}`);

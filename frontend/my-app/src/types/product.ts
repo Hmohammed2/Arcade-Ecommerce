@@ -6,10 +6,11 @@ export type Category = {
   slug: string;
 };
 
-export type Colour = {
+export interface ProductVariant {
   id: number;
-  name: string;
-};
+  colour: string;
+  stock: number;
+}
 
 export type Product = {
   id: number;
@@ -20,13 +21,10 @@ export type Product = {
   overview?: string;
   features?: FeatureItem[];
   price: number;
-  stock: number; // PositiveIntegerField
-  image: string;
-  colours: string[] | Colour[];
-  // 👆 Depending on how your serializer returns it:
-  // - ArrayField/JSONField → ["red", "blue"]
-  // - ManyToManyField with serializer → [{id:1,name:"red"}, {id:2,name:"blue"}]
-
+  stock?: number; // PositiveIntegerField
+  image?: string;
+  images?: string[]; // URLs of additional images
+  variants?: ProductVariant[];
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
 };

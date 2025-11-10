@@ -6,6 +6,7 @@ import { useCart } from "@/store/useCart";
 import { useProductBySlug } from "@/hooks/useProductsBySlug";
 import { getImageUrl } from "@/library/getImageUrl";
 import { ZoomModal } from "@/components/ZoomModal";
+import { ProductVariant } from "@/types/product";
 
 type Props = { slug: string };
 
@@ -14,15 +15,20 @@ export default function ProductPageClient({ slug }: Props) {
   const addItem = useCart((s) => s.addItem);
   const [quantity, setQuantity] = useState<number>(1);
 
-  const colours: string[] = useMemo(() => {
-    const raw = product?.colours ?? [];
-    return Array.isArray(raw)
-      ? raw
-          .map((c: any) => (typeof c === "string" ? c : c?.name))
-          .filter(Boolean)
-      : [];
-  }, [product]);
+  // 🧩 Variants
+  const variants: ProductVariant[] = product?.variants ?? [];
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
+  );
 
+  useEffect(() => {
+    if (!selectedVariant && variants.length > 0) {
+      const firstAvailable = variants.find((v) => v.stock > 0) || variants[0];
+      setSelectedVariant(firstAvailable);
+    }
+  }, [variants, selectedVariant]);
+
+  // 🧩 Features
   const featureList = useMemo(() => {
     const raw = product?.features ?? [];
     if (!Array.isArray(raw)) return [];
@@ -35,11 +41,20 @@ export default function ProductPageClient({ slug }: Props) {
       .filter((f) => !!f.label);
   }, [product]);
 
-  const [selectedColour, setSelectedColour] = useState<string>("");
+  // 🧩 Product images
+  const images = [
+    product?.image,
+    ...(product?.images?.map((img: any) => img.image) || []),
+  ].filter(Boolean);
 
+  const [selectedImage, setSelectedImage] = useState(images[0] ?? "");
+
+  // Auto-update main image if variant has its own image field (optional)
   useEffect(() => {
-    if (!selectedColour && colours.length > 0) setSelectedColour(colours[0]);
-  }, [colours, selectedColour]);
+    if (selectedVariant && (selectedVariant as any).image) {
+      setSelectedImage((selectedVariant as any).image);
+    }
+  }, [selectedVariant]);
 
   if (isLoading)
     return (
@@ -59,18 +74,24 @@ export default function ProductPageClient({ slug }: Props) {
       ? parseFloat(product.price)
       : product.price;
 
+  // 🧩 Add to cart
   const handleAddToCart = () => {
+    if (selectedVariant && selectedVariant.stock === 0) return;
+
     addItem({
       id: product.id,
       title: product.name,
       price: numericPrice,
       quantity,
       image: product.image,
-      colour: selectedColour || null,
+      colour: selectedVariant ? selectedVariant.colour : null,
     });
   };
 
-  const maxQty = Math.min(Math.max(product.stock ?? 0, 0), 10);
+  // 🧩 Max quantity per variant
+  const maxQty = selectedVariant
+    ? Math.min(selectedVariant.stock, 10)
+    : Math.min(product.stock ?? 0, 10);
 
   return (
     <div className="min-h-screen max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -81,28 +102,62 @@ export default function ProductPageClient({ slug }: Props) {
 
       {/* Left: Image */}
       <div className="md:col-span-5 flex justify-center items-start">
-        <div className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-800">
-          <ZoomModal
-            src={getImageUrl(product.image)}
-            alt={product.name}
-            trigger={(open) => (
-              <button
-                type="button"
-                onClick={open}
-                className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800"
-              >
-                <Image
-                  src={getImageUrl(product.image)}
-                  alt={product.name}
-                  fill
-                  className="object-contain"
-                />
-                <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded">
-                  Tap to zoom
-                </span>
-              </button>
+        <div
+          className={`relative w-full max-w-md ${
+            images.length > 1 ? "h-[500px]" : "h-[400px]"
+          } border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden flex items-start justify-center bg-gray-50 dark:bg-gray-800`}
+        >
+          <div className="w-full flex flex-col justify-start items-center">
+            <div className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800">
+              <ZoomModal
+                src={getImageUrl(selectedImage)}
+                alt={product.name}
+                trigger={(open) => (
+                  <button
+                    type="button"
+                    onClick={open}
+                    className="relative w-full h-full"
+                  >
+                    <Image
+                      src={getImageUrl(selectedImage)}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 400px"
+                      priority
+                    />
+                    <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded">
+                      Tap to zoom
+                    </span>
+                  </button>
+                )}
+              />
+            </div>
+
+            {images.length > 1 && (
+              <div className="flex gap-2 mt-2 pt-2 overflow-x-auto">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSelectedImage(img)}
+                    className={`relative w-16 h-16 border rounded-md overflow-hidden flex-shrink-0 ${
+                      selectedImage === img
+                        ? "border-[#14485A] ring-2 ring-[#14485A]"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                  >
+                    <Image
+                      src={getImageUrl(img)}
+                      alt={`${product.name} view ${i + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="64px"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
-          />
+          </div>
         </div>
       </div>
 
@@ -117,58 +172,55 @@ export default function ProductPageClient({ slug }: Props) {
           </p>
         )}
 
-        {/* Colours */}
-        {colours.length > 0 && (
+        {/* Variant selection */}
+        {variants.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              Available Colours
-            </h3>
-            <div className="flex gap-2 flex-wrap">
-              {colours.map((colour) => (
+            <h3 className="text-sm font-semibold mb-2">Available Colours</h3>
+            <div className="flex flex-wrap gap-2">
+              {variants.map((variant) => (
                 <button
-                  key={colour}
-                  onClick={() => setSelectedColour(colour)}
+                  key={variant.id}
+                  onClick={() => setSelectedVariant(variant)}
+                  disabled={variant.stock === 0}
                   className={`px-3 py-1 rounded-md border text-sm transition ${
-                    selectedColour === colour
+                    selectedVariant?.id === variant.id
                       ? "bg-[#14485A] text-white border-[#14485A]"
-                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                  }`}
+                      : "bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                  } ${variant.stock === 0 ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-700"}`}
                 >
-                  {colour}
+                  {variant.colour}{" "}
+                  {variant.stock === 0 && (
+                    <span className="text-xs text-red-500">(Out of stock)</span>
+                  )}
                 </button>
               ))}
             </div>
           </div>
         )}
 
+        {/* Stock message */}
         <p
           className={`text-sm font-medium ${
-            (product.stock ?? 0) > 0
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-500 dark:text-red-400"
+            selectedVariant
+              ? selectedVariant.stock > 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-500 dark:text-red-400"
+              : (product.stock ?? 0) > 0
+                ? "text-green-600 dark:text-green-400"
+                : "text-red-500 dark:text-red-400"
           }`}
         >
-          {(product.stock ?? 0) > 0
-            ? `In Stock — ${product.stock} available`
-            : "Out of Stock"}
+          {selectedVariant
+            ? selectedVariant.stock > 0
+              ? `In Stock — ${selectedVariant.stock} available`
+              : "Out of Stock"
+            : (product.stock ?? 0) > 0
+              ? `In Stock — ${product.stock} available`
+              : "Out of Stock"}
         </p>
       </div>
 
-      {/* Mobile buy controls */}
-      <div className="block md:hidden space-y-4">
-        <QuantitySelect
-          id="quantity-mobile"
-          maxQty={maxQty}
-          value={quantity}
-          onChange={setQuantity}
-        />
-        <AddToCartButton
-          disabled={(product.stock ?? 0) === 0}
-          onClick={handleAddToCart}
-        />
-      </div>
-
-      {/* Right: Buy box */}
+      {/* Right: Buy Box */}
       <div className="hidden md:block md:col-span-3">
         <div className="border border-gray-200 dark:border-gray-700 rounded-lg shadow-md p-4 space-y-4 bg-white dark:bg-gray-800 transition-colors duration-300">
           <p className="text-2xl font-bold text-[#E01D42]">£{numericPrice}</p>
@@ -179,7 +231,10 @@ export default function ProductPageClient({ slug }: Props) {
             onChange={setQuantity}
           />
           <AddToCartButton
-            disabled={(product.stock ?? 0) === 0}
+            disabled={
+              (selectedVariant && selectedVariant.stock === 0) ||
+              (!selectedVariant && (product.stock ?? 0) === 0)
+            }
             onClick={handleAddToCart}
           />
         </div>

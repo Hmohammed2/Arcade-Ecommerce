@@ -1,10 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { cartItem } from "@/types/cart";
 import { getImageUrl } from "@/library/getImageUrl";
-import { useState } from "react";
-import type { Product } from "@/types/product";
+import type { Product, ProductVariant } from "@/types/product";
 
 export function ProductCard({
   product,
@@ -15,26 +15,42 @@ export function ProductCard({
   addItem: (item: cartItem) => void;
   isInCart: (id: number, colour?: string) => boolean;
 }) {
-  const colours =
-    Array.isArray(product.colours) && product.colours.length > 0
-      ? product.colours.map((c: any) => (typeof c === "string" ? c : c.name))
-      : [];
+  // ✅ Use variants from backend instead of product.colours
+  const variants: ProductVariant[] = product.variants ?? [];
 
-  const [selectedColour, setSelectedColour] = useState<string>(
-    colours[0] || ""
+  // Default to first in-stock variant if any
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
+    null
   );
 
+  useEffect(() => {
+    if (!selectedVariant && variants.length > 0) {
+      const available = variants.find((v) => v.stock > 0) || variants[0];
+      setSelectedVariant(available);
+    }
+  }, [variants, selectedVariant]);
+
   const handleAddToCart = () => {
+    if (!product) return;
+
+    // If variant exists and is out of stock, do nothing
+    if (selectedVariant && selectedVariant.stock === 0) return;
+
     const item: cartItem = {
       id: product.id,
       title: product.name,
-      price: product.price,
+      price: Number(product.price),
       image: product.image,
       quantity: 1,
-      colour: selectedColour || null,
+      colour: selectedVariant ? selectedVariant.colour : null,
     };
+
     addItem(item);
   };
+
+  const isOutOfStock =
+    selectedVariant?.stock === 0 ||
+    (variants.length === 0 && (product.stock ?? 0) === 0);
 
   return (
     <motion.div
@@ -44,7 +60,7 @@ export function ProductCard({
       className="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden hover:shadow-lg transition flex flex-col"
     >
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-1">
-        <div className="relative w-full h-48">
+        <div className="relative w-full h-48 flex items-center justify-center">
           <Image
             src={getImageUrl(product.image)}
             alt={product.name}
@@ -53,33 +69,42 @@ export function ProductCard({
             className="object-contain mx-auto"
           />
         </div>
+
         <div className="p-4 flex-1 flex flex-col">
           <h3 className="text-lg font-semibold">{product.name}</h3>
           <p className="text-[#E01D42] font-bold">£{product.price}</p>
+
+          {/* Stock indicator */}
           <p
             className={`text-sm ${
-              product.stock > 0 ? "text-green-600" : "text-red-500"
+              isOutOfStock ? "text-red-500" : "text-green-600"
             }`}
           >
-            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+            {isOutOfStock
+              ? "Out of Stock"
+              : selectedVariant
+                ? `In Stock — ${selectedVariant.stock}`
+                : `In Stock — ${product.stock ?? 0}`}
           </p>
 
-          {colours.length > 0 && (
+          {/* Colour / Variant Buttons */}
+          {variants.length > 0 && (
             <div className="flex gap-2 mt-3 flex-wrap">
-              {colours.map((colour) => (
+              {variants.map((variant) => (
                 <button
-                  key={colour}
+                  key={variant.id}
                   onClick={(e) => {
                     e.preventDefault();
-                    setSelectedColour(colour);
+                    setSelectedVariant(variant);
                   }}
+                  disabled={variant.stock === 0}
                   className={`px-2 py-1 text-xs rounded-md border transition ${
-                    selectedColour === colour
+                    selectedVariant?.id === variant.id
                       ? "bg-[#14485A] text-white border-[#14485A]"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  }`}
+                  } ${variant.stock === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {colour}
+                  {variant.colour}
                 </button>
               ))}
             </div>
@@ -87,16 +112,19 @@ export function ProductCard({
         </div>
       </Link>
 
+      {/* Add to Basket Button */}
       <button
         onClick={handleAddToCart}
-        disabled={product.stock === 0}
+        disabled={isOutOfStock}
         className={`mt-auto w-full py-2 px-4 rounded-lg font-semibold transition ${
-          product.stock > 0
-            ? "bg-[#14485A] text-white hover:bg-[#0e2f3d]"
-            : "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+          isOutOfStock
+            ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
+            : "bg-[#14485A] text-white hover:bg-[#0e2f3d]"
         }`}
       >
-        {isInCart(product.id, selectedColour) ? "Add More" : "Add to Basket"}
+        {isInCart(product.id, selectedVariant?.colour)
+          ? "Add More"
+          : "Add to Basket"}
       </button>
     </motion.div>
   );
