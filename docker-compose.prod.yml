@@ -42,6 +42,9 @@ services:
       PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID}
       PAYPAL_SECRET: ${PAYPAL_SECRET}
       PAYPAL_API_BASE: ${PAYPAL_API_BASE}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
     volumes:
       - ./Ecommerce_app/static:/code/static
       - ./Ecommerce_app/media:/code/media
