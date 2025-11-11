@@ -1,19 +1,17 @@
 services:
-  db-uat:
-    container_name: postgres_db_uat
+  db:
+    container_name: postgres_db
     image: postgres:15
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "7015:5432"
     volumes:
-      - postgres_data_uat:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - app_net
-  django-backend-uat:
-    container_name: django-backend-uat
+  django-backend-prod:
+    container_name: django-backend-prod
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
@@ -50,18 +48,18 @@ services:
       - ./Ecommerce_app/media:/code/media
       - ./Ecommerce_app:/code
     depends_on:
-      - db-uat
+      - db
     ports:
-      - "7014:8000"
+      - "7011:8000"
     networks:
       - app_net
-  frontend-uat:
-    container_name: frontend-uat
+  frontend-prod:
+    container_name: frontend-prod
     build:
       context: ./frontend/my-app
       dockerfile: Dockerfile.prod
     ports:
-      - "7013:3000"
+      - "7010:3000"
     environment:
       - NODE_ENV=production
     networks:
@@ -73,16 +71,16 @@ services:
       [
         "listen",
         "--forward-to",
-        "https://arcadesticklabs-test.ddns.net/api/payments/webhook/",
+        "https://arcadesticklabs.co.uk/api/payments/webhook/",
       ]
     volumes:
       - stripe-cli-config:/root/.config/stripe
     depends_on:
-      - django-backend-uat
+      - django-backend-prod
     networks:
       - app_net
 volumes:
-  postgres_data_uat:
+  postgres_data_prod:
   stripe-cli-config:
 
 networks:
