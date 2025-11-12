@@ -105,6 +105,7 @@ class Payment(models.Model):
         choices=[
             ("pending", "Pending"),
             ("processing", "Processing"),
+            ("on_hold", "On Hold"),
             ("succeeded", "Succeeded"),
             ("failed", "Failed"),
             ("refunded", "Refunded"),

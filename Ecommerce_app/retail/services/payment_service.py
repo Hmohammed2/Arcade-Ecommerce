@@ -270,7 +270,7 @@ class PaymentService:
         order = payment.order
 
         # 2) Try to decrement stock atomically
-        ok, errs = PaymentService._deplete_stock_for_order(order)
+        ok, errs = _deplete_stock_for_order(order)
         if not ok:
             # Business choice: put order on hold and notify staff; you could also auto-refund here.
             order.status = "on_hold"
@@ -342,7 +342,7 @@ class PaymentService:
         logger.info("Marking PayPal payment succeeded for Order #%s", order.id)
 
         # 2️⃣ Attempt to atomically decrement stock
-        ok, errs = PaymentService._deplete_stock_for_order(order)
+        ok, errs = _deplete_stock_for_order(order)
 
         if not ok:
             # ⚠️ If stock can’t be fulfilled, place order on hold and notify staff
