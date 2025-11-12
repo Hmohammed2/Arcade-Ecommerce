@@ -8,6 +8,8 @@ const nextConfig = {
     },
   },
   images: {
+    domains: ["arcadesticklabs.co.uk"],
+    formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
         protocol: "http",
@@ -23,7 +25,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "arcadesticklabs-test.ddns.net",
+        hostname: "arcadesticklabs.co.uk",
         pathname: "/media/**",
       },
     ],
