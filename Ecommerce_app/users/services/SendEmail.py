@@ -1,5 +1,6 @@
 import requests
 from django.conf import settings
+from django.utils import timezone
 
 def get_graph_access_token():
     tenant_id = settings.GRAPH_TENANT_ID
@@ -45,3 +46,126 @@ def send_graph_email(to_email, subject, body):
     response = requests.post(url, headers=headers, json=email_msg)
     if response.status_code != 202:
         raise Exception(f"Email failed: {response.text}")
+
+def send_payment_success_email(to_email, first_name, order_id, amount, items=None, payment_method="card"):
+    """
+    Sends a styled payment success email using the site's theme, including order items.
+    """
+    subject = f"Your ArcadeStickLabs Order #{order_id} — Payment Confirmed!"
+
+    # 🧾 Build items HTML table
+    items_html = ""
+    if items:
+        items_html = """
+        <table style="width:100%; border-collapse: collapse; margin-top:20px;">
+          <thead>
+            <tr style="background-color:#f3f4f6; text-align:left;">
+              <th style="padding:8px; border-bottom:1px solid #e5e7eb;">Item</th>
+              <th style="padding:8px; border-bottom:1px solid #e5e7eb;">Qty</th>
+              <th style="padding:8px; border-bottom:1px solid #e5e7eb;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+        """
+        for item in items:
+            items_html += f"""
+              <tr>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['name']}</td>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['quantity']}</td>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">£{item['price']:.2f}</td>
+              </tr>
+            """
+        items_html += """
+          </tbody>
+        </table>
+        """
+
+    body = f"""
+        <html>
+        <head>
+        <style>
+            body {{
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+            }}
+            .container {{
+            max-width: 600px;
+            margin: 40px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            overflow: hidden;
+            }}
+            .header {{
+            background: linear-gradient(135deg, #4f46e5, #db2777);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            }}
+            .header h1 {{
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 700;
+            }}
+            .content {{
+            padding: 30px;
+            }}
+            .button {{
+            display: inline-block;
+            background-color: #db2777;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+            }}
+            .footer {{
+            background-color: #f3f4f6;
+            text-align: center;
+            padding: 16px;
+            font-size: 0.875rem;
+            color: #6b7280;
+            }}
+            a.email-link {{
+            color: #db2777;
+            text-decoration: none;
+            font-weight: 600;
+            }}
+            a.email-link:hover {{
+            text-decoration: underline;
+            }}
+        </style>
+        </head>
+        <body>
+        <div class="container">
+            <div class="header">
+            <h1>Payment Received</h1>
+            </div>
+            <div class="content">
+            <p>Hi {first_name},</p>
+            <p>Thank you for your purchase! We’ve successfully processed your payment for:</p>
+            <h2 style="margin-bottom:10px;">Order #{order_id}</h2>
+            <p><strong>Amount:</strong> £{amount:.2f}</p>
+            <p><strong>Payment Method:</strong> {payment_method.title()}</p>
+            {items_html}
+            <p style="margin-top:20px;">Your order is now being prepared and will move to <strong>Processing</strong> shortly.</p>
+            <p style="margin-top:30px;">
+                If you have any questions, just contact 
+                <a href="mailto:support@arcadesticklabs.co.uk" class="email-link">support@arcadesticklabs.co.uk</a> — we’re happy to help.
+            </p>
+            <p>– The ArcadeStickLabs Team</p>
+            </div>
+            <div class="footer">
+            &copy; {timezone.now().year} ArcadeStickLabs. All rights reserved.
+            </div>
+        </div>
+        </body>
+        </html>
+        """
+
+
+    send_graph_email(to_email, subject, body)

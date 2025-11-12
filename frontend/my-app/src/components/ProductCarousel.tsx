@@ -53,11 +53,11 @@ export function ProductCarousel({
                 >
                   <div className="relative">
                     <Image
-                      src={getImageUrl(product.image) || "/placeholder.png"}
+                      src={getImageUrl(product.image)}
                       alt={product.name}
                       width={400}
-                      height={300}
-                      className={`object-cover w-full h-56 transition-transform duration-300 
+                      height={200}
+                      className={`object-cover w-full h-[224px] transition-transform duration-300 
                         ${!isSoldOut ? "group-hover:scale-105" : ""}`}
                     />
 

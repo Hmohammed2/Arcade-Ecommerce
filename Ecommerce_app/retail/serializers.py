@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -20,6 +21,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product

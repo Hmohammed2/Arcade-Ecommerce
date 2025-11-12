@@ -119,7 +119,7 @@ export default function ProductPageClient({ slug }: Props) {
                     className="relative w-full h-full"
                   >
                     <Image
-                      src={getImageUrl(selectedImage)}
+                      src={getImageUrl(selectedImage) || "placeholder.png"}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -147,7 +147,7 @@ export default function ProductPageClient({ slug }: Props) {
                     }`}
                   >
                     <Image
-                      src={getImageUrl(img)}
+                      src={getImageUrl(img) || "placeholder.png"}
                       alt={`${product.name} view ${i + 1}`}
                       fill
                       className="object-cover"
@@ -218,6 +218,23 @@ export default function ProductPageClient({ slug }: Props) {
               ? `In Stock — ${product.stock} available`
               : "Out of Stock"}
         </p>
+      </div>
+
+      {/* Mobile Add to Cart section */}
+      <div className="md:hidden mt-2 border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+        <QuantitySelect
+          id="quantity-mobile"
+          maxQty={maxQty}
+          value={quantity}
+          onChange={setQuantity}
+        />
+        <AddToCartButton
+          disabled={
+            (selectedVariant && selectedVariant.stock === 0) ||
+            (!selectedVariant && (product.stock ?? 0) === 0)
+          }
+          onClick={handleAddToCart}
+        />
       </div>
 
       {/* Right: Buy Box */}

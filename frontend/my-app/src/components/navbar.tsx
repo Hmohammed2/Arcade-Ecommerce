@@ -47,6 +47,8 @@ const Navbar = () => {
     if (query.trim()) console.log("Searching for:", query);
   };
 
+  console.log(results);
+
   return (
     <header className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 shadow-sm w-full top-0 left-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -100,15 +102,18 @@ const Navbar = () => {
                       className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-200"
                     >
                       {p.image ? (
-                        <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden border border-gray-100 dark:border-gray-700">
-                          <Image
-                            src={getImageUrl(p.image)}
-                            alt={p.name}
-                            width={40}
-                            height={40}
-                            className="object-cover w-full h-full"
-                          />
-                        </div>
+                        (console.log(getImageUrl(p.image)),
+                        (
+                          <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden border border-gray-100 dark:border-gray-700">
+                            <Image
+                              src={getImageUrl(p.image)}
+                              alt={p.name}
+                              width={20}
+                              height={20}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                        ))
                       ) : (
                         <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-md" />
                       )}

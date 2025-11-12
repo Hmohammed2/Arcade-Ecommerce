@@ -62,7 +62,7 @@ export function ProductCard({
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-1">
         <div className="relative w-full h-48 flex items-center justify-center">
           <Image
-            src={getImageUrl(product.image)}
+            src={getImageUrl(product.image) || "placeholder.png"}
             alt={product.name}
             width={200}
             height={200}

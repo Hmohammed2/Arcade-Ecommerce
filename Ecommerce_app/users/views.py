@@ -23,6 +23,9 @@ from django.conf import settings
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 
+import logging
+logger = logging.getLogger(__name__)
+
 class TurnstileVerifyView(APIView):
     permission_classes = [AllowAny]  # anyone can verify before login
 
@@ -201,13 +204,14 @@ class PasswordResetEmailView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
+            logger.exception("Password reset requested for non-existent email: %s", email)
             pass
 
         # Create token
         reset_token = PasswordResetToken.create_token(user)
         token = reset_token.token
         
-        reset_link = f"{settings.frontendURL}/reset-password?token={token}"
+        reset_link = f"{settings.FRONTENDURL}/reset-password?token={token}"
 
             # Send password reset email via Microsoft Graph
         send_graph_email(

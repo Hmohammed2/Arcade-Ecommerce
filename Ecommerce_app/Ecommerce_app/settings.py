@@ -15,6 +15,8 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)  # Ensure /logs folder exists
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -86,16 +88,66 @@ CSRF_TRUSTED_ORIGINS = [
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+
+    "formatters": {
+        "verbose": {
+            "format": "[{asctime}] {levelname} [{name}:{lineno}] {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
+
+    "handlers": {
+        # --- Console output ---
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+
+        # --- File handler for PayPal logs ---
+        "paypal_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "paypal.log",
+            "maxBytes": 5 * 1024 * 1024,  # 5 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+
+        # --- Optional file for general app logs ---
+        "app_file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOG_DIR / "app.log",
+            "maxBytes": 10 * 1024 * 1024,  # 10 MB
+            "backupCount": 5,
+            "formatter": "verbose",
+        },
+    },
+
     "root": {
-        "handlers": ["console"],
+        "handlers": ["console", "app_file"],
         "level": "INFO",
     },
+
+    "loggers": {
+        # PayPal Facade detailed logs
+        "retail.facades.paypal_facade": {
+            "handlers": ["console", "paypal_file"],
+            "level": "DEBUG",  # capture all PayPal API details
+            "propagate": False,
+        },
+
+        # Payment Service (Stripe, Orders, etc.)
+        "retail.services.payment_service": {
+            "handlers": ["console", "app_file"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }
+
 
 # Application definition
 
@@ -313,6 +365,6 @@ GRAPH_SHARED_MAILBOX="no-reply@arcadesticklabs.co.uk"
 
 # Frontend URL for email links
 if DEBUG:
-    frontendURL = "http://localhost:3000"
+    FRONTENDURL = "http://localhost:3000"
 else:
-    frontendURL = "https://arcadesticklabs-test.ddns.net"
+    FRONTENDURL = "https://arcadesticklabs.co.uk"
