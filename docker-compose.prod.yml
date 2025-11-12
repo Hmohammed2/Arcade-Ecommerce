@@ -6,6 +6,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DJANGO_ENV: production
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -80,7 +81,7 @@ services:
     networks:
       - app_net
 volumes:
-  postgres_data_prod:
+  postgres_data:
   stripe-cli-config:
 
 networks:
