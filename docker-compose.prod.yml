@@ -12,7 +12,6 @@ services:
     networks:
       - app_net
   django-backend-prod:
-    container_name: django-backend-prod
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
@@ -65,24 +64,9 @@ services:
       - NODE_ENV=production
     networks:
       - app_net
-  stripe:
-    image: stripe/stripe-cli
-    container_name: stripe
-    command:
-      [
-        "listen",
-        "--forward-to",
-        "https://arcadesticklabs.co.uk/api/payments/webhook/",
-      ]
-    volumes:
-      - stripe-cli-config:/root/.config/stripe
-    depends_on:
-      - django-backend-prod
-    networks:
-      - app_net
+
 volumes:
   postgres_data:
-  stripe-cli-config:
 
 networks:
   app_net:
