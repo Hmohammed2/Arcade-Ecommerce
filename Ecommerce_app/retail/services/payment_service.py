@@ -6,6 +6,7 @@ from retail.models import Order, OrderItem, Payment, Product, Coupon, ProductVar
 from retail.facades.stripe_facade import StripePaymentFacade
 from retail.facades.paypal_facade import PayPalFacade
 from retail.utils.slack_notifications import send_slack_message
+from retail.utils.deplete_stock import _deplete_stock_for_order
 
 import logging
 
@@ -84,14 +85,10 @@ class PaymentService:
                     logger.exception("Insufficient stock for product %s variant %s: requested %s, available %s", product.id, colour, quantity, variant.stock)
                     raise ValueError(f"Insufficient stock for {product.name} ({colour})")
 
-                variant.stock -= quantity
-                variant.save(update_fields=["stock"])
             else:
                 if product.stock < quantity:
                     logger.exception("Insufficient stock for product %s: requested %s, available %s", product.id, quantity, product.stock)
                     raise ValueError(f"Insufficient stock for {product.name}")
-                product.stock -= quantity
-                product.save(update_fields=["stock"])
                 
             # Calculate line total
             line_price = product.price * quantity
@@ -256,40 +253,50 @@ class PaymentService:
     @staticmethod
     @transaction.atomic
     def mark_payment_succeeded(intent: dict) -> None:
-        """
-        Marks a payment as succeeded and updates the related order.
-        """
-        from retail.models import CouponUsage  # ✅ Import here to avoid circular import
+        from retail.models import CouponUsage
         from users.services.SendEmail import send_payment_success_email
-        
+
         try:
             payment = Payment.objects.get(stripe_payment_intent=intent["id"])
         except Payment.DoesNotExist:
             logger.exception("Payment with Stripe intent %s does not exist", intent["id"])
             return
 
+        # 1) Mark payment fields
         payment.status = "succeeded"
         payment.payment_method = intent["payment_method_types"][0]
-        payment.save()
+        payment.save(update_fields=["status", "payment_method"])
 
         order = payment.order
-        order.status = "processing"
-        order.save()
-        
-        # ✅ If the order had a coupon, mark it as used
-        if order.coupon and order.email:
-            CouponUsage.objects.get_or_create(
-                coupon=order.coupon,
-                email=order.email,
+
+        # 2) Try to decrement stock atomically
+        ok, errs = PaymentService._deplete_stock_for_order(order)
+        if not ok:
+            # Business choice: put order on hold and notify staff; you could also auto-refund here.
+            order.status = "on_hold"
+            order.save(update_fields=["status"])
+            msg = (
+                f"⚠️ Stock shortfall for Order #{order.id} after payment. "
+                f"Items: {', '.join(errs)}"
             )
+            logger.error(msg)
+            send_slack_message(msg)
+            return  # stop here; don't send success email yet (or send a different one)
+
+        # 3) All good → proceed
+        order.status = "processing"
+        order.save(update_fields=["status"])
+
+        if order.coupon and order.email:
+            CouponUsage.objects.get_or_create(coupon=order.coupon, email=order.email)
 
         send_slack_message(
-            f"✅ Payment succeeded for Order #{order.id} "
+            f"✅ Payment succeeded and stock reserved for Order #{order.id} "
             f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
-        logger.info("Payment for Order #%s marked as succeeded and Slack notified.", order.id)
-        
-        # ✅ Send confirmation email
+        logger.info("Payment and stock confirmed for Order #%s", order.id)
+
+        # 4) Email customer
         try:
             items = [
                 {"name": i.product.name, "quantity": i.quantity, "price": float(i.price)}
@@ -314,40 +321,62 @@ class PaymentService:
     @transaction.atomic
     def mark_paypal_payment_succeeded(order_id: str) -> None:
         """
-        Marks a PayPal payment as succeeded, updates the related order,
-        and records coupon usage for that email.
+        Marks a PayPal payment as succeeded, decrements stock,
+        updates order status, records coupon usage, and sends notification/email.
         """
-        from retail.models import CouponUsage  # ✅ Import here to avoid circular import
+        from retail.models import CouponUsage  # avoid circular import
         from users.services.SendEmail import send_payment_success_email
-        
+
         try:
             payment = Payment.objects.get(stripe_payment_intent=order_id)
         except Payment.DoesNotExist:
             logger.exception("Payment with PayPal order ID %s does not exist", order_id)
             return
 
+        # 1️⃣ Update payment record
         payment.status = "succeeded"
         payment.payment_method = "paypal"
-        payment.save()
+        payment.save(update_fields=["status", "payment_method"])
 
         order = payment.order
-        order.status = "processing"
-        order.save()
+        logger.info("Marking PayPal payment succeeded for Order #%s", order.id)
 
-        # ✅ Record coupon usage
+        # 2️⃣ Attempt to atomically decrement stock
+        ok, errs = PaymentService._deplete_stock_for_order(order)
+
+        if not ok:
+            # ⚠️ If stock can’t be fulfilled, place order on hold and notify staff
+            order.status = "on_hold"
+            order.save(update_fields=["status"])
+
+            msg = (
+                f"⚠️ Stock shortfall for PayPal Order #{order.id}. "
+                f"Unable to fulfill: {', '.join(errs)}"
+            )
+            logger.error(msg)
+            send_slack_message(msg)
+            return  # stop here; don't send success email yet
+
+        # 3️⃣ All stock OK → mark order as processing
+        order.status = "processing"
+        order.save(update_fields=["status"])
+
+        # 4️⃣ Record coupon usage (if applicable)
         if order.coupon and order.email:
             CouponUsage.objects.get_or_create(
                 coupon=order.coupon,
                 email=order.email,
             )
 
-        send_slack_message(
-            f"✅ PayPal Payment succeeded for Order #{order.id} "
+        # 5️⃣ Log + Slack notification
+        msg = (
+            f"✅ PayPal payment succeeded and stock reserved for Order #{order.id} "
             f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
-        logger.info("Payment for Order #%s marked as succeeded and Slack notified.", order.id)
-        
-        # ✅ Send confirmation email
+        logger.info(msg)
+        send_slack_message(msg)
+
+        # 6️⃣ Send confirmation email
         try:
             items = [
                 {"name": i.product.name, "quantity": i.quantity, "price": float(i.price)}
