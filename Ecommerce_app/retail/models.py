@@ -38,6 +38,18 @@ class Product(models.Model):
 
     def __str__(self):
         return f'{self.name} - {self.category.name} - £{self.price} - Stock: {self.stock}'
+    
+    @property
+    def total_stock(self):
+        """
+        Returns:
+            - the product's own stock if there are no variants
+            - otherwise, the sum of all variant stock
+        """
+        variants = self.variants.all()
+        if variants.exists():
+            return sum(v.stock for v in variants)
+        return self.stock
 
 class ProductVariant(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="variants")
@@ -49,6 +61,22 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return f"{self.product.name} ({self.colour}) - Stock: {self.stock}"
+    
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.update_product_stock()
+
+    def delete(self, *args, **kwargs):
+        product = self.product
+        super().delete(*args, **kwargs)
+        product.stock = sum(v.stock for v in product.variants.all()) or product.stock
+        product.save(update_fields=['stock'])
+    
+    def update_product_stock(self):
+        product = self.product
+        total = sum(v.stock for v in product.variants.all())
+        product.stock = total
+        product.save(update_fields=['stock'])
 
 class Order(models.Model):
     STATUS_CHOICES = (

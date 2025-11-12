@@ -36,7 +36,6 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ["name", "description"]
     permission_classes = [permissions.AllowAny]  # 👈 public endpoint
 
-
 # Orders
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -218,10 +217,15 @@ def checkout(request):
             f"[Checkout] Order {result['order_id']} created with PaymentIntent {result['clientSecret']}"
         )
         return Response(result, status=status.HTTP_201_CREATED)
+    
+    except ValueError as e:
+        # 💡 This handles stock errors and validation issues gracefully
+        logger.warning(f"[Checkout] Validation error: {e}")
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
-        logger.exception("[Checkout] Failed to create order + payment")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.exception("[Checkout] Unexpected failure during order creation")
+        return Response({"error": "Something went wrong during checkout."}, status=500)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -247,6 +251,12 @@ def paypal_checkout(request):
         )
 
         return Response(result, status=status.HTTP_201_CREATED)
+    
+    except ValueError as e:
+        # 💡 This handles stock errors and validation issues gracefully
+        logger.warning(f"[Checkout] Validation error: {e}")
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

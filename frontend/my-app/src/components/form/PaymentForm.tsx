@@ -120,8 +120,19 @@ export default function PaymentForm() {
             }
           );
           const data = await res.json();
-          if (!res.ok)
-            throw new Error(data.error || "Failed to create PayPal order");
+          if (!res.ok) {
+            const message = data?.error || "Unable to create PayPal order ❌";
+            toast.error(message);
+            paypalRef.current
+              ?.querySelector("button")
+              ?.setAttribute("disabled", "true");
+            setTimeout(() => {
+              paypalRef.current
+                ?.querySelector("button")
+                ?.removeAttribute("disabled");
+            }, 2000);
+            throw new Error(message);
+          }
           return data.paypal_order_id;
         },
         // Capture order after approval
@@ -229,7 +240,11 @@ export default function PaymentForm() {
       }
     } catch (err: any) {
       console.error(err.message);
-      toast.error("Payment failed ❌");
+      // 💡 NEW: Display backend error if available
+      const backendMessage =
+        err?.response?.data?.error || err.message || "Payment failed ❌";
+
+      toast.error(backendMessage);
     } finally {
       setProcessing(false);
     }

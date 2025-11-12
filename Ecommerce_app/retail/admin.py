@@ -48,3 +48,12 @@ class ProductAdmin(ImportExportModelAdmin):
     inlines = [ProductImageInline, ProductVariantInline]
     list_display = ('name', 'price', 'stock')
     prepopulated_fields = {"slug": ("name",)}
+    
+    def get_readonly_fields(self, request, obj=None):
+        if obj and obj.variants.exists():
+            return ['stock']
+        return []
+    
+    def display_stock(self, obj):
+        return obj.total_stock
+    display_stock.short_description = 'Total Stock'

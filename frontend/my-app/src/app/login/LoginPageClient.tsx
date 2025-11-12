@@ -114,10 +114,15 @@ export default function LoginPageClient() {
           />
         </div>
 
-        <Turnstile
-          sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
-          onVerify={(token) => setToken(token)}
-        />
+        <div className="w-full flex justify-center">
+          <div className="turnstile-container w-full">
+            <Turnstile
+              sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
+              onVerify={(token) => setToken(token)}
+              className="w-full"
+            />
+          </div>
+        </div>
 
         {/* Login button */}
         <button

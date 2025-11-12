@@ -27,3 +27,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.turnstile-container iframe {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 100% !important;
+  display: block !important;
+}
