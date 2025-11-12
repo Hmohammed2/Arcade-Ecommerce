@@ -12,6 +12,7 @@ services:
     networks:
       - app_net
   django-backend-prod:
+    container_name: django-backend-prod
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
