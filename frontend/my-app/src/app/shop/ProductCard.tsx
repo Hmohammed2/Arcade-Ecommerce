@@ -64,9 +64,9 @@ export function ProductCard({
           <Image
             src={getImageUrl(product.image) || "placeholder.png"}
             alt={product.name}
-            width={200}
-            height={200}
-            className="object-contain mx-auto"
+            fill
+            className="object-cover w-full h-[224px]"
+            sizes="64px"
           />
         </div>
 
