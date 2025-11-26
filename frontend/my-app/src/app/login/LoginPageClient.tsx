@@ -113,16 +113,11 @@ export default function LoginPageClient() {
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
           />
         </div>
-
-        <div className="w-full flex justify-center">
-          <div className="turnstile-container w-full">
-            <Turnstile
-              sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
-              onVerify={(token) => setToken(token)}
-              className="w-full"
-            />
-          </div>
-        </div>
+        {/* Turnstile CAPTCHA */}
+        <Turnstile
+          sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
+          onVerify={(token) => setToken(token)}
+        />
 
         {/* Login button */}
         <button

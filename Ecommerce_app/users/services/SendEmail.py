@@ -2,6 +2,7 @@ import requests
 from django.conf import settings
 from django.utils import timezone
 
+
 def get_graph_access_token():
     tenant_id = settings.GRAPH_TENANT_ID
     client_id = settings.GRAPH_CLIENT_ID
@@ -19,6 +20,7 @@ def get_graph_access_token():
     response = requests.post(url, data=data)
     response.raise_for_status()
     return response.json()["access_token"]
+
 
 def send_graph_email(to_email, subject, body):
     access_token = get_graph_access_token()
@@ -47,11 +49,45 @@ def send_graph_email(to_email, subject, body):
     if response.status_code != 202:
         raise Exception(f"Email failed: {response.text}")
 
-def send_payment_success_email(to_email, first_name, order_id, amount, items=None, payment_method="card"):
+
+def send_payment_success_email(
+    to_email,
+    first_name,
+    order_id,
+    amount,
+    items=None,
+    payment_method: str = "card",
+    delivery_fee: float | None = None,
+    discount_amount: float | None = None,
+    coupon_code: str | None = None,
+):
     """
-    Sends a styled payment success email using the site's theme, including order items.
+    Sends a styled payment success email using the site's theme, including:
+    - line items
+    - subtotal
+    - delivery
+    - discount (if any)
+    - total paid
     """
     subject = f"Your ArcadeStickLabs Order #{order_id} — Payment Confirmed!"
+
+    # 🧾 Compute subtotal & amounts
+    subtotal = 0.0
+    if items:
+        for item in items:
+            line_price = float(item.get("price", 0)) * float(item.get("quantity", 0))
+            subtotal += line_price
+
+    # If not provided, assume 0 delivery (for backwards compatibility)
+    delivery_fee_val = float(delivery_fee) if delivery_fee is not None else 0.0
+    total_paid = float(amount)
+
+    # If discount not passed explicitly, derive it from the math if possible
+    if discount_amount is None:
+        derived_discount = (subtotal + delivery_fee_val) - total_paid
+        discount_amount_val = derived_discount if derived_discount > 0 else 0.0
+    else:
+        discount_amount_val = float(discount_amount)
 
     # 🧾 Build items HTML table
     items_html = ""
@@ -72,13 +108,35 @@ def send_payment_success_email(to_email, first_name, order_id, amount, items=Non
               <tr>
                 <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['name']}</td>
                 <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['quantity']}</td>
-                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">£{item['price']:.2f}</td>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">£{float(item['price']):.2f}</td>
               </tr>
             """
         items_html += """
           </tbody>
         </table>
         """
+
+    # 🧮 Build the totals / discount section
+    totals_html = f"""
+        <div style="margin-top:20px; font-size:0.95rem;">
+          <p><strong>Items subtotal:</strong> £{subtotal:.2f}</p>
+          <p><strong>Delivery:</strong> £{delivery_fee_val:.2f}</p>
+    """
+
+    if discount_amount_val > 0:
+        totals_html += f"""
+          <p style="color:#16a34a;">
+            <strong>Discount applied{f" ({coupon_code})" if coupon_code else ""}:</strong>
+            -£{discount_amount_val:.2f}
+          </p>
+        """
+
+    totals_html += f"""
+          <p style="margin-top:8px; font-size:1rem;">
+            <strong>Total paid:</strong> £{total_paid:.2f}
+          </p>
+        </div>
+    """
 
     body = f"""
         <html>
@@ -149,10 +207,12 @@ def send_payment_success_email(to_email, first_name, order_id, amount, items=Non
             <p>Hi {first_name},</p>
             <p>Thank you for your purchase! We’ve successfully processed your payment for:</p>
             <h2 style="margin-bottom:10px;">Order #{order_id}</h2>
-            <p><strong>Amount:</strong> £{amount:.2f}</p>
             <p><strong>Payment Method:</strong> {payment_method.title()}</p>
+            {totals_html}
             {items_html}
-            <p style="margin-top:20px;">Your order is now being prepared and will move to <strong>Processing</strong> shortly.</p>
+            <p style="margin-top:20px;">
+                Your order is now being prepared and will move to <strong>Processing</strong> shortly.
+            </p>
             <p style="margin-top:30px;">
                 If you have any questions, just contact 
                 <a href="mailto:support@arcadesticklabs.co.uk" class="email-link">support@arcadesticklabs.co.uk</a> — we’re happy to help.
@@ -166,6 +226,5 @@ def send_payment_success_email(to_email, first_name, order_id, amount, items=Non
         </body>
         </html>
         """
-
 
     send_graph_email(to_email, subject, body)

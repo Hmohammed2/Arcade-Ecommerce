@@ -309,6 +309,7 @@ class PaymentService:
                 amount=payment.amount,
                 items=items,
                 payment_method=payment.payment_method,
+                coupon_code=order.coupon.code if order.coupon else None,
             )
             logger.info("Payment success email sent for Order #%s to %s", order.id, order.email)
         except Exception as e:
@@ -389,6 +390,7 @@ class PaymentService:
                 amount=payment.amount,
                 items=items,
                 payment_method="PayPal",
+                coupon_code=order.coupon.code if order.coupon else None,
             )
             logger.info("PayPal payment success email sent for Order #%s to %s", order.id, order.email)
         except Exception as e:

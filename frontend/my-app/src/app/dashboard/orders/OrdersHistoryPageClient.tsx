@@ -85,6 +85,23 @@ export default function OrderHistoryPageClient() {
         {orders.map((order: Order, index: number) => {
           const isExpanded = expandedOrder === order.id;
 
+          // 💸 DISCOUNT LOGIC
+          const deliveryFee = Number(order.delivery_fee) || 0;
+          const itemsSubtotal = order.items.reduce(
+            (sum: number, item: OrderItem) => {
+              const price = Number(item.price) || 0;
+              return sum + price * item.quantity;
+            },
+            0
+          );
+
+          const totalPrice = Number(order.total_price) || 0;
+          const rawDiscount = itemsSubtotal + deliveryFee - totalPrice;
+
+          // Avoid tiny floating-point noise
+          const discount = Math.round(rawDiscount * 100) / 100;
+          const hasDiscount = discount > 0;
+
           return (
             <motion.div
               key={order.id}
@@ -120,12 +137,14 @@ export default function OrderHistoryPageClient() {
                     <span className="font-medium capitalize text-gray-700 dark:text-gray-300">
                       {order.delivery_method}
                     </span>{" "}
-                    (
-                    {Number(order.delivery_fee) > 0
-                      ? `£${order.delivery_fee}`
-                      : "Free"}
-                    )
+                    ({deliveryFee > 0 ? `£${deliveryFee.toFixed(2)}` : "Free"})
                   </p>
+
+                  {hasDiscount && (
+                    <p className="text-xs text-green-700 dark:text-green-300 font-medium mt-1">
+                      You saved £{discount.toFixed(2)} on this order
+                    </p>
+                  )}
                 </div>
 
                 <span
@@ -180,7 +199,7 @@ export default function OrderHistoryPageClient() {
                             </span>
                           </div>
                           <span className="text-gray-700 dark:text-gray-200 font-medium ml-2 shrink-0">
-                            £{item.price}
+                            £{Number(item.price).toFixed(2)}
                           </span>
                         </li>
                       ))}
@@ -189,16 +208,29 @@ export default function OrderHistoryPageClient() {
                     {/* Totals */}
                     <div className="mt-4 sm:mt-5 border-t border-gray-200 dark:border-gray-700 pt-3 sm:pt-4 space-y-1 text-sm sm:text-base">
                       <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Items Subtotal</span>
+                        <span>£{itemsSubtotal.toFixed(2)}</span>
+                      </div>
+
+                      {hasDiscount && (
+                        <div className="flex justify-between text-sm sm:text-base text-green-700 dark:text-green-300">
+                          <span>Discount</span>
+                          <span>-£{discount.toFixed(2)}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Delivery Fee</span>
                         <span>
-                          {Number(order.delivery_fee) > 0
-                            ? `£${order.delivery_fee}`
+                          {deliveryFee > 0
+                            ? `£${deliveryFee.toFixed(2)}`
                             : "Free"}
                         </span>
                       </div>
+
                       <div className="flex justify-between font-semibold text-gray-900 dark:text-gray-100 border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
                         <span>Total</span>
-                        <span>£{order.total_price}</span>
+                        <span>£{totalPrice.toFixed(2)}</span>
                       </div>
                     </div>
                   </motion.div>

@@ -55,6 +55,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_price",
             "delivery_method",
             "delivery_fee",
+            "coupon",
             "created_at",
             "updated_at",
             "items",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
@@ -55,6 +55,33 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
     fetchOrder();
   }, [orderId, isAuthenticated, accessToken]);
 
+  // 🔢 Derived amounts
+  const { subtotal, deliveryFee, discountAmount, totalPaid } = useMemo(() => {
+    if (!order || !order.items) {
+      return {
+        subtotal: 0,
+        deliveryFee: 0,
+        discountAmount: 0,
+        totalPaid: 0,
+      };
+    }
+
+    const subtotal = order.items.reduce(
+      (sum: number, item: any) =>
+        sum + Number(item.price) * Number(item.quantity),
+      0
+    );
+
+    const deliveryFee = Number(order.delivery_fee ?? 0);
+    const totalPaid = Number(order.total_price ?? 0);
+
+    // discount = (items + delivery) - total
+    const discountRaw = subtotal + deliveryFee - totalPaid;
+    const discountAmount = discountRaw > 0 ? discountRaw : 0;
+
+    return { subtotal, deliveryFee, discountAmount, totalPaid };
+  }, [order]);
+
   // ✅ Loading state
   if (loading)
     return (
@@ -100,9 +127,28 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         <p>
           <span className="font-medium">Status:</span> {order.status}
         </p>
-        <p>
-          <span className="font-medium">Total:</span> £{order.total_price}
-        </p>
+
+        {/* 💰 Breakdown showing discount */}
+        <div className="mt-4 space-y-1 text-sm">
+          <p>
+            <span className="font-medium">Items subtotal:</span> £
+            {subtotal.toFixed(2)}
+          </p>
+          <p>
+            <span className="font-medium">Delivery:</span> £
+            {deliveryFee.toFixed(2)}
+          </p>
+          {discountAmount > 0 && (
+            <p className="text-green-600 dark:text-green-400">
+              <span className="font-medium">Discount applied:</span> -£
+              {discountAmount.toFixed(2)}
+            </p>
+          )}
+          <p className="mt-1">
+            <span className="font-medium">Total paid:</span> £
+            {totalPaid.toFixed(2)}
+          </p>
+        </div>
 
         <div className="mt-6">
           <h3 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
