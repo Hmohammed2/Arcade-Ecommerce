@@ -81,6 +81,12 @@ class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
     image = models.ImageField(upload_to="products/gallery/")
     alt_text = models.CharField(max_length=255, blank=True)
+    colour = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Optional: if set, this image is used for the matching colour variant."
+    )
 
     class Meta:
         ordering = ("id",)

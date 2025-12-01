@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { cartItem } from "@/types/cart";
 import { getImageUrl } from "@/library/getImageUrl";
 import type { Product, ProductVariant } from "@/types/product";
@@ -49,6 +49,26 @@ export function ProductCard({
   const maxStock =
     selectedVariant?.stock ?? product.stock ?? Number.POSITIVE_INFINITY;
 
+  // Normalise colours for comparison
+  const selectedColour = selectedVariant?.colour?.toLowerCase().trim() ?? null;
+
+  const variantImage = useMemo(() => {
+    if (!selectedColour || !product.images?.length) return null;
+
+    return (
+      product.images.find((img) => {
+        if (!img.colour) return false;
+        return img.colour.toLowerCase().trim() === selectedColour;
+      }) || null
+    );
+  }, [product.images, selectedColour]);
+
+  const displayImage =
+    variantImage?.image ||
+    product.image || // main / default image from backend
+    product.images?.[0]?.image || // fallback to first gallery image
+    "placeholder.png";
+
   const handleIncrement = () => {
     if (isOutOfStock) return;
     if (qty >= maxStock) return;
@@ -61,7 +81,7 @@ export function ProductCard({
         id: product.id,
         title: product.name,
         price: Number(product.price),
-        image: product.image,
+        image: displayImage,
         quantity: 1,
         colour,
       };
@@ -97,7 +117,7 @@ export function ProductCard({
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-1">
         <div className="relative w-full h-48 flex items-center justify-center">
           <Image
-            src={getImageUrl(product.image) || "placeholder.png"}
+            src={getImageUrl(displayImage)}
             alt={product.name}
             fill
             className="object-cover w-full h-[224px]"

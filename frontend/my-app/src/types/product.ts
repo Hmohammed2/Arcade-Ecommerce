@@ -6,6 +6,13 @@ export type Category = {
   slug: string;
 };
 
+export interface ProductImage {
+  id: number;
+  image: string;
+  alt_text: string;
+  colour?: string | null;
+}
+
 export interface ProductVariant {
   id: number;
   colour: string;
@@ -23,7 +30,7 @@ export type Product = {
   price: number;
   stock?: number; // PositiveIntegerField
   image?: string;
-  images?: string[]; // URLs of additional images
+  images?: ProductImage[];
   variants?: ProductVariant[];
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime

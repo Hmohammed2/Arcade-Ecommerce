@@ -41,20 +41,47 @@ export default function ProductPageClient({ slug }: Props) {
       .filter((f) => !!f.label);
   }, [product]);
 
-  // 🧩 Product images
-  const images = [
-    product?.image,
-    ...(product?.images?.map((img: any) => img.image) || []),
-  ].filter(Boolean);
+  // 🧩 Product images – primary + gallery
+  const images = useMemo(() => {
+    if (!product) return [];
+    const primary = product.image ? [product.image] : [];
+    const gallery =
+      product.images?.map((img: any) => img.image).filter(Boolean) || [];
+    return [...primary, ...gallery];
+  }, [product]);
 
-  const [selectedImage, setSelectedImage] = useState(images[0] ?? "");
+  const [selectedImage, setSelectedImage] = useState<string>("");
 
-  // Auto-update main image if variant has its own image field (optional)
+  // Auto-select image based on selected variant colour
   useEffect(() => {
-    if (selectedVariant && (selectedVariant as any).image) {
-      setSelectedImage((selectedVariant as any).image);
+    if (!product) return;
+
+    const allImages = images;
+    if (!allImages.length) {
+      setSelectedImage("");
+      return;
     }
-  }, [selectedVariant]);
+
+    // If there is a selected variant, try to find a colour-matched image
+    if (selectedVariant && product.images?.length) {
+      const selectedColour = selectedVariant.colour?.toLowerCase().trim();
+
+      const match = product.images.find((img: any) => {
+        if (!img.colour) return false;
+        return img.colour.toLowerCase().trim() === selectedColour;
+      });
+
+      if (match?.image) {
+        setSelectedImage(match.image);
+        return;
+      }
+    }
+
+    // If current selectedImage is still valid, keep it
+    setSelectedImage((prev) =>
+      prev && allImages.includes(prev) ? prev : allImages[0]
+    );
+  }, [product, images, selectedVariant]);
 
   if (isLoading)
     return (
@@ -83,7 +110,7 @@ export default function ProductPageClient({ slug }: Props) {
       title: product.name,
       price: numericPrice,
       quantity,
-      image: product.image,
+      image: selectedImage || product.image,
       colour: selectedVariant ? selectedVariant.colour : null,
     });
   };
@@ -119,7 +146,7 @@ export default function ProductPageClient({ slug }: Props) {
                     className="relative w-full h-full"
                   >
                     <Image
-                      src={getImageUrl(selectedImage) || "placeholder.png"}
+                      src={getImageUrl(selectedImage)}
                       alt={product.name}
                       fill
                       className="object-cover"
@@ -147,7 +174,7 @@ export default function ProductPageClient({ slug }: Props) {
                     }`}
                   >
                     <Image
-                      src={getImageUrl(img) || "placeholder.png"}
+                      src={getImageUrl(img)}
                       alt={`${product.name} view ${i + 1}`}
                       fill
                       className="object-cover"
