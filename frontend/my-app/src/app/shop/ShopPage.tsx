@@ -7,7 +7,8 @@ import type { Product } from "@/types/product";
 import { ProductCard } from "./ProductCard";
 
 export default function ShopPage() {
-  const { addItem, isInCart } = useCart();
+  // ⬇️ grab the extra cart helpers
+  const { addItem, isInCart, updateQuantity, getItemCount } = useCart();
   const { data: products = [], isLoading, isError } = useProducts();
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -135,7 +136,7 @@ export default function ShopPage() {
             {filteredProducts.length === 0 ? (
               <p>No products found.</p>
             ) : (
-              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl-grid-cols-4">
                 {filteredProducts.map((product) => {
                   const inStock = getProductStockStatus(product);
                   return (
@@ -151,6 +152,8 @@ export default function ShopPage() {
                         product={product}
                         addItem={addItem}
                         isInCart={isInCart}
+                        updateQuantity={updateQuantity}
+                        getItemCount={getItemCount}
                       />
                     </div>
                   );

@@ -9,19 +9,23 @@ import type { Product, ProductVariant } from "@/types/product";
 export function ProductCard({
   product,
   addItem,
+  updateQuantity,
+  getItemCount,
   isInCart,
 }: {
   product: Product;
   addItem: (item: cartItem) => void;
-  isInCart: (id: number, colour?: string) => boolean;
+  updateQuantity: (id: number, colour: string | null, quantity: number) => void;
+  getItemCount: (id: number, colour?: string | null) => number;
+  isInCart: (id: number, colour?: string | null) => boolean;
 }) {
-  // ✅ Use variants from backend instead of product.colours
   const variants: ProductVariant[] = product.variants ?? [];
 
-  // Default to first in-stock variant if any
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
     null
   );
+
+  const [qty, setQty] = useState(0);
 
   useEffect(() => {
     if (!selectedVariant && variants.length > 0) {
@@ -30,27 +34,58 @@ export function ProductCard({
     }
   }, [variants, selectedVariant]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
+  const colour = selectedVariant?.colour ?? null;
 
-    // If variant exists and is out of stock, do nothing
-    if (selectedVariant && selectedVariant.stock === 0) return;
-
-    const item: cartItem = {
-      id: product.id,
-      title: product.name,
-      price: Number(product.price),
-      image: product.image,
-      quantity: 1,
-      colour: selectedVariant ? selectedVariant.colour : null,
-    };
-
-    addItem(item);
-  };
+  // sync local qty with cart whenever variant or cart changes
+  useEffect(() => {
+    const cartQty = getItemCount(product.id, colour) || 0;
+    setQty(cartQty);
+  }, [product.id, colour, getItemCount]);
 
   const isOutOfStock =
     selectedVariant?.stock === 0 ||
     (variants.length === 0 && (product.stock ?? 0) === 0);
+
+  const maxStock =
+    selectedVariant?.stock ?? product.stock ?? Number.POSITIVE_INFINITY;
+
+  const handleIncrement = () => {
+    if (isOutOfStock) return;
+    if (qty >= maxStock) return;
+
+    const newQty = qty + 1;
+
+    if (qty === 0) {
+      // first add – use addItem so you keep your "Added X to cart" toast
+      const item: cartItem = {
+        id: product.id,
+        title: product.name,
+        price: Number(product.price),
+        image: product.image,
+        quantity: 1,
+        colour,
+      };
+      addItem(item);
+    } else {
+      updateQuantity(product.id, colour, newQty);
+    }
+
+    setQty(newQty);
+  };
+
+  const handleDecrement = () => {
+    if (qty <= 0) return;
+
+    if (qty <= 1) {
+      // bin behaviour – go back to 0
+      updateQuantity(product.id, colour, 0); // your store removes item & toasts
+      setQty(0);
+    } else {
+      const newQty = qty - 1;
+      updateQuantity(product.id, colour, newQty);
+      setQty(newQty);
+    }
+  };
 
   return (
     <motion.div
@@ -68,6 +103,64 @@ export function ProductCard({
             className="object-cover w-full h-[224px]"
             sizes="64px"
           />
+
+          {/* Deliveroo-style controls over image */}
+          {!isOutOfStock && (
+            <div className="absolute bottom-2 right-2">
+              {qty === 0 ? (
+                // just plus when nothing in cart
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleIncrement();
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-[#14485A] text-white text-xl shadow-md hover:bg-[#0e2f3d] transition"
+                  aria-label="Add to basket"
+                >
+                  +
+                </button>
+              ) : (
+                // qty pill when something in cart
+                <div className="flex items-center gap-2 bg-white/95 dark:bg-gray-900/95 rounded-full shadow-md px-2 py-1">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDecrement();
+                    }}
+                    className={`flex items-center justify-center w-7 h-7 rounded-full border text-sm font-bold transition ${
+                      qty === 1
+                        ? "border-[#E01D42] text-[#E01D42] hover:bg-[#E01D42] hover:text-white"
+                        : "border-[#14485A] text-[#14485A] hover:bg-[#14485A] hover:text-white"
+                    }`}
+                    aria-label={
+                      qty === 1 ? "Remove from basket" : "Decrease quantity"
+                    }
+                  >
+                    {qty === 1 ? "🗑" : "−"}
+                  </button>
+
+                  <span className="min-w-[1.5rem] text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
+                    {qty}
+                  </span>
+
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleIncrement();
+                    }}
+                    className="flex items-center justify-center w-7 h-7 rounded-full border border-[#14485A] text-[#14485A] text-sm font-bold hover:bg-[#14485A] hover:text-white transition disabled:opacity-40"
+                    aria-label="Increase quantity"
+                    disabled={qty >= maxStock}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="p-4 flex-1 flex flex-col">
@@ -102,7 +195,9 @@ export function ProductCard({
                     selectedVariant?.id === variant.id
                       ? "bg-[#14485A] text-white border-[#14485A]"
                       : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  } ${variant.stock === 0 ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${
+                    variant.stock === 0 ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
                   {variant.colour}
                 </button>
@@ -111,21 +206,6 @@ export function ProductCard({
           )}
         </div>
       </Link>
-
-      {/* Add to Basket Button */}
-      <button
-        onClick={handleAddToCart}
-        disabled={isOutOfStock}
-        className={`mt-auto w-full py-2 px-4 rounded-lg font-semibold transition ${
-          isOutOfStock
-            ? "bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed"
-            : "bg-[#14485A] text-white hover:bg-[#0e2f3d]"
-        }`}
-      >
-        {isInCart(product.id, selectedVariant?.colour)
-          ? "Add More"
-          : "Add to Basket"}
-      </button>
     </motion.div>
   );
 }
