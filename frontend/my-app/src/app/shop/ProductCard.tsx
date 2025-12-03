@@ -67,7 +67,7 @@ export function ProductCard({
     variantImage?.image ||
     product.image || // main / default image from backend
     product.images?.[0]?.image || // fallback to first gallery image
-    "placeholder.png";
+    "/placeholder.png";
 
   const handleIncrement = () => {
     if (isOutOfStock) return;
