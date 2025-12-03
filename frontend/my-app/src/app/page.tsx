@@ -1,32 +1,19 @@
-import {
-  HydrationBoundary,
-  QueryClient,
-  dehydrate,
-} from "@tanstack/react-query";
+// app/page.tsx (or wherever LandingPage lives)
 import { fetchProducts } from "@/library/fetchProducts";
 import Link from "next/link";
 import { Package, Box, Truck } from "lucide-react";
 import { ProductCarousel } from "@/components/ProductCarousel";
 
-// --- Landing Page ---
 export default async function LandingPage() {
-  const queryClient = new QueryClient();
-
-  // Prefetch all products server-side
-  await queryClient.prefetchQuery({
-    queryKey: ["products"],
-    queryFn: fetchProducts,
-  });
-
+  // 🔹 Single server-side fetch only
   const products = await fetchProducts();
 
-  // Filter featured items (backend marks them via a boolean field or tag)
   const featuredProducts = products.filter((p: any) => p.is_featured);
 
   return (
     <div className="min-h-screen text-gray-800 dark:text-gray-100 flex flex-col bg-white dark:bg-gray-900 transition-colors duration-300">
       <main className="flex-grow">
-        {/* ================= HERO SECTION ================= */}
+        {/* HERO SECTION */}
         <section className="relative overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -61,10 +48,10 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        {/* ================= FEATURED PRODUCTS ================= */}
+        {/* FEATURED PRODUCTS */}
         <ProductCarousel featuredProducts={featuredProducts} />
 
-        {/* ================= WHY CHOOSE US ================= */}
+        {/* WHY CHOOSE US */}
         <section
           id="products"
           className="bg-gradient-to-br from-indigo-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-colors duration-300"
@@ -104,7 +91,6 @@ export default async function LandingPage() {
   );
 }
 
-// --- Feature Card ---
 function Feature({
   title,
   desc,
