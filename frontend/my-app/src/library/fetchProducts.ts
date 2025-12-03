@@ -1,9 +1,6 @@
-const baseUrl =
-  typeof window === "undefined"
-    ? process.env.NEXT_INTERNAL_API_URL // SSR inside container → direct to Django
-    : process.env.NEXT_PUBLIC_API_URL; // Client-side → public domain
-
+const baseUrl = process.env.NEXT_INTERNAL_API_URL; // SSR inside container → direct to Django
 const baseUrlClient = process.env.NEXT_PUBLIC_API_URL_CLIENT || "";
+
 export async function fetchProducts() {
   const res = await fetch(`${baseUrl}/api/products/`, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to fetch products: ${res.status}`);
