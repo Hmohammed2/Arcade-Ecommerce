@@ -1,9 +1,11 @@
+import { fetchWithTimeout } from "@/library/fetchWithTimeout";
+
 const baseUrlServer = process.env.NEXT_PUBLIC_API_URL_SERVER;
 const baseUrlClient = process.env.NEXT_PUBLIC_API_URL_CLIENT;
 
 // Fetch all products
 export async function fetchProducts() {
-  const res = await fetch(`${baseUrlServer}/api/products/`, {
+  const res = await fetchWithTimeout(`${baseUrlServer}/api/products/`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to fetch products");
