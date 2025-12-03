@@ -19,6 +19,12 @@ const nextConfig = {
       },
       {
         protocol: "http",
+        hostname: "django-backend-prod",
+        port: "8000",
+        pathname: "/media/**",
+      },
+      {
+        protocol: "http",
         hostname: "localhost",
         port: "8000",
         pathname: "/media/**",
