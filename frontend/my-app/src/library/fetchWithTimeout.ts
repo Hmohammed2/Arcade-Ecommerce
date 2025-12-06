@@ -1,6 +1,13 @@
+export type ExtendedFetchOptions = RequestInit & {
+  next?: {
+    revalidate?: number;
+    tags?: string[];
+  };
+};
+
 export async function fetchWithTimeout(
   url: string,
-  options: RequestInit = {},
+  options: ExtendedFetchOptions = {},
   timeoutMs = 20000
 ) {
   const controller = new AbortController();
