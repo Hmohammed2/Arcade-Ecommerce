@@ -4,7 +4,9 @@ import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import AuthHydration from "@/components/middleware/AuthHydration"; // 👈 new small client wrapper
 import QueryProvider from "./providers/providers";
+import Script from "next/script";
 import "./globals.css";
+import Snow from "@/components/snow";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT;
 
@@ -76,6 +78,7 @@ export default function RootLayout({
         <QueryProvider>
           <AuthHydration /> {/* Runs useAuth() + fetchUser client-side */}
           <Navbar />
+          <Snow />
           {children}
           <Footer />
         </QueryProvider>

@@ -1,7 +1,9 @@
 @import "tailwindcss";
 @import "swiper/css";
+@import "swiper/css/thumbs";
 @import "swiper/css/navigation";
 @import "swiper/css/pagination";
+@import "swiper/css/free-mode";
 
 :root {
   --background: #ffffff;

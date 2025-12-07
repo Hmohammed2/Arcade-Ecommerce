@@ -7,6 +7,9 @@ import { useProductBySlug } from "@/hooks/useProductsBySlug";
 import { getImageUrl } from "@/library/getImageUrl";
 import { ZoomModal } from "@/components/ZoomModal";
 import { ProductVariant } from "@/types/product";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, Thumbs, FreeMode } from "swiper/modules";
+import { Swiper as SwiperType } from "swiper";
 
 type Props = { slug: string };
 
@@ -14,6 +17,7 @@ export default function ProductPageClient({ slug }: Props) {
   const { data: product, isLoading, isError } = useProductBySlug(slug);
   const addItem = useCart((s) => s.addItem);
   const [quantity, setQuantity] = useState<number>(1);
+  const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
 
   // 🧩 Variants
   const variants: ProductVariant[] = product?.variants ?? [];
@@ -127,64 +131,94 @@ export default function ProductPageClient({ slug }: Props) {
         {product.name}
       </h1>
 
-      {/* Left: Image */}
+      {/* Left: Image Carousel */}
       <div className="md:col-span-5 flex justify-center items-start">
         <div
           className={`relative w-full max-w-md ${
             images.length > 1 ? "h-[500px]" : "h-[400px]"
-          } border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden flex items-start justify-center bg-gray-50 dark:bg-gray-800`}
+          } border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800`}
         >
-          <div className="w-full flex flex-col justify-start items-center">
-            <div className="relative w-full max-w-md h-[400px] border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden bg-gray-50 dark:bg-gray-800">
-              <ZoomModal
-                src={getImageUrl(selectedImage)}
-                alt={product.name}
-                trigger={(open) => (
-                  <button
-                    type="button"
-                    onClick={open}
-                    className="relative w-full h-full"
-                  >
-                    <Image
-                      src={getImageUrl(selectedImage)}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, 400px"
-                      priority
-                    />
-                    <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded">
-                      Tap to zoom
-                    </span>
-                  </button>
-                )}
-              />
-            </div>
-
-            {images.length > 1 && (
-              <div className="flex gap-2 mt-2 pt-2 overflow-x-auto">
+          {images.length > 0 && (
+            <>
+              {/* Main Swiper */}
+              <Swiper
+                onSwiper={setMainSwiper}
+                spaceBetween={10}
+                navigation
+                modules={[Navigation, Thumbs, FreeMode]}
+                thumbs={{ swiper: mainSwiper }}
+                className="w-full h-[400px] rounded-lg"
+                onSlideChange={(swiper) =>
+                  setSelectedImage(images[swiper.activeIndex])
+                }
+              >
                 {images.map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setSelectedImage(img)}
-                    className={`relative w-16 h-16 border rounded-md overflow-hidden flex-shrink-0 ${
-                      selectedImage === img
-                        ? "border-[#14485A] ring-2 ring-[#14485A]"
-                        : "border-gray-300 dark:border-gray-600"
-                    }`}
-                  >
-                    <Image
+                  <SwiperSlide key={i}>
+                    <ZoomModal
                       src={getImageUrl(img)}
-                      alt={`${product.name} view ${i + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="64px"
+                      alt={product.name}
+                      trigger={(open) => (
+                        <button
+                          type="button"
+                          onClick={open}
+                          className="relative w-full h-[400px]"
+                        >
+                          <Image
+                            src={getImageUrl(img)}
+                            alt={`${product.name} view ${i + 1}`}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 100vw, 400px"
+                          />
+                          <span className="absolute bottom-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded">
+                            Tap to zoom
+                          </span>
+                        </button>
+                      )}
                     />
-                  </button>
+                  </SwiperSlide>
                 ))}
-              </div>
-            )}
-          </div>
+              </Swiper>
+
+              {/* Thumbnails Swiper */}
+              {images.length > 1 && (
+                <Swiper
+                  onSwiper={setMainSwiper}
+                  spaceBetween={8}
+                  slidesPerView={5}
+                  freeMode
+                  watchSlidesProgress
+                  modules={[Thumbs, FreeMode]}
+                  breakpoints={{
+                    0: { slidesPerView: 4, spaceBetween: 8 },
+                    640: { slidesPerView: 5, spaceBetween: 10 },
+                  }}
+                  className="mt-3 pb-2"
+                >
+                  {images.map((img, i) => (
+                    <SwiperSlide key={`thumb-${i}`} className="cursor-pointer">
+                      <div
+                        onClick={() => setSelectedImage(img)}
+                        className={`relative w-16 h-16 border rounded-md overflow-hidden ${
+                          selectedImage === img
+                            ? "border-[#14485A] ring-2 ring-[#14485A]"
+                            : "border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        <Image
+                          src={getImageUrl(img)}
+                          alt={`${product.name} thumbnail ${i + 1}`}
+                          fill
+                          className="object-cover"
+                          sizes="64px"
+                        />
+                      </div>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              )}
+            </>
+          )}
         </div>
       </div>
 

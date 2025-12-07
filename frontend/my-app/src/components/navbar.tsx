@@ -57,7 +57,7 @@ const Navbar = () => {
           <Image
             width={140}
             height={40}
-            src="/Logo.webp"
+            src="/Logo-christmas.webp"
             alt="ArcadeStickLabs Logo"
           />
         </Link>

@@ -39,7 +39,7 @@ const Footer = () => {
           {/* 🕹️ Logo */}
           <div className="flex flex-col items-start">
             <Image
-              src="/Logo.webp"
+              src="/Logo-christmas.webp"
               alt="ArcadeStickLabs Logo"
               width={128}
               height={128}
