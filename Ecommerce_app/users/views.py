@@ -19,12 +19,80 @@ from .serializers import UserSerializer, RegisterSerializer, UserAddressSerializ
 from .models import UserAddress, PasswordResetToken
 from .services.SendEmail import send_graph_email
 from django.conf import settings
+from django.contrib.auth import authenticate
 
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
 
 import logging
 logger = logging.getLogger(__name__)
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        identifier = request.data.get("identifier")
+        password = request.data.get("password")
+        turnstile_token = request.data.get("token")
+
+        if not identifier or not password or not turnstile_token:
+            return Response(
+                {"detail": "Missing credentials"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ✅ Verify Turnstile
+        secret_key = os.environ.get(
+            "TURNSTILE_SECRET_KEY",
+            "1x0000000000000000000000000000000AA",
+        )
+
+        resp = requests.post(
+            "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+            data={
+                "secret": secret_key,
+                "response": turnstile_token,
+                "remoteip": request.META.get("REMOTE_ADDR"),
+            },
+        )
+        
+        print(resp.json())
+
+        if not resp.json().get("success"):
+            return Response(
+                {"detail": "CAPTCHA verification failed"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # ✅ Try username OR email
+        user = authenticate(username=identifier, password=password)
+
+        if not user:
+            try:
+                user_obj = User.objects.get(email__iexact=identifier)
+                if user_obj.check_password(password):
+                    user = user_obj
+            except User.DoesNotExist:
+                pass
+
+        if not user:
+            return Response(
+                {"detail": "Invalid credentials"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # ✅ Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 class TurnstileVerifyView(APIView):
     permission_classes = [AllowAny]  # anyone can verify before login

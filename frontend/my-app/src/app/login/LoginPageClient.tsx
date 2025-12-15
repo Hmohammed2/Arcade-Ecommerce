@@ -14,7 +14,7 @@ export default function LoginPageClient() {
   const login = useAuth((s) => s.login);
   const [token, setToken] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState<string | null>(null);
 
@@ -27,7 +27,7 @@ export default function LoginPageClient() {
     setIsLoading(true);
 
     try {
-      await login(formData.username, formData.password, token ?? "");
+      await login(formData.identifier, formData.password, token ?? "");
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Login failed");
@@ -80,15 +80,15 @@ export default function LoginPageClient() {
         {/* Username */}
         <div>
           <label
-            htmlFor="username"
+            htmlFor="identifier"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            Username
+            Username Or Email Address
           </label>
           <input
-            id="username"
-            name="username"
-            value={formData.username}
+            id="identifier"
+            name="identifier"
+            value={formData.identifier}
             onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm py-2 px-3 transition-colors"
@@ -116,13 +116,18 @@ export default function LoginPageClient() {
         {/* Turnstile CAPTCHA */}
         <Turnstile
           sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
-          onVerify={(token) => setToken(token)}
+          onVerify={(token) => {
+            console.log("Turnstile token:", token);
+            setToken(token);
+          }}
+          onExpire={() => setToken(null)}
+          onError={() => setToken(null)}
         />
 
         {/* Login button */}
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || !token}
           className="w-full py-2 px-4 bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white rounded-md font-semibold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center gap-2"
         >
           {isLoading ? (

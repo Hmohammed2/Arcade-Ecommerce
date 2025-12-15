@@ -70,6 +70,18 @@ const Navbar = () => {
           >
             Shop
           </Link>
+          <Link
+            href="/resources"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+          >
+            Resources
+          </Link>
+          <Link
+            href="/faqs"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+          >
+            FAQS
+          </Link>
 
           <form
             onSubmit={handleSearch}
@@ -318,6 +330,20 @@ const Navbar = () => {
               onClick={() => setIsMobileOpen(false)}
             >
               Shop
+            </Link>
+            <Link
+              href="/resources"
+              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              Resources
+            </Link>
+            <Link
+              href="/faqs"
+              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              FAQS
             </Link>
 
             {!isAuthenticated ? (
