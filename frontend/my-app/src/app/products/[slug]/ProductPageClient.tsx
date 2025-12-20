@@ -10,6 +10,7 @@ import { ProductVariant } from "@/types/product";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper";
+import Breadcrumbs from "@/components/BreadCrumb";
 
 type Props = { slug: string };
 
@@ -126,6 +127,17 @@ export default function ProductPageClient({ slug }: Props) {
 
   return (
     <div className="min-h-screen max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      {/* Breadcrumbs */}
+      <div className="md:col-span-12">
+        <Breadcrumbs
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Shop", href: "/shop" },
+            { label: product.name },
+          ]}
+        />
+      </div>
+
       {/* Mobile title */}
       <h1 className="text-2xl font-bold text-center md:hidden">
         {product.name}

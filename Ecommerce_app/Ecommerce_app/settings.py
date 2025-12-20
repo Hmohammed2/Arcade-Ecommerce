@@ -180,6 +180,7 @@ INSTALLED_APPS = [
     "marketing",
     "retail",
     "users",
+    "articles"
 ]
 
 

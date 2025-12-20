@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCart } from "@/store/useCart";
 import { getImageUrl } from "@/library/getImageUrl";
 import { getColourTextClass } from "../utils/colour-text";
+import Breadcrumbs from "@/components/BreadCrumb";
 
 export default function CartPage() {
   const { items, removeItem, clearCart, updateQuantity, getTotalPrice } =
@@ -26,6 +27,8 @@ export default function CartPage() {
 
   return (
     <div className="min-h-screen max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Cart" }]} />
       {/* 🟡 Notice Bar */}
       <div className="mb-6 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 p-4 text-sm text-yellow-900 dark:text-yellow-100 text-center">
         <p>

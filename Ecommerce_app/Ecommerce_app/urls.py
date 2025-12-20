@@ -25,6 +25,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("marketing/", include("marketing.urls")),
     path("users/", include("users.urls")),
+    path("articles/", include("articles.urls")),
 
     # Authentication (dj-rest-auth + allauth)
     path("auth/", include("dj_rest_auth.urls")),
