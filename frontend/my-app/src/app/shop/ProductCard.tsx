@@ -115,7 +115,7 @@ export function ProductCard({
       className="bg-white dark:bg-gray-800 shadow-md rounded-xl overflow-hidden hover:shadow-lg transition flex flex-col"
     >
       <Link href={`/products/${product.slug}`} className="flex flex-col flex-1">
-        <div className="relative w-full h-48 flex items-center justify-center">
+        <div className="relative w-full aspect-square bg-gray-50 dark:bg-gray-700">
           <Image
             src={getImageUrl(displayImage)}
             alt={product.name}
