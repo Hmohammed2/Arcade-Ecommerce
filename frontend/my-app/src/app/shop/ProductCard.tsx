@@ -120,8 +120,9 @@ export function ProductCard({
             src={getImageUrl(displayImage)}
             alt={product.name}
             fill
-            className="object-cover w-full h-[224px]"
-            sizes="64px"
+            className="object-contain p-4"
+            sizes="(max-width: 768px) 100vw, 33vw"
+            priority={false}
           />
 
           {/* Deliveroo-style controls over image */}
