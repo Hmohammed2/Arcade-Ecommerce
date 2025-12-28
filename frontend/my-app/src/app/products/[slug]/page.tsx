@@ -4,6 +4,7 @@ import { QueryClient, dehydrate } from "@tanstack/react-query";
 import { HydrationBoundary } from "@tanstack/react-query";
 import ProductPageClient from "./ProductPageClient";
 import { fetchProductBySlug } from "@/library/fetchProducts";
+import Script from "next/script";
 
 /**
  * Dynamic SEO metadata for each product
@@ -67,6 +68,7 @@ export default async function ProductPage({
 }) {
   const { slug } = params;
   const queryClient = new QueryClient();
+  const product = await fetchProductBySlug(slug);
 
   await queryClient.prefetchQuery({
     queryKey: ["product", slug],
@@ -76,10 +78,42 @@ export default async function ProductPage({
   const dehydratedState = dehydrate(queryClient);
 
   return (
-    <HydrationBoundary state={dehydratedState}>
-      <div className="dark:bg-gray-900">
-        <ProductPageClient slug={slug} />
-      </div>
-    </HydrationBoundary>
+    <>
+      <Script
+        id="product-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: product.name,
+            image: product.images?.map((img: any) =>
+              typeof img === "string" ? img : img.url
+            ),
+            description: product.shortDescription || product.description,
+            sku: product.sku || product.id,
+            brand: {
+              "@type": "Brand",
+              name: product.brand || "ArcadeStickLabs",
+            },
+            offers: {
+              "@type": "Offer",
+              url: `https://arcadesticklabs.co.uk/products/${slug}`,
+              priceCurrency: "GBP",
+              price: product.price,
+              availability: product.in_stock
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+              itemCondition: "https://schema.org/NewCondition",
+            },
+          }),
+        }}
+      />
+      <HydrationBoundary state={dehydratedState}>
+        <div className="dark:bg-gray-900">
+          <ProductPageClient slug={slug} />
+        </div>
+      </HydrationBoundary>
+    </>
   );
 }
