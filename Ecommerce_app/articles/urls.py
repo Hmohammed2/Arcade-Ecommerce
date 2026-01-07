@@ -8,7 +8,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path("articles/", ArticleListView.as_view()),
+    path("fetcharticles/", ArticleListView.as_view()),
     path("article/create/", ArticleCreateView.as_view()),
     path("article/<slug:slug>/edit/", ArticleUpdateView.as_view()),
     path("article/<slug:slug>/", ArticleDetailView.as_view()),

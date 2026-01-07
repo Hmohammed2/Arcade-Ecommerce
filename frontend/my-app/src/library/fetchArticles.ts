@@ -28,7 +28,7 @@ const API_BASE =
  * GET /articles/
  */
 export async function fetchArticles(): Promise<Article[]> {
-  const res = await fetch(`${API_BASE}/articles/articles/`, {
+  const res = await fetch(`${API_BASE}/articles/fetcharticles/`, {
     next: { revalidate: 60 }, // ISR friendly
   });
 
