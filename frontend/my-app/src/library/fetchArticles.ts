@@ -69,18 +69,22 @@ export async function createArticle(
     slug: string;
     excerpt?: string;
     content: string;
-    is_published?: boolean;
-    published_at?: string | null;
   },
-  accessToken: string
+  accessToken: string,
+  thumbnail?: File | null
 ): Promise<Article> {
+  const body = new FormData();
+
+  body.append("title", data.title);
+  body.append("slug", data.slug);
+  if (data.excerpt) body.append("excerpt", data.excerpt);
+  body.append("content", data.content);
+  if (thumbnail) body.append("thumbnail", thumbnail);
+
   const res = await fetch(`${API_BASE}/articles/article/create/`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(data),
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body,
   });
 
   if (!res.ok) {
@@ -93,26 +97,40 @@ export async function createArticle(
 
 /**
  * Update an existing article
- * PUT /articles/:slug/edit/
+ * PATCH /articles/:slug/edit/
  */
 export async function updateArticle(
   slug: string,
   data: Partial<{
     title: string;
-    excerpt: string;
     content: string;
-    is_published: boolean;
-    published_at: string | null;
+    thumbnail?: File | null;
   }>,
   accessToken: string
 ): Promise<Article> {
+  const hasFile = data.thumbnail instanceof File;
+
+  let body: FormData | string;
+
+  if (hasFile) {
+    const form = new FormData();
+    if (data.title) form.append("title", data.title);
+    if (data.content) form.append("content", data.content);
+    form.append("thumbnail", data.thumbnail as File);
+    body = form;
+  } else {
+    body = JSON.stringify(data);
+  }
+
   const res = await fetch(`${API_BASE}/articles/article/${slug}/edit/`, {
     method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(data),
+    headers: hasFile
+      ? { Authorization: `Bearer ${accessToken}` }
+      : {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+    body,
   });
 
   if (!res.ok) {

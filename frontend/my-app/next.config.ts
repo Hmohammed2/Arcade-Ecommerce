@@ -19,6 +19,12 @@ const nextConfig = {
       },
       {
         protocol: "http",
+        hostname: "django-backend",
+        port: "8000",
+        pathname: "/articles/**",
+      },
+      {
+        protocol: "http",
         hostname: "django-backend-prod",
         port: "8000",
         pathname: "/media/**",
@@ -33,6 +39,11 @@ const nextConfig = {
         protocol: "https",
         hostname: "arcadesticklabs.co.uk",
         pathname: "/media/**",
+      },
+      {
+        protocol: "https",
+        hostname: "arcadesticklabs.co.uk",
+        pathname: "/articles/**",
       },
     ],
   },

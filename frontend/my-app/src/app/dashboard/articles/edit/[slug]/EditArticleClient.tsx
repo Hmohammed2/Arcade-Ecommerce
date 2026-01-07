@@ -19,6 +19,7 @@ export default function EditArticleClient({ slug }: EditArticleClientProps) {
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
   const accessToken = useAuth((s) => s.accessToken);
 
@@ -51,7 +52,11 @@ export default function EditArticleClient({ slug }: EditArticleClientProps) {
     try {
       await updateArticle(
         slug,
-        { title: article?.title, content },
+        {
+          title: article?.title,
+          content,
+          thumbnail: thumbnailFile ?? undefined,
+        },
         accessToken
       );
       toast.success("Article updated successfully");
@@ -85,7 +90,7 @@ export default function EditArticleClient({ slug }: EditArticleClientProps) {
      Render
   ----------------------------- */
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12 space-y-6">
+    <div className="mx-auto max-w-7xl px-6 py-12 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Editing: {article.title}</h1>
@@ -101,7 +106,12 @@ export default function EditArticleClient({ slug }: EditArticleClientProps) {
       </div>
 
       {/* Editor */}
-      <ArticleEditor content={content} onChange={setContent} />
+      <ArticleEditor
+        content={content}
+        onChange={setContent}
+        thumbnailUrl={article.thumbnail_url}
+        onThumbnailChange={setThumbnailFile}
+      />
     </div>
   );
 }

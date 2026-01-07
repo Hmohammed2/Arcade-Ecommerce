@@ -5,6 +5,7 @@ import ArticleLayout from "@/components/article/ArticleLayout";
 import Comments from "@/components/article/Comments";
 import { fetchArticleBySlug, Article } from "@/library/fetchArticles";
 import { getImageUrl } from "@/library/getImageUrl";
+const { useAuth } = require("@/store/useAuth");
 
 interface ArticleClientProps {
   slug: string;
@@ -14,6 +15,7 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
   const [article, setArticle] = useState<Article | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const user = useAuth((s: any) => s.user);
 
   useEffect(() => {
     let isMounted = true;
@@ -75,10 +77,9 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
           : "Draft"
       }
       comments={<Comments />}
-      canEdit={true} // 🔒 auth-gate later
+      canEdit={user?.is_staff}
       editHref={`/dashboard/articles/edit/${article.slug}`}
-    >
-      {article.content}
-    </ArticleLayout>
+      children={article.content}
+    ></ArticleLayout>
   );
 }

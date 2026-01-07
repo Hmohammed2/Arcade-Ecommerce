@@ -14,7 +14,7 @@ class UserSerializer(ModelSerializer):
     address = UserAddressSerializer(source="useraddress", read_only=True)
     class Meta:
         model = User
-        fields = ("id", "username", "email", "first_name", "last_name", "address")
+        fields = ("id", "username", "email", "first_name", "last_name", "address", "is_staff")
     
 class RegisterSerializer(ModelSerializer):
     class Meta:

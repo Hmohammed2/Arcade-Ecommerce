@@ -7,6 +7,8 @@ class ArticleListSerializer(serializers.ModelSerializer):
         source="author.get_full_name",
         read_only=True
     )
+    
+    thumbnail = serializers.ImageField(use_url=False)
 
     class Meta:
         model = Article
@@ -19,6 +21,12 @@ class ArticleListSerializer(serializers.ModelSerializer):
             "published_at",
             "author_name",
         )
+        
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if data.get("thumbnail"):
+            data["thumbnail"] = "/media/" + data["thumbnail"].lstrip("/")
+        return data
 
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -31,6 +39,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         trim_whitespace=False,
         style={"base_template": "textarea.html"}
     )
+    thumbnail = serializers.ImageField(use_url=False)
     
     class Meta:
         model = Article
@@ -39,6 +48,6 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        if data.get("content"):
-            data["content"] = data["content"].encode().decode("unicode_escape")
+        if data.get("thumbnail"):
+            data["thumbnail"] = "/media/" + data["thumbnail"].lstrip("/")
         return data

@@ -1,6 +1,7 @@
 # articles/views.py
 from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from .permissions import IsCMSAdmin
 from .models import Article
 from .serializers import ArticleDetailSerializer, ArticleListSerializer
 
@@ -37,7 +38,7 @@ class ArticleDetailView(generics.RetrieveAPIView):
 
 class ArticleCreateView(generics.CreateAPIView):
     serializer_class = ArticleDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsCMSAdmin]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -46,7 +47,7 @@ class ArticleCreateView(generics.CreateAPIView):
 class ArticleUpdateView(generics.UpdateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleDetailSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsCMSAdmin]
     lookup_field = "slug"
     lookup_url_kwarg = "slug"    # 👈 OPTIONAL but explicit
     parser_classes = (JSONParser, MultiPartParser, FormParser)

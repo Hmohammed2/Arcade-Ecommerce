@@ -3,7 +3,9 @@ import React, { ReactNode } from "react";
 import TableOfContents from "@/app/resources/articles/[slug]/TableOfContents";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import { getImageUrl } from "@/library/getImageUrl";
+import Breadcrumbs from "@/components/BreadCrumb";
 
 interface ArticleLayoutProps {
   title: string;
@@ -30,6 +32,14 @@ export default function ArticleLayout({
 }: ArticleLayoutProps) {
   return (
     <article className="mx-auto max-w-7xl px-4 py-12 dark:text-gray-100 dark:bg-gray-900">
+      {/* Breadcrumbs */}
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Resources", href: "/resources" },
+          { label: title },
+        ]}
+      />
       {/* Thumbnail */}
       <div className="relative mb-8 aspect-[16/9] overflow-hidden rounded-lg">
         <Image
@@ -79,10 +89,13 @@ export default function ArticleLayout({
             </div>
           </div>
 
-          <div className="prose prose-neutral dark:prose-invert">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {children}
-            </ReactMarkdown>
+          {/* Article Content */}
+          <div className="prose max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              children={children}
+            />
           </div>
 
           {/* Mobile comments */}
