@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
 import { getImageUrl } from "@/library/getImageUrl";
 import Breadcrumbs from "@/components/BreadCrumb";
+import { slugify } from "@/library/slugify";
 
 interface ArticleLayoutProps {
   title: string;
@@ -94,6 +95,16 @@ export default function ArticleLayout({
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
+              components={{
+                h2: ({ node, ...props }) => {
+                  const id = slugify(String(props.children));
+                  return <h2 id={id} {...props} />;
+                },
+                h3: ({ node, ...props }) => {
+                  const id = slugify(String(props.children));
+                  return <h3 id={id} {...props} />;
+                },
+              }}
               children={children}
             />
           </div>
