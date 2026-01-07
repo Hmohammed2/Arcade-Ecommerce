@@ -1,6 +1,6 @@
 export async function refreshAccessToken(refreshToken: string) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/token/refresh/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/token/refresh/`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

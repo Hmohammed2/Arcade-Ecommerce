@@ -3,6 +3,7 @@ import React, { ReactNode } from "react";
 import TableOfContents from "@/app/resources/articles/[slug]/TableOfContents";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { getImageUrl } from "@/library/getImageUrl";
 
 interface ArticleLayoutProps {
   title: string;
@@ -65,7 +66,7 @@ export default function ArticleLayout({
             <div className="relative h-9 w-9 overflow-hidden rounded-full bg-gray-200">
               {authorAvatar ? (
                 <Image
-                  src={authorAvatar}
+                  src={getImageUrl(authorAvatar)}
                   alt={authorName}
                   fill
                   className="object-cover"

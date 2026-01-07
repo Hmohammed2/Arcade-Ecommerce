@@ -7,7 +7,6 @@ class ArticleListSerializer(serializers.ModelSerializer):
         source="author.get_full_name",
         read_only=True
     )
-    thumbnail_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
@@ -16,16 +15,10 @@ class ArticleListSerializer(serializers.ModelSerializer):
             "slug",
             "title",
             "excerpt",
-            "thumbnail_url",
+            "thumbnail",
             "published_at",
             "author_name",
         )
-
-    def get_thumbnail_url(self, obj):
-        request = self.context.get("request")
-        if obj.thumbnail and request:
-            return request.build_absolute_uri(obj.thumbnail.url)
-        return None
 
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -33,15 +26,19 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         source="author.get_full_name",
         read_only=True
     )
-    thumbnail_url = serializers.SerializerMethodField()
-
+       # 🔥 THIS IS THE FIX
+    content = serializers.CharField(
+        trim_whitespace=False,
+        style={"base_template": "textarea.html"}
+    )
+    
     class Meta:
         model = Article
         fields = "__all__"
         read_only_fields = ("author", "created_at", "updated_at")
     
-    def get_thumbnail_url(self, obj):
-        request = self.context.get("request")
-        if obj.thumbnail and request:
-            return request.build_absolute_uri(obj.thumbnail.url)
-        return None
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if data.get("content"):
+            data["content"] = data["content"].encode().decode("unicode_escape")
+        return data

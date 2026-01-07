@@ -6,7 +6,6 @@ import AuthHydration from "@/components/middleware/AuthHydration";
 import QueryProvider from "./providers/providers";
 import Script from "next/script";
 import "./globals.css";
-import Snow from "@/components/snow";
 
 const baseUrl = "https://arcadesticklabs.co.uk"; // hard canonical
 
@@ -95,7 +94,6 @@ export default function RootLayout({
         <QueryProvider>
           <AuthHydration />
           <Navbar />
-          <Snow />
           {children}
           <Footer />
         </QueryProvider>

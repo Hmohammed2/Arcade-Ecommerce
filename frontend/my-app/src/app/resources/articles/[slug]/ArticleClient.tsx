@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ArticleLayout from "@/components/article/ArticleLayout";
 import Comments from "@/components/article/Comments";
 import { fetchArticleBySlug, Article } from "@/library/fetchArticles";
+import { getImageUrl } from "@/library/getImageUrl";
 
 interface ArticleClientProps {
   slug: string;
@@ -60,7 +61,9 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
   return (
     <ArticleLayout
       title={article.title}
-      thumbnail={article.thumbnail ?? "/images/articles/placeholder.jpg"}
+      thumbnail={
+        getImageUrl(article.thumbnail) ?? "/images/articles/placeholder.jpg"
+      }
       authorName={article.author_name ?? "ArcadeStickLabs"}
       publishedAt={
         article.published_at

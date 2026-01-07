@@ -7,6 +7,7 @@ export interface Article {
   excerpt: string;
   content: string;
   thumbnail?: string | null;
+  thumbnail_url?: string | null;
   author: number;
   author_name?: string;
   is_published: boolean;
@@ -106,7 +107,7 @@ export async function updateArticle(
   accessToken: string
 ): Promise<Article> {
   const res = await fetch(`${API_BASE}/articles/article/${slug}/edit/`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,

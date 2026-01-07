@@ -47,8 +47,6 @@ const Navbar = () => {
     if (query.trim()) console.log("Searching for:", query);
   };
 
-  console.log(results);
-
   return (
     <header className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 shadow-sm w-full top-0 left-0 z-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -57,7 +55,7 @@ const Navbar = () => {
           <Image
             width={140}
             height={40}
-            src="/Logo-christmas.webp"
+            src="/Logo.webp"
             alt="ArcadeStickLabs Logo"
           />
         </Link>

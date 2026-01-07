@@ -30,12 +30,14 @@ export default async function LandingPage() {
           />
           <div className="relative max-w-4xl mx-auto px-6 py-32 text-center text-white">
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight">
-              Build Your Arcade Stick The Right Way
+              UK Arcade Stick Parts & Fightstick Builder Store
             </h1>
-            <p className="mt-6 max-w-2xl mx-auto text-gray-200 dark:text-gray-300">
-              Curated arcade parts from Sanwa, Seimitsu, Brook, and more.
-              Small-batch quantities, fast UK shipping, and builder-friendly
-              bundles.
+            <p className="mt-6 max-w-3xl mx-auto text-gray-200 dark:text-gray-300 text-lg">
+              ArcadeStickLabs is the UK home for arcade stick parts, Sanwa
+              buttons, Brook PCBs, joystick upgrades and custom fightstick
+              components for Tekken, Street Fighter, Guilty Gear and the FGC
+              community. Build, mod and upgrade your arcade stick with fast UK
+              shipping and builder-approved parts.
             </p>
             <div className="mt-8">
               <Link
@@ -50,6 +52,40 @@ export default async function LandingPage() {
 
         {/* FEATURED PRODUCTS */}
         <ProductCarousel featuredProducts={featuredProducts} />
+
+        <section className="bg-white dark:bg-gray-900">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <h2 className="text-2xl md:text-3xl font-bold text-center">
+              Built for the Fighting Game Community
+            </h2>
+
+            <p className="mt-6 text-center max-w-4xl mx-auto text-gray-600 dark:text-gray-300">
+              We specialise in arcade stick parts for competitive FGC players
+              across the UK and EU. Whether you’re upgrading a Mad Catz, Qanba,
+              Hori or building a custom fightstick from scratch, we stock
+              genuine Sanwa, Seimitsu and Brook hardware trusted by tournament
+              players. Perfect for Tekken 8, Street Fighter 6, Guilty Gear
+              Strive, Mortal Kombat and more.
+            </p>
+          </div>
+        </section>
+
+        <section className="bg-gradient-to-br from-pink-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+          <div className="max-w-6xl mx-auto px-6 py-14 grid md:grid-cols-3 gap-6 text-center">
+            <Trust
+              title="Genuine Japanese Parts"
+              desc="No clones. Only official Sanwa, Seimitsu & Brook hardware."
+            />
+            <Trust
+              title="FGC Tested"
+              desc="All parts verified by real arcade stick builders & players."
+            />
+            <Trust
+              title="UK Fast Shipping"
+              desc="Local stock. No customs delays. No AliExpress waiting times."
+            />
+          </div>
+        </section>
 
         {/* WHY CHOOSE US */}
         <section
@@ -87,6 +123,17 @@ export default async function LandingPage() {
           </div>
         </section>
       </main>
+    </div>
+  );
+}
+
+function Trust({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all">
+      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
+        {title}
+      </h4>
+      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{desc}</p>
     </div>
   );
 }

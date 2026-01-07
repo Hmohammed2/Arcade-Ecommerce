@@ -1,6 +1,6 @@
 # articles/views.py
 from rest_framework import generics, permissions
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from .models import Article
 from .serializers import ArticleDetailSerializer, ArticleListSerializer
 
@@ -49,4 +49,4 @@ class ArticleUpdateView(generics.UpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "slug"
     lookup_url_kwarg = "slug"    # 👈 OPTIONAL but explicit
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
