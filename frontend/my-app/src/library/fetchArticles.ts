@@ -16,6 +16,9 @@ export interface Article {
   updated_at: string;
 }
 
+const baseUrlServer = process.env.NEXT_PUBLIC_API_URL_SERVER;
+const baseUrlClient = process.env.NEXT_PUBLIC_API_URL_CLIENT;
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_URL_CLIENT ?? "http://localhost:8000/";
 
@@ -28,7 +31,7 @@ const API_BASE =
  * GET /articles/
  */
 export async function fetchArticles(): Promise<Article[]> {
-  const res = await fetch(`${API_BASE}/articles/fetcharticles/`, {
+  const res = await fetch(`${baseUrlServer}/articles/fetcharticles/`, {
     next: { revalidate: 60 }, // ISR friendly
   });
 
