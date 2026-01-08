@@ -3,10 +3,18 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
   compiler: {
-    removeConsole: {
-      exclude: ["error"],
-    },
+    removeConsole: { exclude: ["error"] },
   },
+
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap.xml",
+        destination: "/sitemap.xml",
+      },
+    ];
+  },
+
   images: {
     domains: ["arcadesticklabs.co.uk"],
     formats: ["image/avif", "image/webp"],
