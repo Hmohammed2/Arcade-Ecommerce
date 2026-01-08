@@ -10,7 +10,7 @@ const isProd = process.env.NODE_ENV === "production";
 
 export async function fetchProducts() {
   const options: ExtendedFetchOptions = isProd
-    ? { next: { revalidate: 120 } }
+    ? { next: { revalidate: 300 } }
     : { cache: "no-store" };
 
   const res = await fetchWithTimeout(`${baseUrlServer}/api/products/`, options);
