@@ -5,6 +5,8 @@ import Footer from "@/components/footer";
 import AuthHydration from "@/components/middleware/AuthHydration";
 import QueryProvider from "./providers/providers";
 import Script from "next/script";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
+import RouteTracker from "@/components/RouteTracker";
 import "./globals.css";
 
 const baseUrl = "https://arcadesticklabs.co.uk"; // hard canonical
@@ -21,6 +23,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  alternates: {
+    canonical: baseUrl,
+  },
   title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
   description:
     "UK specialist store for premium arcade sticks, custom parts, Brook boards, Sanwa and Seimitsu components.",
@@ -58,8 +63,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="canonical" href={baseUrl} />
-
         {/* Global Business / Merchant Schema */}
         <Script
           id="business-schema"
@@ -92,6 +95,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <QueryProvider>
+          <GoogleAnalytics />
+          <RouteTracker />
           <AuthHydration />
           <Navbar />
           {children}

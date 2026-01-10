@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "react-hot-toast";
 import { cartItem } from "@/types/cart";
+import { gaEvent } from "@/library/ga";
 
 type DeliveryType = "standard" | "express";
 
@@ -47,6 +48,24 @@ export const useCart = create<CartState>()(
           );
 
           set({ items: updatedItems });
+          const article = sessionStorage.getItem("last_article");
+          // 🔥 GA Event
+          gaEvent("add_to_cart", {
+            currency: "GBP",
+            value: item.price * item.quantity,
+            items: [
+              {
+                item_id: item.id,
+                item_name: item.title,
+                item_variant: item.colour || "default",
+                item_list_id: article || "direct",
+                item_list_name: article || "direct",
+                price: item.price,
+                quantity: item.quantity,
+              },
+            ],
+          });
+
           toast.success(
             `Increased quantity of ${item.title}${
               item.colour ? ` (${item.colour})` : ""
@@ -74,6 +93,19 @@ export const useCart = create<CartState>()(
               (i) => !(i.id === id && (i.colour || "") === normalizedColour)
             ),
           });
+          gaEvent("remove_from_cart", {
+            currency: "GBP",
+            value: item.price * item.quantity,
+            items: [
+              {
+                item_id: item.id,
+                item_name: item.title,
+                item_variant: item.colour || "default",
+                price: item.price,
+                quantity: item.quantity,
+              },
+            ],
+          });
           toast.success(
             `Removed ${item.title}${item.colour ? ` (${item.colour})` : ""}`
           );
@@ -94,6 +126,26 @@ export const useCart = create<CartState>()(
             ? { ...i, quantity }
             : i
         );
+
+        const current = get().items.find(
+          (i) => i.id === id && (i.colour || "") === normalizedColour
+        );
+
+        if (current) {
+          gaEvent("add_to_cart", {
+            currency: "GBP",
+            value: (quantity - current.quantity) * current.price,
+            items: [
+              {
+                item_id: current.id,
+                item_name: current.title,
+                item_variant: current.colour || "default",
+                price: current.price,
+                quantity: quantity - current.quantity,
+              },
+            ],
+          });
+        }
 
         set({ items: updatedItems });
 

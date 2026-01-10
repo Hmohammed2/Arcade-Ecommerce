@@ -5,7 +5,8 @@ import ArticleLayout from "@/components/article/ArticleLayout";
 import Comments from "@/components/article/Comments";
 import { fetchArticleBySlug, Article } from "@/library/fetchArticles";
 import { getImageUrl } from "@/library/getImageUrl";
-const { useAuth } = require("@/store/useAuth");
+import { useAuth } from "@/store/useAuth";
+import { gaEvent } from "@/library/ga";
 
 interface ArticleClientProps {
   slug: string;
@@ -55,6 +56,22 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
       </div>
     );
   }
+
+  useEffect(() => {
+    sessionStorage.setItem("last_article", article.slug);
+  }, []);
+
+  useEffect(() => {
+    if (!article) return;
+
+    gaEvent("view_item_list", {
+      item_list_id: article.slug,
+      item_list_name: article.title,
+    });
+
+    // 🔗 Attach article to all future cart actions
+    sessionStorage.setItem("last_article", article.slug);
+  }, [article]);
 
   /* -----------------------------
      Render

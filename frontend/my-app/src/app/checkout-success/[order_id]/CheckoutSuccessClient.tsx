@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
+import { gaEvent } from "@/library/ga";
 
 interface Props {
   orderId: string;
@@ -18,6 +19,25 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
 
   useEffect(() => {
     const fetchOrder = async () => {
+      useEffect(() => {
+        if (!order || !order.items) return;
+
+        gaEvent("purchase", {
+          transaction_id: order.id,
+          currency: "GBP",
+          value: totalPaid,
+          shipping: deliveryFee,
+          coupon: discountAmount > 0 ? "PROMO" : undefined,
+          items: order.items.map((item: any) => ({
+            item_id: item.product?.id,
+            item_name: item.product?.name,
+            item_variant: item.colour || "default",
+            price: Number(item.price),
+            quantity: Number(item.quantity),
+          })),
+        });
+      }, [order, totalPaid, deliveryFee, discountAmount]);
+
       try {
         let endpoint = "";
         let headers: HeadersInit = { "Content-Type": "application/json" };

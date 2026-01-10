@@ -6,6 +6,7 @@ import { useCart } from "@/store/useCart";
 import { getImageUrl } from "@/library/getImageUrl";
 import { getColourTextClass } from "../utils/colour-text";
 import Breadcrumbs from "@/components/BreadCrumb";
+import { gaEvent } from "@/library/ga";
 
 export default function CartPage() {
   const { items, removeItem, clearCart, updateQuantity, getTotalPrice } =
@@ -135,12 +136,28 @@ export default function CartPage() {
           >
             Clear Cart
           </button>
-          <Link
-            href="/checkout"
+          <button
+            onClick={() => {
+              const total = getTotalPrice();
+
+              gaEvent("begin_checkout", {
+                currency: "GBP",
+                value: total,
+                items: items.map((i) => ({
+                  item_id: i.id,
+                  item_name: i.title,
+                  item_variant: i.colour || "default",
+                  price: i.price,
+                  quantity: i.quantity,
+                })),
+              });
+
+              window.location.href = "/checkout";
+            }}
             className="px-6 py-2 rounded bg-pink-600 text-white hover:bg-pink-700 dark:hover:bg-pink-500 text-sm font-medium text-center w-full sm:w-auto transition"
           >
             Checkout
-          </Link>
+          </button>
         </div>
       </div>
     </div>
