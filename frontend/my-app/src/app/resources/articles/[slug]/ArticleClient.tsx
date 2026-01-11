@@ -18,27 +18,38 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
   const [error, setError] = useState<string | null>(null);
   const user = useAuth((s: any) => s.user);
 
+  // Fetch article
   useEffect(() => {
     let isMounted = true;
 
     fetchArticleBySlug(slug)
-      .then((data) => {
-        if (isMounted) setArticle(data);
-      })
-      .catch(() => {
-        if (isMounted) setError("Failed to load article");
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
+      .then((data) => isMounted && setArticle(data))
+      .catch(() => isMounted && setError("Failed to load article"))
+      .finally(() => isMounted && setIsLoading(false));
 
     return () => {
       isMounted = false;
     };
   }, [slug]);
 
+  // Persist last article
+  useEffect(() => {
+    if (!article) return;
+    sessionStorage.setItem("last_article", article.slug);
+  }, [article]);
+
+  // GA tracking
+  useEffect(() => {
+    if (!article) return;
+
+    gaEvent("view_item_list", {
+      item_list_id: article.slug,
+      item_list_name: article.title,
+    });
+  }, [article]);
+
   /* -----------------------------
-     States
+     Safe conditional rendering
   ----------------------------- */
 
   if (isLoading) {
@@ -56,26 +67,6 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
       </div>
     );
   }
-
-  useEffect(() => {
-    sessionStorage.setItem("last_article", article.slug);
-  }, []);
-
-  useEffect(() => {
-    if (!article) return;
-
-    gaEvent("view_item_list", {
-      item_list_id: article.slug,
-      item_list_name: article.title,
-    });
-
-    // 🔗 Attach article to all future cart actions
-    sessionStorage.setItem("last_article", article.slug);
-  }, [article]);
-
-  /* -----------------------------
-     Render
-  ----------------------------- */
 
   return (
     <ArticleLayout
@@ -96,7 +87,8 @@ export default function ArticleClient({ slug }: ArticleClientProps) {
       comments={<Comments />}
       canEdit={user?.is_staff}
       editHref={`/dashboard/articles/edit/${article.slug}`}
-      children={article.content}
-    ></ArticleLayout>
+    >
+      {article.content}
+    </ArticleLayout>
   );
 }
