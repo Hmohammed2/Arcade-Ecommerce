@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Iterable, Tuple
-
+import uuid
 from django.conf import settings
 from django.db import models
 from django.db.models import F, Sum
@@ -146,7 +145,9 @@ class Order(models.Model):
 
     status = models.CharField(max_length=20, choices=Status.CHOICES, default=Status.PENDING)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
-
+    public_id = models.UUIDField(editable=False, default=uuid.uuid4, unique=True)
+    tracking_number = models.CharField(max_length=100, blank=True, null=True)
+    status_changed_at = models.DateTimeField(null=True, blank=True)
     coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
 
     delivery_method = models.CharField(
@@ -165,6 +166,14 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         return f"Order #{self.id} — {self.first_name} {self.last_name} — {self.status}"
+    
+    def save(self, *args, **kwargs):
+        if self.pk:
+            old = Order.objects.get(pk=self.pk)
+            if old.status != self.status:
+                self.status_changed_at = timezone.now()
+        super().save(*args, **kwargs)
+
 
 
 class OrderItem(models.Model):

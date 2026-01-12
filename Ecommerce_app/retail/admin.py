@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from .tasks import handle_order_status_change
 from .models import Coupon
 
 class ProductImageInline(admin.TabularInline):
@@ -41,6 +42,17 @@ class OrderItemAdmin(ImportExportModelAdmin):
 @admin.register(Order)
 class OrderAdmin(ImportExportModelAdmin):
     resource_class = OrderResource
+    list_display = ("id", "email", "status", "total_price", "created_at")
+    list_filter = ("status",)
+    search_fields = ("email", "first_name", "last_name")
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            old = Order.objects.get(pk=obj.pk)
+            if old.status != obj.status:
+                handle_order_status_change.delay(obj.id, old.status, obj.status)
+
+        super().save_model(request, obj, form, change)
 
 @admin.register(Product)
 class ProductAdmin(ImportExportModelAdmin):

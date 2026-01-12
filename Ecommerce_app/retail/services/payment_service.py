@@ -305,7 +305,7 @@ class PaymentService:
             send_payment_success_email(
                 to_email=order.email,
                 first_name=order.first_name or "",
-                order_id=order.id,
+                order_id=order.public_id,
                 amount=payment.amount,
                 items=items,
                 payment_method=payment.payment_method,
@@ -386,7 +386,7 @@ class PaymentService:
             send_payment_success_email(
                 to_email=order.email,
                 first_name=order.first_name or "",
-                order_id=order.id,
+                order_id=order.public_id,
                 amount=payment.amount,
                 items=items,
                 payment_method="PayPal",

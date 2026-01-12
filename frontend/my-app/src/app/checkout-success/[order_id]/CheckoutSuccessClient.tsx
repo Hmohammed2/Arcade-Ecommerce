@@ -17,64 +17,6 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
 
   const { isAuthenticated, accessToken } = useAuth();
 
-  useEffect(() => {
-    const fetchOrder = async () => {
-      useEffect(() => {
-        if (!order || !order.items) return;
-
-        gaEvent("purchase", {
-          transaction_id: order.id,
-          currency: "GBP",
-          value: totalPaid,
-          shipping: deliveryFee,
-          coupon: discountAmount > 0 ? "PROMO" : undefined,
-          items: order.items.map((item: any) => ({
-            item_id: item.product?.id,
-            item_name: item.product?.name,
-            item_variant: item.colour || "default",
-            price: Number(item.price),
-            quantity: Number(item.quantity),
-          })),
-        });
-      }, [order, totalPaid, deliveryFee, discountAmount]);
-
-      try {
-        let endpoint = "";
-        let headers: HeadersInit = { "Content-Type": "application/json" };
-
-        if (isAuthenticated && accessToken) {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/`;
-          headers["Authorization"] = `Bearer ${accessToken}`;
-        } else {
-          const email = localStorage.getItem("guest_email");
-          if (!email) throw new Error("No guest email found.");
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/?email=${email}`;
-        }
-
-        const res = await fetch(endpoint, {
-          method: "GET",
-          headers,
-          cache: "no-store",
-          credentials: "include",
-        });
-
-        if (!res.ok) throw new Error("Order not found");
-
-        const data = await res.json();
-        setOrder(data);
-
-        if (!isAuthenticated) localStorage.removeItem("guest_email");
-      } catch (err: any) {
-        console.error(err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchOrder();
-  }, [orderId, isAuthenticated, accessToken]);
-
   // 🔢 Derived amounts
   const { subtotal, deliveryFee, discountAmount, totalPaid } = useMemo(() => {
     if (!order || !order.items) {
@@ -101,6 +43,64 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
 
     return { subtotal, deliveryFee, discountAmount, totalPaid };
   }, [order]);
+
+  /* 1️⃣ Fetch order */
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        let endpoint = "";
+        let headers: HeadersInit = { "Content-Type": "application/json" };
+
+        if (isAuthenticated && accessToken) {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/`;
+          headers["Authorization"] = `Bearer ${accessToken}`;
+        } else {
+          const email = localStorage.getItem("guest_email");
+          if (!email) throw new Error("No guest email found.");
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/?email=${email}`;
+        }
+
+        const res = await fetch(endpoint, {
+          headers,
+          cache: "no-store",
+          credentials: "include",
+        });
+
+        if (!res.ok) throw new Error("Order not found");
+
+        const data = await res.json();
+        setOrder(data);
+
+        if (!isAuthenticated) localStorage.removeItem("guest_email");
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId, isAuthenticated, accessToken]);
+
+  /* 2️⃣ Fire GA purchase event */
+  useEffect(() => {
+    if (!order || !order.items) return;
+
+    gaEvent("purchase", {
+      transaction_id: order.public_id ?? order.id,
+      currency: "GBP",
+      value: totalPaid,
+      shipping: deliveryFee,
+      coupon: discountAmount > 0 ? "PROMO" : undefined,
+      items: order.items.map((item: any) => ({
+        item_id: item.product?.public_id ?? item.product?.id,
+        item_name: item.product?.name,
+        item_variant: item.colour || "default",
+        price: Number(item.price),
+        quantity: Number(item.quantity),
+      })),
+    });
+  }, [order, totalPaid, deliveryFee, discountAmount]);
 
   // ✅ Loading state
   if (loading)

@@ -23,3 +23,7 @@ stripe==13.1.0
 
 # Production server
 gunicorn==22.0.0
+
+# Background jobs / automation
+celery==5.4.0
+redis==5.0.4

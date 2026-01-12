@@ -178,7 +178,7 @@ INSTALLED_APPS = [
 
     # Local apps
     "marketing",
-    "retail",
+    "retail.apps.RetailConfig",
     "users",
     "articles"
 ]
@@ -369,3 +369,8 @@ if DEBUG:
     FRONTENDURL = "http://localhost:3000"
 else:
     FRONTENDURL = "https://arcadesticklabs.co.uk"
+
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
