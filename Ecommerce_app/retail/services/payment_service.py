@@ -1,12 +1,13 @@
 from decimal import Decimal
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-
-from retail.models import Order, OrderItem, Payment, Product, Coupon, ProductVariant
+from django.db.models import F
+from retail.models import Order, OrderItem, Payment, Product, Coupon, ProductVariant, Bundle
 from retail.facades.stripe_facade import StripePaymentFacade
 from retail.facades.paypal_facade import PayPalFacade
 from retail.utils.slack_notifications import send_slack_message
 from retail.utils.deplete_stock import _deplete_stock_for_order
+from rest_framework.response import Response
 
 import logging
 
@@ -58,41 +59,44 @@ class PaymentService:
 
         # ✅ Step 2: Create order items and manage stock
         for item in items:
-            try:
-                product = Product.objects.get(id=item["product_id"])
-            except ObjectDoesNotExist:
-                logger.exception("Product not found during checkout: %s", e)
-                raise ValueError(f"Product with id {item['product_id']} not found.")
-
+            item_type = item.get("type", "product")
             quantity = int(item.get("quantity", 1))
+
             if quantity < 1:
-                logger.exception("Invalid quantity for product %s: %s", item["product_id"], quantity)
                 raise ValueError("Quantity must be at least 1.")
 
+            # -------------------------
+            # 🧩 BUNDLE
+            # -------------------------
+            if item_type == "bundle":
+                bundle = Bundle.objects.select_for_update().prefetch_related("items__product").get(id=item["id"])
+
+                if bundle.max_available < quantity:
+                    raise ValueError(f"Not enough stock for bundle {bundle.name}")
+
+                OrderItem.objects.create(
+                    order=order,
+                    bundle=bundle,
+                    quantity=quantity,
+                    price=bundle.price,
+                )
+
+                subtotal += bundle.price * quantity
+                continue
+
+            # -------------------------
+            # 📦 PRODUCT
+            # -------------------------
+            product = Product.objects.select_for_update().get(id=item["id"])
             colour = item.get("colour")
-            
-            logger.debug("Processing item %s (qty=%s, colour=%s)", item["product_id"], item.get("quantity"), item.get("colour"))
 
-            # 🧠 Smart stock validation — variant or fallback
             if colour:
-                variant = ProductVariant.objects.filter(
-                    product=product, colour__iexact=colour
-                ).first()
-                if not variant:
-                    logger.exception("Variant not found for product %s with colour %s", product.id, colour)
-                    raise ValueError(f"Colour '{colour}' not available for {product.name}")
-                if variant.stock < quantity:
-                    logger.exception("Insufficient stock for product %s variant %s: requested %s, available %s", product.id, colour, quantity, variant.stock)
+                variant = ProductVariant.objects.filter(product=product, colour__iexact=colour).first()
+                if not variant or variant.stock < quantity:
                     raise ValueError(f"Insufficient stock for {product.name} ({colour})")
-
             else:
                 if product.stock < quantity:
-                    logger.exception("Insufficient stock for product %s: requested %s, available %s", product.id, quantity, product.stock)
                     raise ValueError(f"Insufficient stock for {product.name}")
-                
-            # Calculate line total
-            line_price = product.price * quantity
-            subtotal += line_price
 
             OrderItem.objects.create(
                 order=order,
@@ -101,6 +105,9 @@ class PaymentService:
                 price=product.price,
                 colour=colour,
             )
+
+            subtotal += product.price * quantity
+
             
         # ✅ Step 3: Apply coupon (if valid)
         discount_percent = Decimal("0.00")
@@ -186,7 +193,7 @@ class PaymentService:
 
         # ✅ Step 8: Return response to frontend
         return {
-            "order_id": order.id,
+            "order_id": order.public_id,
             "payment_id": payment.id,
             "clientSecret": intent_data.get("client_secret"),
             "amount": amount_in_pence,
@@ -270,7 +277,11 @@ class PaymentService:
         order = payment.order
 
         # 2) Try to decrement stock atomically
-        ok, errs = _deplete_stock_for_order(order)
+        try:
+            ok, errs = _deplete_stock_for_order(order)
+        except Exception:
+            logger.exception("Stripe stock failure")
+            return Response(status=200)
         if not ok:
             # Business choice: put order on hold and notify staff; you could also auto-refund here.
             order.status = "on_hold"
@@ -342,8 +353,11 @@ class PaymentService:
         order = payment.order
         logger.info("Marking PayPal payment succeeded for Order #%s", order.id)
 
-        # 2️⃣ Attempt to atomically decrement stock
-        ok, errs = _deplete_stock_for_order(order)
+        try:
+            ok, errs = _deplete_stock_for_order(order)
+        except Exception:
+            logger.exception("Stripe stock failure")
+            return Response(status=200)
 
         if not ok:
             # ⚠️ If stock can’t be fulfilled, place order on hold and notify staff

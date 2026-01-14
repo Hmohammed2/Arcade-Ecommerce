@@ -1,8 +1,9 @@
-export interface cartItem {
+export interface CartItem {
+  type: "product" | "bundle";
   id: number;
   title: string;
   price: number;
-  image: string | undefined;
+  image?: string;
   quantity: number;
-  colour?: string | null;
+  colour?: string | null; // ignored for bundles
 }

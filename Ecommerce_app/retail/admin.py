@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
+from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant, Bundle, BundleItem
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from .tasks import handle_order_status_change
@@ -42,7 +42,7 @@ class OrderItemAdmin(ImportExportModelAdmin):
 @admin.register(Order)
 class OrderAdmin(ImportExportModelAdmin):
     resource_class = OrderResource
-    list_display = ("id", "email", "status", "total_price", "created_at")
+    list_display = ("id", "public_id", "email", "status", "total_price", "review_token", "created_at")
     list_filter = ("status",)
     search_fields = ("email", "first_name", "last_name")
 
@@ -60,6 +60,7 @@ class ProductAdmin(ImportExportModelAdmin):
     inlines = [ProductImageInline, ProductVariantInline]
     list_display = ('name', 'price', 'stock')
     prepopulated_fields = {"slug": ("name",)}
+    search_fields = ("name", "slug")   # 👈 ADD THIS LINE
     
     def get_readonly_fields(self, request, obj=None):
         if obj and obj.variants.exists():
@@ -69,3 +70,63 @@ class ProductAdmin(ImportExportModelAdmin):
     def display_stock(self, obj):
         return obj.total_stock
     display_stock.short_description = 'Total Stock'
+
+class BundleItemInline(admin.TabularInline):
+    model = BundleItem
+    extra = 1
+    autocomplete_fields = ["product"]
+    min_num = 1
+
+@admin.register(Bundle)
+class BundleAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "price",
+        "discount_percent",
+        "is_active",
+        "is_featured",
+        "max_available",
+        "sort_order",
+    )
+
+    list_filter = ("is_active", "is_featured")
+    search_fields = ("name", "slug", "short_description")
+    prepopulated_fields = {"slug": ("name",)}
+    ordering = ("sort_order", "name")
+
+    readonly_fields = ("price", "max_available")
+
+    fieldsets = (
+        ("Core", {
+            "fields": (
+                "name",
+                "slug",
+                "short_description",
+                "description",
+                "image",
+            )
+        }),
+        ("Visibility", {
+            "fields": (
+                "is_active",
+                "is_featured",
+                "sort_order",
+            )
+        }),
+        ("Pricing", {
+            "fields": (
+                "discount_percent",
+                "price_override",
+                "price",
+            )
+        }),
+    )
+
+    inlines = [BundleItemInline]
+
+
+@admin.register(BundleItem)
+class BundleItemAdmin(admin.ModelAdmin):
+    list_display = ("bundle", "product", "quantity")
+    autocomplete_fields = ("bundle", "product")
+    list_filter = ("bundle",)

@@ -20,7 +20,7 @@ export async function updateUserAddresses(
   payload: UpdateAddressPayload
 ) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/addresses/`,
+    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
     {
       method: "PUT",
       headers: {

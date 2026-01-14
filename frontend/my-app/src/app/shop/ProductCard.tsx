@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState, useEffect, useMemo } from "react";
-import { cartItem } from "@/types/cart";
+import { CartItem } from "@/types/cart";
 import { getImageUrl } from "@/library/getImageUrl";
 import type { Product, ProductVariant } from "@/types/product";
 
@@ -14,7 +14,7 @@ export function ProductCard({
   isInCart,
 }: {
   product: Product;
-  addItem: (item: cartItem) => void;
+  addItem: (item: CartItem) => void;
   updateQuantity: (id: number, colour: string | null, quantity: number) => void;
   getItemCount: (id: number, colour?: string | null) => number;
   isInCart: (id: number, colour?: string | null) => boolean;
@@ -77,7 +77,8 @@ export function ProductCard({
 
     if (qty === 0) {
       // first add – use addItem so you keep your "Added X to cart" toast
-      const item: cartItem = {
+      const item: CartItem = {
+        type: "product",
         id: product.id,
         title: product.name,
         price: Number(product.price),

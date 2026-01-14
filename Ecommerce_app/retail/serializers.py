@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant
+from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant, BundleItem, Bundle
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,17 +34,66 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.image.url  # this is relative to MEDIA_URL
         return None
 
+class BundleListSerializer(serializers.ModelSerializer):
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    is_in_stock = serializers.BooleanField(read_only=True)
+    max_available = serializers.IntegerField(read_only=True)
 
-class OrderItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Bundle
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "short_description",
+            "image",
+            "price",
+            "is_featured",
+            "is_in_stock",
+            "max_available",
+        ]
+
+class BundleItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
 
     class Meta:
+        model = BundleItem
+        fields = ["product", "quantity"]
+
+class BundleDetailSerializer(serializers.ModelSerializer):
+    items = BundleItemSerializer(many=True, read_only=True)
+    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    is_in_stock = serializers.BooleanField(read_only=True)
+    max_available = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Bundle
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "short_description",
+            "description",
+            "image",
+            "price",
+            "discount_percent",
+            "is_in_stock",
+            "max_available",
+            "items",
+        ]
+
+class OrderItemSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    bundle = BundleListSerializer(read_only=True)
+
+    class Meta:
         model = OrderItem
-        fields = ["id", "product", "quantity", "price", "colour"]
+        fields = ["id", "product", "bundle", "quantity", "price", "colour"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
+    id = serializers.UUIDField(source="public_id", read_only=True)
 
     class Meta:
         model = Order
@@ -55,6 +104,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_price",
             "delivery_method",
             "delivery_fee",
+            "review_token",
             "coupon",
             "created_at",
             "updated_at",
@@ -81,3 +131,4 @@ class PaymentSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["created_at", "updated_at"]
+        

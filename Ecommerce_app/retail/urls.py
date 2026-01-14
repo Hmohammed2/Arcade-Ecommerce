@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CategoryViewSet, ProductViewSet, OrderViewSet, PaymentViewSet, validate_coupon
+from .views import CategoryViewSet, ProductViewSet, OrderViewSet, PaymentViewSet, BundleViewSet, validate_coupon
 from . import views
 
 router = DefaultRouter()
@@ -8,6 +8,8 @@ router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"products", ProductViewSet, basename="product")
 router.register(r"orders", OrderViewSet, basename="order")
 router.register(r"payments", PaymentViewSet, basename="payment")
+router.register(r"bundles", BundleViewSet, basename="bundle")
+
 
 urlpatterns = [
     path("payments/webhook/", views.stripe_webhook, name="stripe_webhook"),

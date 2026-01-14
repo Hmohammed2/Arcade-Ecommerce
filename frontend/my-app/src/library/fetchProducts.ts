@@ -39,3 +39,22 @@ export async function searchProducts(query: string) {
   if (!res.ok) throw new Error("Failed to search products");
   return res.json();
 }
+
+export async function fetchBundles() {
+  const options: ExtendedFetchOptions = isProd
+    ? { next: { revalidate: 300 } }
+    : { cache: "no-store" };
+
+  const res = await fetchWithTimeout(`${baseUrlServer}/api/bundles/`, options);
+  if (!res.ok) throw new Error(`Failed to fetch bundles: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchBundleBySlug(slug: string) {
+  const res = await fetch(
+    `${baseUrlServer}/api/bundles/${slug}/`,
+    { cache: "no-store" } // IMPORTANT
+  );
+  if (!res.ok) throw new Error(`Failed to fetch bundle`);
+  return res.json();
+}

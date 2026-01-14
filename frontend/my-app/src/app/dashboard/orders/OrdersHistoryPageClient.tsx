@@ -181,7 +181,7 @@ export default function OrderHistoryPageClient() {
                         >
                           <div className="flex flex-col">
                             <span className="font-medium text-gray-800 dark:text-gray-200">
-                              {item.product.name}
+                              {item.product?.name || item.bundle?.name}
                               {item.colour && (
                                 <>
                                   {" "}

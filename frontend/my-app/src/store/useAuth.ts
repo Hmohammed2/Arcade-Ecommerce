@@ -18,6 +18,7 @@ interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
+  authReady?: boolean;
 
   login: (
     identifier: string,
@@ -28,6 +29,7 @@ interface AuthState {
   fetchUser: () => Promise<void>;
   refreshAccessToken: () => Promise<void>;
   setAccessToken: (token: string) => void;
+  setAuthReady: (v: boolean) => void;
 }
 
 export const useAuth = create<AuthState>()(
@@ -38,7 +40,9 @@ export const useAuth = create<AuthState>()(
         accessToken: null,
         refreshToken: null,
         isAuthenticated: false,
+        authReady: false,
 
+        setAuthReady: (v) => set({ authReady: v }),
         login: async (identifier, password, turnstileToken) => {
           try {
             if (!turnstileToken) throw new Error("Please complete the CAPTCHA");

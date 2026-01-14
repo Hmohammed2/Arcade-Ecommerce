@@ -4,12 +4,15 @@ from rest_framework.decorators import api_view, action, permission_classes, auth
 from rest_framework.permissions import IsAuthenticatedOrReadOnly , IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
-from .models import Category, Product, Order, Payment, Coupon
+from django.shortcuts import get_object_or_404
+from .models import Category, Product, Order, Payment, Coupon, Bundle
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
     OrderSerializer,
     PaymentSerializer,
+    BundleDetailSerializer,
+    BundleListSerializer,
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
@@ -38,6 +41,19 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
 
 # Orders
 
+# Bundles
+class BundleViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Bundle.objects.filter(is_active=True).prefetch_related("items__product").order_by("sort_order", "name")
+    permission_classes = [AllowAny]
+    lookup_field = "slug"
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name", "short_description", "description"]
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return BundleListSerializer
+        return BundleDetailSerializer
+
 class OrderViewSet(viewsets.ModelViewSet):
     """
     Handles both authenticated and guest order access:
@@ -47,54 +63,40 @@ class OrderViewSet(viewsets.ModelViewSet):
     """
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    lookup_field = "id"  # keep internal only
 
     def get_queryset(self):
         user = self.request.user
-
-        # 🧑‍💼 Staff or admin → all orders
         if user.is_staff or user.is_superuser:
             return Order.objects.all().order_by("-created_at")
-
-        # 👤 Authenticated customer → only their orders
         if user.is_authenticated:
             return Order.objects.filter(user=user).order_by("-created_at")
-
-        # 📨 Guest user → filter by email param (optional)
-        email = self.request.query_params.get("email")
-        if email:
-            return Order.objects.filter(email=email).order_by("-created_at")
-
-        # 🚫 Otherwise return nothing
         return Order.objects.none()
 
     def retrieve(self, request, *args, **kwargs):
-        """Allow guests to fetch a single order if they know order_id + email"""
         order = self.get_object()
-
-        # Staff or owner → always allowed
         if request.user.is_staff or order.user == request.user:
-            serializer = self.get_serializer(order)
-            return Response(serializer.data)
+            return Response(self.get_serializer(order).data)
+        return Response({"error": "Not found."}, status=404)
 
-        # Guest access → must match email query param
+    @action(detail=False, methods=["get"], url_path=r"lookup/(?P<public_id>[^/.]+)", permission_classes=[AllowAny])
+    def lookup(self, request, public_id=None):
         email = request.query_params.get("email")
-        if email and order.email.lower() == email.lower():
-            serializer = self.get_serializer(order)
-            return Response(serializer.data)
+        if not email:
+            return Response({"error": "Email is required."}, status=400)
 
-        return Response(
-            {"error": "You do not have permission to view this order."},
-            status=status.HTTP_403_FORBIDDEN,
-        )
-        
-    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes = [JWTAuthentication])
+        order = get_object_or_404(Order, public_id=public_id)
+
+        if order.email.lower() != email.lower():
+            return Response({"error": "Order not found."}, status=404)
+
+        return Response(self.get_serializer(order).data)
+
+    @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes=[JWTAuthentication])
     def history(self, request):
-        """Return orders belonging to the authenticated user"""
-        user = request.user
-        orders = Order.objects.filter(user=user).order_by("-created_at")
-        serializer = self.get_serializer(orders, many=True)
-        return Response(serializer.data)
-
+        orders = Order.objects.filter(user=request.user).order_by("-created_at")
+        return Response(self.get_serializer(orders, many=True).data)
+    
 # Payments
 class PaymentViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = PaymentSerializer
@@ -329,3 +331,4 @@ def validate_coupon(request):
             "valid": False,
             "message": "Coupon not valid for this account or expired.",
         }, status=400)
+

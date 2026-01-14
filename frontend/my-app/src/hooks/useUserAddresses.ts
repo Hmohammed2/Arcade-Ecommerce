@@ -42,7 +42,7 @@ export function useUserAddresses() {
   const mutation = useMutation({
     mutationFn: async (payload: UpdateAddressPayload) => {
       const res = await authorizedFetch(
-        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/auth/addresses/`,
+        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

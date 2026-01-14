@@ -1,9 +1,11 @@
+import { Bundle } from "./bundle";
 import type { Product } from "./product";
 
 export interface OrderItem {
   id: number;
   product: Product;
   quantity: number;
+  bundle?: Bundle;
   price: number;
   colour: string;
 }

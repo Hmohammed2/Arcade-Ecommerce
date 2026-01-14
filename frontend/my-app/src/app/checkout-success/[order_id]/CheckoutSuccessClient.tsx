@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
 import { gaEvent } from "@/library/ga";
+import { useRef } from "react";
 
 interface Props {
   orderId: string;
@@ -15,7 +16,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isAuthenticated, accessToken } = useAuth();
+  const { isAuthenticated, accessToken, user, authReady } = useAuth();
 
   // 🔢 Derived amounts
   const { subtotal, deliveryFee, discountAmount, totalPaid } = useMemo(() => {
@@ -52,12 +53,13 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         let headers: HeadersInit = { "Content-Type": "application/json" };
 
         if (isAuthenticated && accessToken) {
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/`;
+          const email = user?.email;
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/lookup/${orderId}/?email=${email}`;
           headers["Authorization"] = `Bearer ${accessToken}`;
         } else {
           const email = localStorage.getItem("guest_email");
           if (!email) throw new Error("No guest email found.");
-          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/${orderId}/?email=${email}`;
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/lookup/${orderId}/?email=${email}`;
         }
 
         const res = await fetch(endpoint, {
@@ -181,7 +183,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
                 className="flex justify-between pb-2 border-b border-gray-200 dark:border-gray-700"
               >
                 <span>
-                  {item.quantity} × {item.product?.name}
+                  {item.quantity} × {item.product?.name || item.bundle?.name}
                   {item.colour && (
                     <>
                       {" "}

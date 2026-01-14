@@ -1,5 +1,5 @@
 def delivered_review_email(order):
-    review_url = f"https://arcadesticklabs.co.uk/review/{order.public_id}"
+    review_url = f"https://arcadesticklabs.co.uk/review/{order.public_id}?t={order.review_token}"
 
     return f"""
 <html>

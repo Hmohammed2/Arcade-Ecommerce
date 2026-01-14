@@ -6,15 +6,15 @@ import ProductPageClient from "./ProductPageClient";
 import { fetchProductBySlug } from "@/library/fetchProducts";
 import Script from "next/script";
 
+type Props = {
+  params: Promise<{ slug: string }>;
+};
 /**
  * Dynamic SEO metadata for each product
  */
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
-  const product = await fetchProductBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const product = await fetchProductBySlug(slug);
 
   if (!product) {
     return {
@@ -40,7 +40,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      url: `https://arcadesticklabs.co.uk/products/${params.slug}`,
+      url: `https://arcadesticklabs.co.uk/products/${slug}`,
       siteName: "ArcadeStickLabs",
       type: "website",
       images: firstImage
@@ -61,12 +61,8 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default async function ProductPage({ params }: Props) {
+  const { slug } = await params;
   const queryClient = new QueryClient();
   const product = await fetchProductBySlug(slug);
 

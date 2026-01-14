@@ -180,7 +180,8 @@ INSTALLED_APPS = [
     "marketing",
     "retail.apps.RetailConfig",
     "users",
-    "articles"
+    "articles",
+    "reviews"
 ]
 
 

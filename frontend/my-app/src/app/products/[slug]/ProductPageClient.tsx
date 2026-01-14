@@ -111,6 +111,7 @@ export default function ProductPageClient({ slug }: Props) {
     if (selectedVariant && selectedVariant.stock === 0) return;
 
     addItem({
+      type: "product",
       id: product.id,
       title: product.name,
       price: numericPrice,

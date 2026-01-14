@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { QueryClient, dehydrate } from "@tanstack/react-query";
 import { HydrationBoundary } from "@tanstack/react-query";
-import { fetchProducts } from "@/library/fetchProducts";
+import { fetchProducts, fetchBundles } from "@/library/fetchProducts";
 import ShopPage from "./ShopPage";
 
 export const metadata: Metadata = {
@@ -17,6 +17,11 @@ export default async function ShopPageWrapper() {
   await queryClient.prefetchQuery({
     queryKey: ["products"],
     queryFn: fetchProducts,
+  });
+
+  await queryClient.prefetchQuery({
+    queryKey: ["bundles"],
+    queryFn: fetchBundles,
   });
 
   const dehydratedState = dehydrate(queryClient);

@@ -185,9 +185,10 @@ export default function PaymentForm() {
 
     try {
       const items = getCartItems().map((item) => ({
-        product_id: item.id,
+        type: item.type, // "product" | "bundle"
+        id: item.id, // backend expects id
         quantity: item.quantity,
-        colour: item.colour,
+        colour: item.type === "product" ? (item.colour ?? null) : null,
       }));
 
       const payload = {

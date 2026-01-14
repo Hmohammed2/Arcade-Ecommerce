@@ -7,6 +7,8 @@ import { useCheckoutForm } from "@/store/useCheckoutForm";
 import { getColourTextClass } from "@/app/utils/colour-text";
 import { toast } from "react-hot-toast";
 import { useState } from "react";
+import Image from "next/image";
+import { getImageUrl } from "@/library/getImageUrl";
 
 export default function OrderSummary() {
   const {
@@ -99,21 +101,45 @@ export default function OrderSummary() {
       <ul className="divide-y divide-gray-200 dark:divide-gray-700">
         {cartItems.map((item) => (
           <li
-            key={`${item.id}-${item.colour || "default"}`}
-            className="flex justify-between py-2 text-sm"
+            key={`${item.type}-${item.id}-${item.colour || "default"}`}
+            className="flex items-center justify-between py-2 gap-3"
           >
-            <span>
-              {item.title} × {item.quantity}{" "}
-              {item.colour && (
-                <>
-                  {" - "}
-                  <span className={getColourTextClass(item.colour)}>
-                    {item.colour}
-                  </span>
-                </>
+            <div className="flex items-center gap-3">
+              {/* Thumbnail */}
+              {item.image && (
+                <div className="relative w-12 h-12 sm:w-12 sm:h-12 shrink-0 rounded-md border border-gray-200 dark:border-gray-700 bg-white overflow-hidden">
+                  <Image
+                    src={getImageUrl(item.image)}
+                    alt={item.title}
+                    fill
+                    sizes="48px"
+                    className="object-contain p-1"
+                  />
+                </div>
               )}
+
+              {/* Title & colour */}
+              <div className="leading-tight">
+                <p className="text-sm font-medium">
+                  {item.title} × {item.quantity}
+                </p>
+
+                {item.colour && (
+                  <p className={`text-xs ${getColourTextClass(item.colour)}`}>
+                    {item.colour}
+                  </p>
+                )}
+
+                {item.type === "bundle" && (
+                  <p className="text-xs text-pink-600 font-semibold">Mod Kit</p>
+                )}
+              </div>
+            </div>
+
+            {/* Line total */}
+            <span className="text-sm font-semibold">
+              £{(item.price * item.quantity).toFixed(2)}
             </span>
-            <span>£{(item.price * item.quantity).toFixed(2)}</span>
           </li>
         ))}
       </ul>
