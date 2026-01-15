@@ -24,7 +24,7 @@ LOG_DIR.mkdir(exist_ok=True)  # Ensure /logs folder exists
 # SECURITY WARNING: don't run with debug turned on in production!
 DJANGO_ENV = os.getenv("DJANGO_ENV", "development")
 
-DEBUG = DJANGO_ENV != "production"
+DEBUG = DJANGO_ENV != "PRODUCTION"
 
 if not DEBUG:
     SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")

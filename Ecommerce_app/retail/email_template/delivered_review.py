@@ -1,5 +1,10 @@
+from django.conf import settings
+
 def delivered_review_email(order):
-    review_url = f"https://arcadesticklabs.co.uk/review/{order.public_id}?t={order.review_token}"
+    if settings.DEBUG:
+        review_url = f"http://localhost:3000/review/{order.public_id}?t={order.review_token}"
+    else:
+        review_url = f"https://arcadesticklabs.co.uk/review/{order.public_id}?t={order.review_token}"
 
     return f"""
 <html>
