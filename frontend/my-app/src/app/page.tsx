@@ -39,6 +39,7 @@ export default async function LandingPage() {
               community. Build, mod and upgrade your arcade stick with fast UK
               shipping and builder-approved parts.
             </p>
+
             <div className="mt-8">
               <Link
                 href="/shop"
@@ -46,6 +47,24 @@ export default async function LandingPage() {
               >
                 Shop Now
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* TESTIMONIAL BRIDGE SECTION */}
+        <section className="bg-gradient-to-b from-white to-pink-50 dark:from-gray-900 dark:to-gray-800">
+          <div className="py-10 max-w-2xl mx-auto px-6">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-center shadow-sm border-t-4 border-t-pink-500">
+              <div className="text-yellow-400 text-lg mb-1">⭐⭐⭐⭐⭐</div>
+
+              <p className="italic text-sm md:text-base text-gray-800 dark:text-gray-100">
+                “Genuinely great Sanwa parts — it’s brilliant to buy genuine
+                parts from a UK supplier and avoid the knockoff gamble.”
+              </p>
+
+              <p className="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                — Kevin M. • Verified Customer
+              </p>
             </div>
           </div>
         </section>

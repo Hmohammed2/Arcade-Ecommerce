@@ -175,6 +175,7 @@ INSTALLED_APPS = [
     "dj_rest_auth.registration",
     "corsheaders",
     "import_export",
+    "nested_admin",
 
     # Local apps
     "marketing",

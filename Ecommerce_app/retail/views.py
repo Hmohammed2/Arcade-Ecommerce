@@ -39,11 +39,19 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
     search_fields = ["name", "description"]
     permission_classes = [permissions.AllowAny]  # 👈 public endpoint
 
-# Orders
-
 # Bundles
 class BundleViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Bundle.objects.filter(is_active=True).prefetch_related("items__product").order_by("sort_order", "name")
+    queryset = (
+        Bundle.objects.filter(is_active=True)
+        .prefetch_related(
+            "items__product",
+            "options__values",          # 👈 NEW
+            "components__product",      # optional but useful later
+            "components__variant",
+        )
+        .order_by("sort_order", "name")
+    )
+
     permission_classes = [AllowAny]
     lookup_field = "slug"
     filter_backends = [filters.SearchFilter]
@@ -54,6 +62,7 @@ class BundleViewSet(viewsets.ReadOnlyModelViewSet):
             return BundleListSerializer
         return BundleDetailSerializer
 
+# Orders
 class OrderViewSet(viewsets.ModelViewSet):
     """
     Handles both authenticated and guest order access:
@@ -196,9 +205,6 @@ def checkout(request):
         if not items:
             logger.warning("[Checkout] No items provided")
             return Response({"error": "No items provided"}, status=status.HTTP_400_BAD_REQUEST)
-        if not email:
-            logger.warning("[Checkout] Email is required for guest checkout")
-            return Response({"error": "Email is required for guest checkout"}, status=status.HTTP_400_BAD_REQUEST)
 
         logger.info(f"[Checkout] Creating order + PaymentIntent for user={user} email={email}")
         
@@ -241,6 +247,9 @@ def paypal_checkout(request):
         last_name = data.get("last_name")
         phone = data.get("phone", "")
         delivery_method = data.get("delivery_method", "standard")
+        
+        if not items:
+            return Response({"error": "No items provided"}, status=400)
 
         result = PaymentService.create_paypal_order(
             user=user,
@@ -260,6 +269,7 @@ def paypal_checkout(request):
         return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
+        logger.exception("[Checkout] Unexpected failure during PayPal order creation")
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(["POST"])
@@ -278,12 +288,24 @@ def paypal_capture(request):
         capture_data = PayPalFacade.capture_order(order_id)
 
         if capture_data.get("status") in ["COMPLETED", "captured"]:
+            payer = capture_data.get("payer", {})
+            paypal_email = payer.get("email_address")
+
+            # Attach email to your Order if it was missing
+            payment = Payment.objects.get(stripe_payment_intent=order_id)
+            order = payment.order
+
+            if not order.email and paypal_email:
+                order.email = paypal_email
+                order.save(update_fields=["email"])
+            
             # 🧩 Step 2: Mark payment succeeded in our database
             PaymentService.mark_paypal_payment_succeeded(order_id)
 
             return Response(
                 {
                     "id": capture_data.get("id"),
+                    "order_public_id": str(order.public_id), 
                     "status": capture_data.get("status"),
                     "payer": capture_data.get("payer", {}),
                     "amount": capture_data.get("purchase_units", [{}])[0]

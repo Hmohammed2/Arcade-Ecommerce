@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
-from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant, BundleItem, Bundle
+from .models import Category, Product, Order, OrderItem, Payment, ProductImage, ProductVariant, BundleItem, Bundle, BundleOption, BundleOptionValue, BundleComponent
 
+# Option, BundleOptionValue, BundleComponent
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ["id", "name", "slug"]
+
+# Product Serializers
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
@@ -34,6 +37,8 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.image.url  # this is relative to MEDIA_URL
         return None
 
+# Bundle Serializers
+
 class BundleListSerializer(serializers.ModelSerializer):
     price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     is_in_stock = serializers.BooleanField(read_only=True)
@@ -54,21 +59,47 @@ class BundleListSerializer(serializers.ModelSerializer):
         ]
 
 class BundleItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    product = serializers.SerializerMethodField()
 
     class Meta:
         model = BundleItem
-        fields = ["product", "quantity"]
+        fields = ("product", "quantity")
+
+    def get_product(self, obj):
+        p = obj.product
+        return {
+            "id": p.id,
+            "name": p.name,
+            "slug": p.slug,
+            "price": str(p.price),
+            "image": p.image.url if p.image else None,
+        }
+        
+class BundleOptionValueSerializer(serializers.ModelSerializer):
+    variant_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BundleOptionValue
+        fields = ["id", "label", "colour_hex", "variant_id"]
+
+    def get_variant_id(self, obj):
+        comp = BundleComponent.objects.filter(option_value=obj).first()
+        return comp.variant_id if comp else None
+
+class BundleOptionSerializer(serializers.ModelSerializer):
+    values = BundleOptionValueSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = BundleOption
+        fields = ("id", "name", "required", "values")
 
 class BundleDetailSerializer(serializers.ModelSerializer):
     items = BundleItemSerializer(many=True, read_only=True)
-    price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    is_in_stock = serializers.BooleanField(read_only=True)
-    max_available = serializers.IntegerField(read_only=True)
+    options = BundleOptionSerializer(many=True, read_only=True)
 
     class Meta:
         model = Bundle
-        fields = [
+        fields = (
             "id",
             "name",
             "slug",
@@ -80,7 +111,10 @@ class BundleDetailSerializer(serializers.ModelSerializer):
             "is_in_stock",
             "max_available",
             "items",
-        ]
+            "options",
+        )
+
+# Order Serializers
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)

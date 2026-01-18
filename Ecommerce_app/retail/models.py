@@ -199,6 +199,28 @@ class BundleItem(models.Model):
     def __str__(self) -> str:
         return f"{self.quantity} × {self.product.name} in {self.bundle.name}"
 
+class BundleOption(models.Model):
+    bundle = models.ForeignKey("Bundle", related_name="options", on_delete=models.CASCADE)
+    name = models.CharField(max_length=64)   # e.g. "Button Colour"
+    required = models.BooleanField(default=True)
+    
+    def __str__(self) -> str:
+        return f"{self.bundle.name} → {self.name}"
+
+class BundleOptionValue(models.Model):
+    option = models.ForeignKey(BundleOption, related_name="values", on_delete=models.CASCADE)
+    label = models.CharField(max_length=32)      # Red, White, Black
+    colour_hex = models.CharField(max_length=7)  # #ff0033
+    
+    def __str__(self) -> str:
+        return f"{self.option.name} → {self.label}"
+
+class BundleComponent(models.Model):
+    bundle = models.ForeignKey("Bundle", related_name="components", on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    variant = models.ForeignKey(ProductVariant, null=True, blank=True, on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField()
+    option_value = models.ForeignKey(BundleOptionValue, null=True, blank=True, on_delete=models.PROTECT)
 
 # -----------------------
 # Orders & payments
@@ -226,7 +248,7 @@ class Order(models.Model):
         blank=True,
         related_name="orders",
     )
-    email = models.EmailField()
+    email = models.EmailField(blank=True, null=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20, blank=True)
@@ -286,7 +308,11 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     bundle = models.ForeignKey(Bundle, on_delete=models.CASCADE, null=True, blank=True)
-
+    bundle_options_meta = models.JSONField(
+        null=True,
+        blank=True,
+        help_text="Stores bundle colour breakdown like {option_id: {value_id: qty}}"
+    )
     quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
     colour = models.CharField(max_length=50, blank=True, null=True)

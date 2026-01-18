@@ -8,7 +8,8 @@ def send_slack_message(text: str):
     webhook_url = getattr(settings, "SLACK_WEBHOOK_URL", None)
     if not webhook_url:
         return False
-
+    if settings.DEBUG:
+        return False  # Avoid sending messages in debug mode
     payload = {"text": text}
     try:
         response = requests.post(webhook_url, json=payload, timeout=5)

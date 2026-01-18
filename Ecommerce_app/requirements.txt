@@ -2,6 +2,7 @@
 Django==5.2.6
 django-cors-headers==4.9.0
 psycopg2-binary==2.9.10
+django-nested-admin==4.1.6
 
 # REST API + JWT auth
 djangorestframework==3.16.1

@@ -54,27 +54,30 @@ export default function CartPage() {
 
       {/* 🛒 Cart Items */}
       <div className="space-y-6">
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-4 gap-4 sm:gap-6"
-          >
-            {/* Product info */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
-              {item.image && (
-                <Image
-                  src={getImageUrl(item.image)}
-                  alt={item.title}
-                  width={150}
-                  height={100}
-                  className="rounded-md border border-gray-200 dark:border-gray-700 object-contain w-32 h-32 sm:w-40 sm:h-40"
-                />
-              )}
-              <li key={`${item.id}-${item.colour || "default"}`}>
+        {items.map((item) => {
+          const isBundle = item.type === "bundle";
+
+          return (
+            <div
+              key={`${item.id}-${item.colour || "bundle"}`}
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-4 gap-4 sm:gap-6"
+            >
+              {/* IMAGE + TITLE */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+                {item.image && (
+                  <Image
+                    src={getImageUrl(item.image)}
+                    alt={item.title}
+                    width={150}
+                    height={100}
+                    className="rounded-md border border-gray-200 dark:border-gray-700 object-contain w-32 h-32 sm:w-40 sm:h-40"
+                  />
+                )}
+
                 <div className="flex flex-col">
                   <span className="text-base font-medium text-gray-800 dark:text-gray-100">
-                    {item.title}
-                    {item.colour && (
+                    {isBundle ? "🧰 " : ""} {item.title}
+                    {!isBundle && item.colour && (
                       <span
                         className={`${getColourTextClass(
                           item.colour
@@ -84,43 +87,74 @@ export default function CartPage() {
                       </span>
                     )}
                   </span>
+
+                  {/* PRICE */}
                   <span className="text-pink-600 dark:text-pink-400 font-semibold mt-1">
                     £{item.price}
                   </span>
-                </div>
-              </li>
-            </div>
 
-            {/* Quantity + Remove */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <label htmlFor={`qty-${item.id}`} className="sr-only">
-                  Quantity
-                </label>
-                <input
-                  id={`qty-${item.id}`}
-                  type="number"
-                  min={1}
-                  value={item.quantity}
-                  onChange={(e) =>
-                    updateQuantity(
-                      item.id,
-                      item.colour || "",
-                      Number(e.target.value) || 1
-                    )
-                  }
-                  className="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-center text-sm bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 focus:outline-pink-600 dark:focus:outline-pink-500 transition"
-                />
+                  {/* 🟣 BUNDLE OPTIONS PREVIEW */}
+                  {isBundle && item.option_values && item.option_meta && (
+                    <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                      <p className="font-semibold text-xs uppercase tracking-wide mb-1">
+                        Your selection:
+                      </p>
+
+                      <ul className="list-disc ml-5 space-y-1">
+                        {item.option_meta.map((opt: any) => {
+                          const selected =
+                            item.option_values?.[opt.option_id] ?? {};
+
+                          return Object.entries(selected).map(
+                            ([valueId, qty]: any) => {
+                              const meta = opt.values[valueId];
+
+                              return (
+                                <li key={`${opt.option_id}-${valueId}`}>
+                                  {qty} × {meta.label} {opt.product_name}
+                                </li>
+                              );
+                            }
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
-              <button
-                onClick={() => removeItem(item.id, item.colour || "")}
-                className="text-red-600 dark:text-red-400 hover:underline text-sm mt-1 sm:mt-0 hover:cursor-pointer"
-              >
-                Remove
-              </button>
+
+              {/* QUANTITY + REMOVE */}
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                <div className="flex items-center gap-2">
+                  <label htmlFor={`qty-${item.id}`} className="sr-only">
+                    Quantity
+                  </label>
+                  <input
+                    id={`qty-${item.id}`}
+                    type="number"
+                    min={1}
+                    value={item.quantity}
+                    onChange={(e) =>
+                      updateQuantity(
+                        item.id,
+                        item.colour || "",
+                        Number(e.target.value) || 1
+                      )
+                    }
+                    className="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-center text-sm bg-white dark:bg-gray-800"
+                  />
+                </div>
+
+                <button
+                  onClick={() => removeItem(item.id, item.colour || "")}
+                  className="text-red-600 dark:text-red-400 hover:underline text-sm"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* 🧾 Cart Summary */}

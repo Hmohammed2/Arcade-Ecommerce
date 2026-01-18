@@ -2,7 +2,6 @@ import requests
 from django.conf import settings
 from django.utils import timezone
 
-
 def get_graph_access_token():
     tenant_id = settings.GRAPH_TENANT_ID
     client_id = settings.GRAPH_CLIENT_ID
@@ -227,4 +226,8 @@ def send_payment_success_email(
         </html>
         """
 
+    if settings.DEBUG:
+        print("DEV MODE – Email suppressed:", to_email, subject, body)
+        return
+    
     send_graph_email(to_email, subject, body)

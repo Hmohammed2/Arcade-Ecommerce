@@ -1,33 +1,49 @@
-from decimal import Decimal
-from django.db import transaction
-from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import F
-from retail.models import Order, OrderItem, Payment, Product, Coupon, ProductVariant, Bundle
-from retail.facades.stripe_facade import StripePaymentFacade
-from retail.facades.paypal_facade import PayPalFacade
-from retail.utils.slack_notifications import send_slack_message
-from retail.utils.deplete_stock import _deplete_stock_for_order
-from rest_framework.response import Response
+from __future__ import annotations
 
 import logging
+from decimal import Decimal
+
+from django.db import transaction, models
+from django.db.models import F
+
+
+from retail.facades.paypal_facade import PayPalFacade
+from retail.facades.stripe_facade import StripePaymentFacade
+from retail.models import (
+    Bundle,
+    Coupon,
+    Order,
+    OrderItem,
+    Payment,
+    Product,
+    ProductVariant,
+)
+from retail.services.order_builder import build_order_items_from_payload
+from retail.utils.deplete_stock import _deplete_stock_for_order
+from retail.utils.slack_notifications import send_slack_message
 
 logger = logging.getLogger(__name__)
 
 
 class PaymentService:
     """
-    Service layer that coordinates Order, Payment, Coupons, and Notifications.
+    Clean service layer:
+      - Checkout (Stripe / PayPal) creates an Order + OrderItems (priced snapshot),
+        validates basics, computes totals, creates provider order/intent, creates Payment row.
+      - Webhooks/capture mark payment succeeded and then reserve/deplete stock exactly once.
     """
 
+    MONEY_2DP = Decimal("0.01")
+
     # ---------------------------
-    # 🧾 MAIN CHECKOUT (STRIPE)
+    # ✅ PUBLIC API (CHECKOUT)
     # ---------------------------
     @staticmethod
     @transaction.atomic
     def create_order_and_payment(
         *,
         user=None,
-        items: list,
+        items: list[dict],
         email: str,
         first_name: str,
         last_name: str,
@@ -35,266 +51,165 @@ class PaymentService:
         currency: str = "GBP",
         delivery_method: str = "standard",
         coupon_code: str | None = None,
-    ):
+    ) -> dict:
         """
-        Creates an Order, OrderItems, applies a valid coupon,
-        adds delivery fees, creates Stripe PaymentIntent, and a Payment record.
+        Stripe checkout:
+          1) Validate request
+          2) Create order shell
+          3) Build order items (including snapshot price)
+          4) Validate availability (light validation; real reservation happens on webhook)
+          5) Apply coupon + delivery
+          6) Create Stripe PaymentIntent
+          7) Create Payment row
         """
-        if not items:
-            raise ValueError("Cannot create order with no items.")
-        if not email:
-            raise ValueError("Email is required for checkout.")
+        PaymentService._validate_checkout_payload(items=items, require_email=True, email=email)
 
-        # ✅ Step 1: Create order shell
-        order = Order.objects.create(
+        order = PaymentService._create_order_shell(
             user=user,
             email=email,
             first_name=first_name,
             last_name=last_name,
             phone=phone,
-            total_price=Decimal("0.00"),
+            delivery_method=delivery_method,
         )
 
-        subtotal = Decimal("0.00")
+        # Creates OrderItem rows. Your builder MUST set OrderItem.price (non-null).
+        build_order_items_from_payload(order, items)
 
-        # ✅ Step 2: Create order items and manage stock
-        for item in items:
-            item_type = item.get("type", "product")
-            quantity = int(item.get("quantity", 1))
+        # Optional: quick availability check (avoid obvious failures before charging)
+        PaymentService._precheck_availability(order)
 
-            if quantity < 1:
-                raise ValueError("Quantity must be at least 1.")
+        # Compute total + apply coupon and save to order
+        PaymentService._apply_totals_and_coupon(order, coupon_code=coupon_code)
 
-            # -------------------------
-            # 🧩 BUNDLE
-            # -------------------------
-            if item_type == "bundle":
-                bundle = Bundle.objects.select_for_update().prefetch_related("items__product").get(id=item["id"])
-
-                if bundle.max_available < quantity:
-                    raise ValueError(f"Not enough stock for bundle {bundle.name}")
-
-                OrderItem.objects.create(
-                    order=order,
-                    bundle=bundle,
-                    quantity=quantity,
-                    price=bundle.price,
-                )
-
-                subtotal += bundle.price * quantity
-                continue
-
-            # -------------------------
-            # 📦 PRODUCT
-            # -------------------------
-            product = Product.objects.select_for_update().get(id=item["id"])
-            colour = item.get("colour")
-
-            if colour:
-                variant = ProductVariant.objects.filter(product=product, colour__iexact=colour).first()
-                if not variant or variant.stock < quantity:
-                    raise ValueError(f"Insufficient stock for {product.name} ({colour})")
-            else:
-                if product.stock < quantity:
-                    raise ValueError(f"Insufficient stock for {product.name}")
-
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                price=product.price,
-                colour=colour,
-            )
-
-            subtotal += product.price * quantity
-
-            
-        # ✅ Step 3: Apply coupon (if valid)
-        discount_percent = Decimal("0.00")
-        coupon_obj = None
-
-        if coupon_code:
-            try:
-                coupon = Coupon.objects.get(code__iexact=coupon_code.strip())
-                if coupon.is_valid_for_user(email):
-                    discount_percent = Decimal(coupon.discount_percent) / Decimal("100")
-                    coupon_obj = coupon
-                    coupon.usage_count += 1
-                    coupon.save(update_fields=["usage_count"])
-                else:
-                    logger.exception("Coupon %s not valid for email %s", coupon_code, email)
-                    raise ValueError("Coupon not valid for this account or expired.")
-            except Coupon.DoesNotExist:
-                logger.exception("Coupon %s does not exist", coupon_code)
-                raise ValueError("Invalid coupon code.")
-
-        discounted_total = subtotal * (Decimal("1.00") - discount_percent)
-
-        # ✅ Step 4: Calculate delivery fee
-        delivery_fee = Decimal("0.00")
-        if delivery_method == "standard":
-            if discounted_total < Decimal("15.00"):
-                delivery_fee = Decimal("2.99")
-        elif delivery_method == "express":
-            delivery_fee = Decimal("1.99")
-            if discounted_total < Decimal("15.00"):
-                delivery_fee += Decimal("2.99")
-
-        grand_total = discounted_total + delivery_fee
-        
-        # After subtotal and coupon application
-        logger.info("Subtotal=%s, discount=%s, delivery_fee=%s, grand_total=%s", subtotal, discount_percent, delivery_fee, grand_total)
-
-        # ✅ Step 5: Update order totals
-        order.total_price = grand_total
-        order.delivery_method = delivery_method
-        order.delivery_fee = delivery_fee
-        order.coupon = coupon_obj
-        order.save(
-            update_fields=[
-                "total_price",
-                "delivery_method",
-                "delivery_fee",
-                "coupon",
-            ]
-        )
-
-        # ✅ Step 6: Create Stripe PaymentIntent
-        logger.info("Creating Stripe PaymentIntent for order #%s, amount=%s %s", order.id, grand_total, currency)
-        amount_in_pence = int(grand_total * 100)
-        intent_data = StripePaymentFacade.create_payment_intent(
+        # Create Stripe intent (in smallest currency unit)
+        amount_in_pence = PaymentService._to_minor_units(order.total_price)
+        intent = StripePaymentFacade.create_payment_intent(
             amount=amount_in_pence,
             currency=currency.lower(),
         )
-        
-        
-        # ✅ Step 7: Record Payment in DB
+
         payment = Payment.objects.create(
             order=order,
-            stripe_payment_intent=intent_data.get("id"),
-            amount=grand_total,
+            stripe_payment_intent=intent.get("id"),
+            amount=order.total_price,
             currency=currency.upper(),
             status="pending",
+            payment_method="stripe",
         )
-        
-        
-        # Payment record
-        logger.info("Payment record created (order_id=%s, payment_id=%s)", order.id, payment.id)
 
-        # ✅ Slack Notification
         send_slack_message(
-            f"🛒 Order #{order.id} created by {order.first_name} {order.last_name} "
-            f"for £{order.total_price:.2f}. "
-            f"{'Coupon: ' + coupon_code if coupon_code else ''}"
+            f"🛒 Order #{order.id} created (Stripe pending) — "
+            f"{order.first_name} {order.last_name}, £{order.total_price:.2f}."
+            f"{' Coupon: ' + coupon_code if coupon_code else ''}"
         )
-        
-        # Slack message also logged
-        logger.info("Order #%s successfully created and Slack notified.", order.id)
 
-        # ✅ Step 8: Return response to frontend
+        logger.info("Stripe checkout created order_id=%s payment_id=%s", order.id, payment.id)
+
         return {
             "order_id": order.public_id,
             "payment_id": payment.id,
-            "clientSecret": intent_data.get("client_secret"),
+            "clientSecret": intent.get("client_secret"),
             "amount": amount_in_pence,
             "currency": currency.upper(),
-            "discount_applied": float(discount_percent * 100),
-            "delivery_fee": float(delivery_fee),
-            "grand_total": float(grand_total),
+            "delivery_fee": float(order.delivery_fee or 0),
+            "grand_total": float(order.total_price),
         }
 
-    # ---------------------------
-    # 🅿️ PAYPAL CHECKOUT
-    # ---------------------------
     @staticmethod
     @transaction.atomic
     def create_paypal_order(
-        user,
-        items,
-        email,
-        first_name,
-        last_name,
-        phone="",
-        currency="GBP",
-        delivery_method="standard",
-        coupon_code=None,
-    ):
+        user=None,
+        items: list[dict] | None = None,
+        email: str | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        phone: str = "",
+        currency: str = "GBP",
+        delivery_method: str = "standard",
+        coupon_code: str | None = None,
+    ) -> dict:
         """
-        Creates a PayPal order and links it to a local Payment record.
+        PayPal checkout:
+          - Email is optional (PayPal will provide it at capture)
+          - No Stripe PaymentIntent is created
         """
-        order_data = PaymentService.create_order_and_payment(
+        items = items or []
+        PaymentService._validate_checkout_payload(items=items, require_email=False, email=email)
+
+        order = PaymentService._create_order_shell(
             user=user,
-            items=items,
-            email=email,
+            email=email,  # may be None
             first_name=first_name,
             last_name=last_name,
             phone=phone,
-            currency=currency,
             delivery_method=delivery_method,
-            coupon_code=coupon_code,
         )
 
-        order = Order.objects.get(id=order_data["order_id"])
+        build_order_items_from_payload(order, items)
+        PaymentService._precheck_availability(order)
+        PaymentService._apply_totals_and_coupon(order, coupon_code=coupon_code)
+
         paypal_order = PayPalFacade.create_order(order.total_price, currency)
         paypal_order_id = paypal_order["id"]
 
-        # Update local Payment record to PayPal
-        payment = order.payment
-        payment.payment_method = "paypal"
-        payment.stripe_payment_intent = paypal_order_id
-        payment.status = "pending"
-        payment.save()
+        payment = Payment.objects.create(
+            order=order,
+            payment_method="paypal",
+            # Reusing this field as provider id. Rename later if you can.
+            stripe_payment_intent=paypal_order_id,
+            status="pending",
+            amount=order.total_price,
+            currency=currency.upper(),
+        )
+
+        logger.info("PayPal checkout created order_id=%s paypal_order_id=%s", order.id, paypal_order_id)
 
         return {
             "order_id": order.id,
             "paypal_order_id": paypal_order_id,
             "approval_url": next(
-                (link["href"] for link in paypal_order["links"] if link["rel"] == "approve"),
+                (link["href"] for link in paypal_order.get("links", []) if link.get("rel") == "approve"),
                 None,
             ),
         }
 
     # ---------------------------
-    # 💰 STRIPE PAYMENT STATUS
+    # ✅ PUBLIC API (PAYMENT FINALIZATION)
     # ---------------------------
     @staticmethod
     @transaction.atomic
     def mark_payment_succeeded(intent: dict) -> None:
+        """
+        Stripe webhook: payment_intent.succeeded
+        Reserve/deplete stock once here.
+        """
         from retail.models import CouponUsage
         from users.services.SendEmail import send_payment_success_email
 
-        try:
-            payment = Payment.objects.get(stripe_payment_intent=intent["id"])
-        except Payment.DoesNotExist:
-            logger.exception("Payment with Stripe intent %s does not exist", intent["id"])
+        intent_id = intent.get("id")
+        if not intent_id:
+            logger.error("Stripe succeeded called without intent id")
             return
 
-        # 1) Mark payment fields
+        try:
+            payment = Payment.objects.select_related("order").get(stripe_payment_intent=intent_id)
+        except Payment.DoesNotExist:
+            logger.exception("Payment with Stripe intent %s does not exist", intent_id)
+            return
+
         payment.status = "succeeded"
-        payment.payment_method = intent["payment_method_types"][0]
+        # Use method types if present
+        pm_types = intent.get("payment_method_types") or []
+        payment.payment_method = pm_types[0] if pm_types else payment.payment_method or "stripe"
         payment.save(update_fields=["status", "payment_method"])
 
         order = payment.order
 
-        # 2) Try to decrement stock atomically
-        try:
-            ok, errs = _deplete_stock_for_order(order)
-        except Exception:
-            logger.exception("Stripe stock failure")
-            return Response(status=200)
+        ok, errs = PaymentService._reserve_stock_or_hold(order, channel="Stripe")
         if not ok:
-            # Business choice: put order on hold and notify staff; you could also auto-refund here.
-            order.status = "on_hold"
-            order.save(update_fields=["status"])
-            msg = (
-                f"⚠️ Stock shortfall for Order #{order.id} after payment. "
-                f"Items: {', '.join(errs)}"
-            )
-            logger.error(msg)
-            send_slack_message(msg)
-            return  # stop here; don't send success email yet (or send a different one)
+            return
 
-        # 3) All good → proceed
         order.status = "processing"
         order.save(update_fields=["status"])
 
@@ -302,136 +217,398 @@ class PaymentService:
             CouponUsage.objects.get_or_create(coupon=order.coupon, email=order.email)
 
         send_slack_message(
-            f"✅ Payment succeeded and stock reserved for Order #{order.id} "
+            f"✅ Stripe payment succeeded & stock reserved — Order #{order.id} "
             f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
-        logger.info("Payment and stock confirmed for Order #%s", order.id)
 
-        # 4) Email customer
-        try:
-            items = [
-                {"name": i.product.name, "quantity": i.quantity, "price": float(i.price)}
-                for i in order.items.all()
-            ]
-            send_payment_success_email(
-                to_email=order.email,
-                first_name=order.first_name or "",
-                order_id=order.public_id,
-                amount=payment.amount,
-                items=items,
-                payment_method=payment.payment_method,
-                coupon_code=order.coupon.code if order.coupon else None,
-            )
-            logger.info("Payment success email sent for Order #%s to %s", order.id, order.email)
-        except Exception as e:
-            logger.exception("Failed to send payment success email for Order #%s: %s", order.id, e)
-            send_slack_message(f"⚠️ Failed to send Stripe payment email for Order #{order.id}: {e}")
+        # Email customer (best-effort)
+        if order.email:
+            try:
+                items_payload = PaymentService._email_items_payload(order)
+                send_payment_success_email(
+                    to_email=order.email,
+                    first_name=order.first_name or "",
+                    order_id=order.public_id,
+                    amount=payment.amount,
+                    items=items_payload,
+                    payment_method=payment.payment_method,
+                    coupon_code=order.coupon.code if order.coupon else None,
+                )
+            except Exception as e:
+                logger.exception("Failed to send Stripe success email for Order #%s: %s", order.id, e)
+                send_slack_message(f"⚠️ Failed to send Stripe payment email for Order #{order.id}: {e}")
 
-        
-     # ✅ PAYPAL PAYMENT SUCCESS
     @staticmethod
     @transaction.atomic
-    def mark_paypal_payment_succeeded(order_id: str) -> None:
+    def mark_paypal_payment_succeeded(paypal_order_id: str) -> None:
         """
-        Marks a PayPal payment as succeeded, decrements stock,
-        updates order status, records coupon usage, and sends notification/email.
+        Called after PayPal capture succeeds.
         """
-        from retail.models import CouponUsage  # avoid circular import
+        from retail.models import CouponUsage
         from users.services.SendEmail import send_payment_success_email
 
         try:
-            payment = Payment.objects.get(stripe_payment_intent=order_id)
+            payment = Payment.objects.select_related("order").get(stripe_payment_intent=paypal_order_id)
         except Payment.DoesNotExist:
-            logger.exception("Payment with PayPal order ID %s does not exist", order_id)
+            logger.exception("Payment with PayPal order ID %s does not exist", paypal_order_id)
             return
 
-        # 1️⃣ Update payment record
         payment.status = "succeeded"
         payment.payment_method = "paypal"
         payment.save(update_fields=["status", "payment_method"])
 
         order = payment.order
-        logger.info("Marking PayPal payment succeeded for Order #%s", order.id)
 
-        try:
-            ok, errs = _deplete_stock_for_order(order)
-        except Exception:
-            logger.exception("Stripe stock failure")
-            return Response(status=200)
-
+        ok, errs = PaymentService._reserve_stock_or_hold(order, channel="PayPal")
         if not ok:
-            # ⚠️ If stock can’t be fulfilled, place order on hold and notify staff
-            order.status = "on_hold"
-            order.save(update_fields=["status"])
+            return
 
-            msg = (
-                f"⚠️ Stock shortfall for PayPal Order #{order.id}. "
-                f"Unable to fulfill: {', '.join(errs)}"
-            )
-            logger.error(msg)
-            send_slack_message(msg)
-            return  # stop here; don't send success email yet
-
-        # 3️⃣ All stock OK → mark order as processing
         order.status = "processing"
         order.save(update_fields=["status"])
 
-        # 4️⃣ Record coupon usage (if applicable)
         if order.coupon and order.email:
-            CouponUsage.objects.get_or_create(
-                coupon=order.coupon,
-                email=order.email,
-            )
+            CouponUsage.objects.get_or_create(coupon=order.coupon, email=order.email)
 
-        # 5️⃣ Log + Slack notification
-        msg = (
-            f"✅ PayPal payment succeeded and stock reserved for Order #{order.id} "
+        send_slack_message(
+            f"✅ PayPal payment succeeded & stock reserved — Order #{order.id} "
             f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
-        logger.info(msg)
-        send_slack_message(msg)
 
-        # 6️⃣ Send confirmation email
-        try:
-            items = [
-                {"name": i.product.name, "quantity": i.quantity, "price": float(i.price)}
-                for i in order.items.all()
-            ]
-            send_payment_success_email(
-                to_email=order.email,
-                first_name=order.first_name or "",
-                order_id=order.public_id,
-                amount=payment.amount,
-                items=items,
-                payment_method="PayPal",
-                coupon_code=order.coupon.code if order.coupon else None,
-            )
-            logger.info("PayPal payment success email sent for Order #%s to %s", order.id, order.email)
-        except Exception as e:
-            logger.exception("Failed to send PayPal payment success email for Order #%s: %s", order.id, e)
-            send_slack_message(f"⚠️ Failed to send PayPal payment email for Order #{order.id}: {e}")
-
+        if order.email:
+            try:
+                items_payload = PaymentService._email_items_payload(order)
+                send_payment_success_email(
+                    to_email=order.email,
+                    first_name=order.first_name or "",
+                    order_id=order.public_id,
+                    amount=payment.amount,
+                    items=items_payload,
+                    payment_method="PayPal",
+                    coupon_code=order.coupon.code if order.coupon else None,
+                )
+            except Exception as e:
+                logger.exception("Failed to send PayPal success email for Order #%s: %s", order.id, e)
+                send_slack_message(f"⚠️ Failed to send PayPal payment email for Order #{order.id}: {e}")
 
     @staticmethod
+    @transaction.atomic
     def mark_payment_failed(intent: dict) -> None:
         """
-        Marks a payment as failed and reverts order status.
+        Stripe webhook: payment_intent.payment_failed, etc.
         """
+        intent_id = intent.get("id")
+        if not intent_id:
+            return
+
         try:
-            payment = Payment.objects.get(stripe_payment_intent=intent["id"])
+            payment = Payment.objects.select_related("order").get(stripe_payment_intent=intent_id)
         except Payment.DoesNotExist:
-            logger.exception("Payment with Stripe intent %s does not exist", intent["id"])
+            logger.exception("Payment with Stripe intent %s does not exist", intent_id)
             return
 
         payment.status = "failed"
-        payment.save()
+        payment.save(update_fields=["status"])
 
         order = payment.order
         order.status = "pending"
-        order.save()
+        order.save(update_fields=["status"])
 
         send_slack_message(
-            f"❌ Payment failed for Order #{order.id} "
-            f"({order.first_name} {order.last_name}, £{payment.amount:.2f})."
+            f"❌ Payment failed — Order #{order.id} ({order.first_name} {order.last_name}, £{payment.amount:.2f})."
         )
-        logger.info("Payment for Order #%s marked as failed and Slack notified.", order.id)
+
+    # ---------------------------
+    # 🔒 INTERNAL HELPERS
+    # ---------------------------
+    @staticmethod
+    def _validate_checkout_payload(*, items: list[dict], require_email: bool, email: str | None) -> None:
+        if not items:
+            raise ValueError("No items provided.")
+        if require_email and not email:
+            raise ValueError("Email is required for checkout.")
+
+        # Basic per-line validation
+        for item in items:
+            qty = int(item.get("quantity", 1))
+            if qty < 1:
+                raise ValueError("Quantity must be at least 1.")
+            t = item.get("type")
+            if t not in ("product", "bundle"):
+                raise ValueError("Invalid item type.")
+            if t == "product" and not item.get("product_id"):
+                raise ValueError("Missing product_id for product item.")
+            if t == "bundle" and not item.get("bundle_id"):
+                raise ValueError("Missing bundle_id for bundle item.")
+
+    @staticmethod
+    def _create_order_shell(
+        *,
+        user,
+        email: str | None,
+        first_name: str | None,
+        last_name: str | None,
+        phone: str,
+        delivery_method: str,
+    ) -> Order:
+        # Ensure your Order.email allows null/blank for PayPal flows
+        order = Order.objects.create(
+            user=user,
+            email=email,
+            first_name=first_name or "",
+            last_name=last_name or "",
+            phone=phone or "",
+            delivery_method=delivery_method,
+            total_price=Decimal("0.00"),
+        )
+        return order
+
+    @staticmethod
+    def _precheck_availability(order: Order) -> None:
+        """
+        Pre-check stock before charging:
+        1) Check bundle.max_available against TOTAL kits requested
+        2) Check underlying COMPONENT stock inside each bundle
+        3) Check standalone products/variants
+        This mirrors the logic used later for final depletion.
+        """
+
+        # -------------------------------------------------------
+        # 1) CHECK BUNDLE QUANTITY AS A GROUP
+        # -------------------------------------------------------
+
+        bundle_ids = (
+            order.items
+            .filter(bundle_id__isnull=False)
+            .values_list("bundle_id", flat=True)
+            .distinct()
+        )
+
+        for bundle_id in bundle_ids:
+            bundle = Bundle.objects.select_for_update().get(id=bundle_id)
+
+            total_requested = (
+                order.items
+                .filter(bundle_id=bundle_id)
+                .aggregate(total=models.Sum("quantity"))["total"] or 0
+            )
+
+            logger.info(
+                "[Precheck] Bundle %s requested=%s, max_available=%s",
+                bundle.name, total_requested, bundle.max_available
+            )
+
+            if total_requested > bundle.max_available:
+                raise ValueError(
+                    f"Not enough stock for bundle {bundle.name} "
+                    f"(requested {total_requested}, available {bundle.max_available})"
+                )
+
+        # -------------------------------------------------------
+        # 2) CHECK COMPONENT STOCK INSIDE EACH BUNDLE
+        # -------------------------------------------------------
+
+        for bundle_id in bundle_ids:
+            bundle = (
+                Bundle.objects
+                .select_for_update()
+                .prefetch_related("items__product")
+                .get(id=bundle_id)
+            )
+
+            # Total kits requested for this bundle
+            total_kits = (
+                order.items
+                .filter(bundle_id=bundle_id)
+                .aggregate(total=models.Sum("quantity"))["total"] or 0
+            )
+
+            logger.info(
+                "[Precheck] Checking components for bundle %s (kits=%s)",
+                bundle.name, total_kits
+            )
+
+            for bundle_item in bundle.items.all():
+                product = bundle_item.product
+                required_qty = bundle_item.quantity * total_kits
+
+                logger.info(
+                    "[Precheck] Bundle component %s needs %s units",
+                    product.name, required_qty
+                )
+
+                # If this product tracks stock globally
+                if product.stock is not None:
+                    if product.stock < required_qty:
+                        raise ValueError(
+                            f"Bundle component shortage: {product.name} "
+                            f"(need {required_qty}, have {product.stock})"
+                        )
+
+        # -------------------------------------------------------
+        # 3) CHECK STANDALONE PRODUCTS / VARIANTS
+        # -------------------------------------------------------
+
+        for item in order.items.select_related("product", "bundle"):
+
+            # Skip bundles here (already checked above)
+            if item.bundle_id:
+                continue
+
+            qty = int(item.quantity)
+
+            # ---- Variant product ----
+            if item.colour:
+                try:
+                    variant = ProductVariant.objects.select_for_update().get(
+                        product_id=item.product_id,
+                        colour__iexact=item.colour,
+                    )
+                except ProductVariant.DoesNotExist:
+                    raise ValueError(f"Variant missing for item {item.id}")
+
+                logger.info(
+                    "[Precheck] Variant %s (%s): need=%s, have=%s",
+                    item.product.name,
+                    item.colour,
+                    qty,
+                    variant.stock,
+                )
+
+                if variant.stock is not None and variant.stock < qty:
+                    raise ValueError(
+                        f"Insufficient stock for {item.product.name} ({item.colour}) "
+                        f"(need {qty}, have {variant.stock})"
+                    )
+
+            # ---- Plain product ----
+            else:
+                product = Product.objects.select_for_update().get(id=item.product_id)
+
+                logger.info(
+                    "[Precheck] Product %s: need=%s, have=%s",
+                    product.name,
+                    qty,
+                    product.stock,
+                )
+
+                if product.stock is not None and product.stock < qty:
+                    raise ValueError(
+                        f"Insufficient stock for {product.name} "
+                        f"(need {qty}, have {product.stock})"
+                    )
+
+        logger.info("[Precheck] Stock precheck passed for Order #%s", order.id)
+    
+    @staticmethod
+    def _apply_totals_and_coupon(order: Order, *, coupon_code: str | None) -> None:
+        """
+        Sets order.coupon (if valid), order.discount_percent (if you have it),
+        and order.total_price with delivery fee included.
+        Assumes OrderItem.price is already populated (snapshot).
+        """
+        subtotal = Decimal("0.00")
+        for item in order.items.all():
+            subtotal += (Decimal(item.price) * item.quantity)
+
+        delivery_fee = order.delivery_fee or Decimal("0.00")
+        total = subtotal + delivery_fee
+
+        coupon = None
+        discount = Decimal("0.00")
+
+        if coupon_code:
+            coupon = PaymentService._get_valid_coupon_or_raise(coupon_code)
+            discount = (total * Decimal(coupon.discount_percent)) / Decimal("100")
+            total = total - discount
+
+            # If you track coupon usage counts at checkout (instead of after success),
+            # keep this. If you prefer to count on success, move this elsewhere.
+            coupon.usage_count = F("usage_count") + 1
+            coupon.save(update_fields=["usage_count"])
+
+        # Persist to order
+        if hasattr(order, "coupon"):
+            order.coupon = coupon
+        if hasattr(order, "discount_percent"):
+            # store as decimal fraction if that's what your model uses; otherwise remove
+            try:
+                order.discount_percent = (Decimal(coupon.discount_percent) / Decimal("100")) if coupon else Decimal("0.00")
+            except Exception:
+                pass
+
+        order.total_price = total.quantize(PaymentService.MONEY_2DP)
+        order.save(update_fields=[f for f in ["total_price", "coupon", "discount_percent"] if hasattr(order, f)])
+
+        logger.info(
+            "Totals for order_id=%s subtotal=%s delivery_fee=%s discount=%s grand_total=%s",
+            order.id, subtotal, delivery_fee, discount, order.total_price
+        )
+
+    @staticmethod
+    def _get_valid_coupon_or_raise(code: str) -> Coupon:
+        try:
+            coupon = Coupon.objects.get(code__iexact=code, is_active=True)
+        except Coupon.DoesNotExist:
+            raise ValueError("Invalid or expired coupon.")
+
+        if coupon.usage_limit and coupon.usage_count >= coupon.usage_limit:
+            raise ValueError("Coupon usage limit reached.")
+
+        return coupon
+
+    @staticmethod
+    def _reserve_stock_or_hold(order: Order, *, channel: str) -> tuple[bool, list[str]]:
+        """
+        Attempt to deplete/reserve stock. If fails, put order on_hold and notify staff.
+        """
+        try:
+            ok, errs = _deplete_stock_for_order(order)
+        except Exception as e:
+            logger.exception("%s stock failure for order_id=%s", channel, order.id)
+            send_slack_message(f"⚠️ {channel} stock failure (exception) for Order #{order.id}: {e}")
+            # Do not raise; keep idempotent/Stripe-safe
+            return False, [str(e)]
+
+        if not ok:
+            order.status = "on_hold"
+            order.save(update_fields=["status"])
+            msg = (
+                f"⚠️ Stock shortfall for {channel} Order #{order.id} after payment. "
+                f"Items: {', '.join(errs)}"
+            )
+            logger.error(msg)
+            send_slack_message(msg)
+            return False, errs
+
+        return True, []
+
+    @staticmethod
+    def _email_items_payload(order: Order) -> list[dict]:
+        """
+        Build a safe email payload for line items.
+        """
+        payload: list[dict] = []
+        for i in order.items.select_related("product", "bundle"):
+            name = None
+            if i.product_id:
+                name = i.product.name
+                if i.colour:
+                    name = f"{name} ({i.colour})"
+            elif i.bundle_id:
+                name = i.bundle.name
+            else:
+                name = "Item"
+
+            payload.append(
+                {
+                    "name": name,
+                    "quantity": i.quantity,
+                    "price": float(i.price),
+                }
+            )
+        return payload
+
+    @staticmethod
+    def _to_minor_units(amount: Decimal) -> int:
+        # GBP -> pence
+        return int((amount.quantize(PaymentService.MONEY_2DP) * 100).to_integral_value())

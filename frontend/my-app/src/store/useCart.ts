@@ -1,18 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { toast } from "react-hot-toast";
-import { cartItem } from "@/types/cart";
+import { CartItem } from "@/types/cart";
 import { gaEvent } from "@/library/ga";
 
 type DeliveryType = "standard" | "express";
 
 interface CartState {
-  items: cartItem[];
+  items: CartItem[];
   delivery: DeliveryType;
   setDelivery: (type: DeliveryType) => void;
   getDelivery: () => DeliveryType;
 
-  addItem: (item: cartItem) => void;
+  addItem: (item: CartItem) => void;
   removeItem: (id: number, colour?: string | null) => void;
   updateQuantity: (id: number, colour: string | null, quantity: number) => void;
   clearCart: () => void;
@@ -20,7 +20,7 @@ interface CartState {
   getTotalItems: () => number;
   getTotalPrice: () => number;
   getItemCount: (id: number, colour?: string | null) => number;
-  getCartItems: () => cartItem[];
+  getCartItems: () => CartItem[];
   isInCart: (id: number, colour?: string | null) => boolean;
 }
 
@@ -36,20 +36,39 @@ export const useCart = create<CartState>()(
       // ✅ Add or increment item (unique by id + colour)
       addItem: (item) => {
         const items = get().items;
-        const existingItem = items.find(
-          (i) => i.id === item.id && i.colour === item.colour
-        );
+
+        const existingItem = items.find((i) => {
+          // Same product
+          if (i.id !== item.id) return false;
+
+          // Case 1 — normal product (match by colour)
+          if (item.type === "product") {
+            return i.colour === item.colour;
+          }
+
+          // Case 2 — bundle (match by option_values)
+          if (item.type === "bundle") {
+            return (
+              JSON.stringify(i.option_values) ===
+              JSON.stringify(item.option_values)
+            );
+          }
+
+          return false;
+        });
 
         if (existingItem) {
           const updatedItems = items.map((i) =>
-            i.id === item.id && i.colour === item.colour
+            i === existingItem
               ? { ...i, quantity: i.quantity + item.quantity }
               : i
           );
 
           set({ items: updatedItems });
+
           const article = sessionStorage.getItem("last_article");
-          // 🔥 GA Event
+
+          // 🔥 KEEP YOUR GA EVENT
           gaEvent("add_to_cart", {
             currency: "GBP",
             value: item.price * item.quantity,
@@ -57,7 +76,8 @@ export const useCart = create<CartState>()(
               {
                 item_id: item.id,
                 item_name: item.title,
-                item_variant: item.colour || "default",
+                item_variant:
+                  item.type === "product" ? item.colour || "default" : "bundle",
                 item_list_id: article || "direct",
                 item_list_name: article || "direct",
                 price: item.price,
@@ -66,15 +86,20 @@ export const useCart = create<CartState>()(
             ],
           });
 
+          // ✅ KEEP YOUR TOAST
           toast.success(
             `Increased quantity of ${item.title}${
-              item.colour ? ` (${item.colour})` : ""
+              item.type === "product" && item.colour ? ` (${item.colour})` : ""
             }`
           );
         } else {
           set({ items: [...items, item] });
+
+          // ✅ KEEP YOUR TOAST
           toast.success(
-            `Added ${item.title}${item.colour ? ` (${item.colour})` : ""} to cart`
+            `Added ${item.title}${
+              item.type === "product" && item.colour ? ` (${item.colour})` : ""
+            } to cart`
           );
         }
       },

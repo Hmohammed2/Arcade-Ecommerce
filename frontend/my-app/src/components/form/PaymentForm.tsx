@@ -29,12 +29,7 @@ export default function PaymentForm() {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
-  const {
-    code: couponCode,
-    discountPercent,
-    isValid,
-    clearCoupon,
-  } = useCoupon();
+  const { code: couponCode, isValid, clearCoupon } = useCoupon();
   const { getCartItems, clearCart, getDelivery } = useCart();
   const delivery = getDelivery();
   const { formData } = useCheckoutForm();
@@ -84,18 +79,30 @@ export default function PaymentForm() {
   useEffect(() => {
     if (method !== "paypal" || !window.paypal || !paypalRef.current) return;
 
-    const items = getCartItems().map((item) => ({
-      product_id: item.id,
-      quantity: item.quantity,
-      colour: item.colour,
-    }));
+    const items = getCartItems().map((item: any) => {
+      if (item.type === "bundle") {
+        return {
+          type: "bundle",
+          bundle_id: item.id,
+          quantity: item.quantity,
+          option_values: item.option_values || {}, // ✅ SEND ALL COLOUR QTY
+        };
+      }
+
+      return {
+        type: "product",
+        product_id: item.id,
+        quantity: item.quantity,
+        colour: item.colour ?? null,
+      };
+    });
 
     const payload = {
       items,
-      email: formData.billingEmail,
-      first_name: formData.billingFirstName,
-      last_name: formData.billingLastName,
-      phone: formData.billingPhone,
+      email: formData.billingEmail || undefined, // only send if present
+      first_name: formData.billingFirstName || null,
+      last_name: formData.billingLastName || null,
+      phone: formData.billingPhone || null,
       delivery_method: delivery,
       coupon_code: isValid ? couponCode : null,
     };
@@ -155,7 +162,7 @@ export default function PaymentForm() {
               clearCoupon(); // ✅ Reset coupon after success
               toast.success("PayPal payment successful! 🎉");
               localStorage.setItem("guest_email", formData.billingEmail ?? "");
-              router.push(`/checkout-success/${data.orderID}`);
+              router.push(`/checkout-success/${capture.order_public_id}`);
             } else {
               toast.error("PayPal payment failed ❌");
             }
@@ -175,7 +182,7 @@ export default function PaymentForm() {
     return () => {
       if (paypalRef.current) paypalRef.current.innerHTML = "";
     };
-  }, [method]);
+  }, [method, delivery, couponCode, isValid, formData, getCartItems]);
 
   // 💳 Stripe Card Payment Handler
   const handleStripePayment = async (e: React.FormEvent) => {
@@ -184,12 +191,23 @@ export default function PaymentForm() {
     setProcessing(true);
 
     try {
-      const items = getCartItems().map((item) => ({
-        type: item.type, // "product" | "bundle"
-        id: item.id, // backend expects id
-        quantity: item.quantity,
-        colour: item.type === "product" ? (item.colour ?? null) : null,
-      }));
+      const items = getCartItems().map((item: any) => {
+        if (item.type === "bundle") {
+          return {
+            type: "bundle",
+            bundle_id: item.id,
+            quantity: item.quantity,
+            option_values: item.option_values,
+          };
+        }
+
+        return {
+          type: "product",
+          product_id: item.id,
+          quantity: item.quantity,
+          colour: item.colour ?? null,
+        };
+      });
 
       const payload = {
         items,
