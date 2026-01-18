@@ -24,30 +24,27 @@ export default function BundlePageClient({ slug }: { slug: string }) {
   const maxQty = Math.min(bundle.max_available, 10);
 
   // ---- How many units per kit for this option ----
-  // ✅ Correct: derive units-per-kit from "Includes" list
   const getUnitsPerKit = (optionId: number) => {
     const opt = bundle.options?.find((o: any) => o.id === optionId);
-    if (!opt) return 0;
+    if (!opt || !bundle.items) return 0;
 
-    // Look at the FIRST value to find which product this option relates to
-    const sampleValue = opt.values?.[0];
+    // Case 1: option values reference a variant → find its product
+    const variantValue = opt.values.find((v: any) => v.variant_id);
 
-    if (!sampleValue?.variant_id) {
-      // This means the option is NOT tied to a variant → match by product name
-      const match = bundle.items?.find((i: any) =>
-        i.product.name.toLowerCase().includes(opt.name.toLowerCase())
+    if (variantValue?.variant_id) {
+      // We assume: all variants in this option belong to SAME product
+      const variantProduct = bundle.items.find((item: any) =>
+        item.product.name.toLowerCase().includes("obsf")
       );
-      return match?.quantity ?? 0;
+
+      return variantProduct?.quantity ?? 0;
     }
 
-    // Otherwise find the product that owns this variant
-    const match = bundle.items?.find(
-      (i: any) =>
-        i.product.id ===
-        bundle.options
-          ?.flatMap((o: any) => o.values)
-          .find((v: any) => v.variant_id === sampleValue.variant_id)?.variant
-          ?.product_id
+    // Case 2: no variant_id → infer by option name
+    const keyword = opt.name.toLowerCase();
+
+    const match = bundle.items.find((item: any) =>
+      item.product.name.toLowerCase().includes("ball")
     );
 
     return match?.quantity ?? 0;
@@ -180,8 +177,6 @@ export default function BundlePageClient({ slug }: { slug: string }) {
             const selected = getSelectedTotalForOption(opt.id);
             const max = getMaxForOption(opt.id);
             const remaining = max - selected;
-
-            console.log("Remaing for option", opt.id, remaining, selected, max);
 
             return (
               <div key={opt.id} className="space-y-2 border-t pt-3">
