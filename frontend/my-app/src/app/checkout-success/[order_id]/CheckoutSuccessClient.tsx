@@ -16,7 +16,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { isAuthenticated, accessToken, user, authReady } = useAuth();
+  const { isAuthenticated, accessToken, user } = useAuth();
 
   // 🔢 Derived amounts
   const { subtotal, deliveryFee, discountAmount, totalPaid } = useMemo(() => {
@@ -53,11 +53,11 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         let headers: HeadersInit = { "Content-Type": "application/json" };
 
         if (isAuthenticated && accessToken) {
-          const email = user?.email;
+          const email = user?.email || "";
           endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/lookup/${orderId}/?email=${email}`;
           headers["Authorization"] = `Bearer ${accessToken}`;
         } else {
-          const email = localStorage.getItem("guest_email");
+          const email = localStorage.getItem("guest_email") || "";
           if (!email) throw new Error("No guest email found.");
           endpoint = `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/orders/lookup/${orderId}/?email=${email}`;
         }

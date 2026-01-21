@@ -161,7 +161,10 @@ export default function PaymentForm() {
               clearCart();
               clearCoupon(); // ✅ Reset coupon after success
               toast.success("PayPal payment successful! 🎉");
-              localStorage.setItem("guest_email", formData.billingEmail ?? "");
+              localStorage.setItem(
+                "guest_email",
+                capture.payer?.email_address ?? ""
+              );
               router.push(`/checkout-success/${capture.order_public_id}`);
             } else {
               toast.error("PayPal payment failed ❌");
