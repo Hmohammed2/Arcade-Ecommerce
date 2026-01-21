@@ -94,7 +94,13 @@ export default function ArticleLayout({
             </div>
 
             {/* Markdown Content */}
-            <div className="prose prose-gray dark:prose-invert max-w-none prose-h2:scroll-mt-24 prose-h3:scroll-mt-24">
+            <div
+              className="  prose prose-gray dark:prose-invert max-w-none 
+              prose-h2:scroll-mt-24 prose-h3:scroll-mt-24
+              prose-p:my-1.5
+              prose-li:my-0.5
+              prose-headings:mt-5 prose-headings:mb-2"
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 rehypePlugins={[rehypeHighlight]}
