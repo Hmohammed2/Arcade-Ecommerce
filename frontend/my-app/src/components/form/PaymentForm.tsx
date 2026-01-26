@@ -117,6 +117,7 @@ export default function PaymentForm({
   const elementStyle = {
     base: {
       fontSize: "16px",
+      lineHeight: "24px",
       fontFamily: "'Inter', system-ui, sans-serif",
       color: resolvedTheme === "dark" ? "#f9fafb" : "#32325d",
       "::placeholder": {
@@ -295,7 +296,7 @@ export default function PaymentForm({
               <div
                 className="
   flex items-center gap-2
-  h-11 sm:h-10
+  h-11
   rounded-md
   border border-gray-300 dark:border-gray-600
   bg-white dark:bg-gray-800
@@ -304,7 +305,7 @@ export default function PaymentForm({
   transition-colors
 "
               >
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <CardNumberElement
                     options={{ style: elementStyle }}
                     onChange={handleCardChange}
@@ -327,9 +328,42 @@ export default function PaymentForm({
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <CardExpiryElement options={{ style: elementStyle }} />
-              <CardCvcElement options={{ style: elementStyle }} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Expiry date
+                </label>
+                <div
+                  className="
+      h-11
+      rounded-md
+      border border-gray-300 dark:border-gray-600
+      bg-white dark:bg-gray-800
+      px-3
+      flex items-center
+      focus-within:border-pink-500 dark:focus-within:border-pink-400
+    "
+                >
+                  <CardExpiryElement options={{ style: elementStyle }} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">CVC</label>
+                <div
+                  className="
+      h-11
+      rounded-md
+      border border-gray-300 dark:border-gray-600
+      bg-white dark:bg-gray-800
+      px-3
+      flex items-center
+      focus-within:border-pink-500 dark:focus-within:border-pink-400
+    "
+                >
+                  <CardCvcElement options={{ style: elementStyle }} />
+                </div>
+              </div>
             </div>
 
             <button
