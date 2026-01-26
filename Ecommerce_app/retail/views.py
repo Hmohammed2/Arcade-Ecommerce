@@ -148,6 +148,24 @@ def get_shipping_rates(request):
 
         lead_hours = country_cfg.get("lead_time_hours")
         estimated_days = max(1, round(lead_hours / 24)) if lead_hours else None
+        service_name = method["name"].lower()
+
+        # 1️⃣ Only parcel-style services
+        if not any(
+            kw in service_name
+            for kw in ("parcel", "tracked", "signed", "express", "standard", "next day")
+        ):
+            logger.info("[Shipping] Skipping non-parcel service: %s", method["name"])
+            continue
+
+        # 2️⃣ Must be tracked
+        if not method.get("tracking_enabled", False):
+            logger.info("[Shipping] Skipping untracked service: %s", method["name"])
+            continue
+
+        # 3️⃣ Sanity: ignore letter-weight-only services
+        if float(method["max_weight"]) < 0.1:
+            continue
 
         rates.append(
             {
