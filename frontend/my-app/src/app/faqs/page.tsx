@@ -61,43 +61,55 @@ async function getFAQs(): Promise<FAQItem[]> {
       id: 1,
       question: "How is shipping calculated?",
       answer:
-        "Shipping costs are calculated at checkout based on your delivery address, parcel weight, and selected delivery service. We use real-time carrier rates to ensure accurate pricing.",
+        "Shipping is charged at a fixed rate based on your selected delivery method and destination. The final cost is shown clearly at checkout before payment.",
     },
     {
       id: 2,
       question: "Do you offer free delivery?",
       answer:
-        "Yes. Orders over £45 qualify for free standard delivery. This will be automatically applied at checkout where eligible.",
+        "Yes. UK orders qualify for free standard delivery when the order total is £45 or more. Free delivery is applied automatically at checkout where eligible.",
     },
     {
       id: 3,
-      question: "How long does delivery take?",
+      question: "Do you offer free shipping to Europe?",
       answer:
-        "Delivery times depend on the shipping method selected at checkout. Standard delivery typically takes 2–4 working days, while express options usually arrive within 1–2 working days.",
+        "At the moment, free delivery is available for UK orders only. EU orders are shipped at a flat rate, which is shown at checkout before payment.",
     },
     {
       id: 4,
-      question: "What payment methods do you accept?",
+      question: "How long does delivery take?",
       answer:
-        "We accept all major debit and credit cards as well as PayPal. PayPal offers an express checkout option for faster payments.",
+        "Delivery times depend on the shipping option you select at checkout. Standard delivery typically takes 2–3 working days, while express delivery usually arrives within 1–2 working days.",
     },
     {
       id: 5,
-      question: "Is my shipping address the same as my billing address?",
+      question: "Which countries do you ship to?",
       answer:
-        "By default, your shipping address is set to match your billing address. You can easily change this during checkout if you need your order delivered elsewhere.",
+        "We currently ship within the UK and to selected EU countries, including France, Germany, Netherlands, Belgium, Spain, Ireland, and Italy. Available options are shown during checkout.",
     },
     {
       id: 6,
-      question: "Do you ship to Europe?",
+      question: "What payment methods do you accept?",
       answer:
-        "Yes. We currently ship to selected EU countries including France, Germany, Netherlands, Belgium, Spain, Ireland, and Italy. Available delivery options and prices are shown at checkout.",
+        "We accept all major debit and credit cards, as well as PayPal. Both options are available at checkout for secure payment.",
     },
     {
       id: 7,
+      question: "Can I ship to a different address from my billing address?",
+      answer:
+        "Yes. You can enter a separate shipping address during checkout if your order needs to be delivered to a different location.",
+    },
+    {
+      id: 8,
+      question: "What if I enter the wrong shipping country or postcode?",
+      answer:
+        "To ensure accurate delivery and pricing, your postcode must match the selected country. Orders with mismatched address details may be rejected at checkout.",
+    },
+    {
+      id: 9,
       question: "Can I return an item?",
       answer:
-        "Yes. Returns are accepted within 30 days of delivery, provided items are unused, in original condition, and returned in original packaging. Please contact support before returning an item.",
+        "Yes. Returns are accepted within 30 days of delivery, provided items are unused, in original condition, and returned in their original packaging. Please contact us before returning any item.",
     },
   ];
 }

@@ -25,6 +25,7 @@ import requests
 from django.conf import settings
 from .utils.shipping import resolve_shipping_method
 from .utils.calculate_subtotal import calculate_cart_subtotal
+from .utils.shipping_validation import validate_shipping_address
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -371,9 +372,12 @@ def checkout(request):
         # 📍 Address (required operationally)
         shipping_country = data.get("shipping_country", "GB")
         shipping_postcode = data.get("shipping_postcode")
-
+        
         if not shipping_postcode:
             return Response({"error": "Shipping postcode required"}, status=400)
+        
+        # ✅ 1️⃣ Validate address consistency FIRST
+        validate_shipping_address(shipping_country, shipping_postcode)
 
         # ⚖️ Server-side calculations (authoritative)
         total_weight = calculate_cart_weight(items)
@@ -448,6 +452,9 @@ def paypal_checkout(request):
 
         if not shipping_postcode:
             return Response({"error": "Shipping postcode required"}, status=400)
+        
+        # ✅ 1️⃣ Validate address consistency FIRST
+        validate_shipping_address(shipping_country, shipping_postcode)
 
         # ⚖️ Server-side calculations
         total_weight = calculate_cart_weight(items)

@@ -183,6 +183,38 @@ const Footer = () => {
           </div>
         </div>
 
+        {/* 💳 Payment Methods */}
+        <div className="container mx-auto px-4 mt-10">
+          <div className="flex flex-col items-center gap-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Secure payments accepted
+            </p>
+
+            <div className="flex items-center gap-4 opacity-80">
+              <Image
+                src="/icons/paypal.svg"
+                alt="paypal"
+                width={44}
+                height={28}
+              />
+              <Image src="/icons/jcb.png" alt="jcb" width={44} height={28} />
+              <Image
+                src="/icons/mastercard.png"
+                alt="Mastercard"
+                width={44}
+                height={28}
+              />
+              <Image src="/icons/visa.png" alt="Visa" width={44} height={28} />
+              <Image
+                src="/icons/maestro.png"
+                alt="Maestro"
+                width={44}
+                height={28}
+              />
+            </div>
+          </div>
+        </div>
+
         {/* 📜 Legal Links */}
         <div className="container mx-auto px-4 mt-10 text-center space-x-6 text-sm">
           <Link
