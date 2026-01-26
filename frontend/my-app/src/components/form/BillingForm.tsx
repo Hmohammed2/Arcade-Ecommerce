@@ -162,7 +162,7 @@ export default function BillingForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-            Postcode
+            Postcode/Zip Code
           </label>
           <input
             type="text"
