@@ -123,58 +123,53 @@ def get_shipping_rates(request):
 
         countries = method.get("countries", [])
 
-        # Prefer exact country
+        # Exact match
         country_cfg = next(
             (c for c in countries if c.get("iso_2") == country),
             None,
         )
 
-        # DEV fallback (mock server)
-        if not country_cfg and settings.DEBUG and countries:
-            country_cfg = countries[0]
-
-        # PROD fallback (better than zero rates)
-        if not country_cfg and countries:
-            logger.warning(
-                "[Shipping] No pricing for %s on method %s, falling back to %s",
-                country,
-                method.get("id"),
-                countries[0].get("iso_2"),
+        # DEV fallback → NL mock
+        if not country_cfg and settings.DEBUG:
+            country_cfg = next(
+                (c for c in countries if c.get("iso_2") == "NL"),
+                None,
             )
-            country_cfg = countries[0]
 
+        # PROD: do NOT silently misprice
         if not country_cfg:
             continue
 
         lead_hours = country_cfg.get("lead_time_hours")
         estimated_days = max(1, round(lead_hours / 24)) if lead_hours else None
 
-        service_name = method["name"].lower()
-        
-        PARCEL_KEYWORDS = (
-            "small parcel",
-            "medium parcel",
-            "parcel",
-            "tracked",
-            "signed",
-            "next day",
+        if not settings.DEBUG:
+            service_name = method["name"].lower()
+            
+            PARCEL_KEYWORDS = (
+                "small parcel",
+                "medium parcel",
+                "parcel",
+                "tracked",
+                "signed",
+                "next day",
+                )
+            BLOCKED_KEYWORDS = (
+                "letter",
+                "large letter",
+                "postable",
+                "unstamped",
             )
-        BLOCKED_KEYWORDS = (
-            "letter",
-            "large letter",
-            "postable",
-            "unstamped",
-        )
 
-        # ❌ Block letters immediately
-        if any(bad in service_name for bad in BLOCKED_KEYWORDS):
-            logger.info("[Shipping] Skipping letter service: %s", method["name"])
-            continue
+            # ❌ Block letters immediately
+            if any(bad in service_name for bad in BLOCKED_KEYWORDS):
+                logger.info("[Shipping] Skipping letter service: %s", method["name"])
+                continue
 
-        # ✅ Must look like a parcel
-        if not any(ok in service_name for ok in PARCEL_KEYWORDS):
-            logger.info("[Shipping] Skipping non-parcel service: %s", method["name"])
-            continue
+            # ✅ Must look like a parcel
+            if not any(ok in service_name for ok in PARCEL_KEYWORDS):
+                logger.info("[Shipping] Skipping non-parcel service: %s", method["name"])
+                continue
 
         rates.append(
             {
