@@ -36,20 +36,21 @@ def get_shipping_rates(request):
     weight = float(request.GET.get("weight", 0.1))
     from_postcode = settings.SENDCLOUD_FROM_POSTCODE
 
-    if not country or not to_postcode or not weight:
+    if not country or not to_postcode or weight <= 0:
         return Response(
             {"error": "country, postcode and weight are required"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # 🔀 ENV-BASED CONFIG
+    # -------------------------
+    # ENV CONFIG
+    # -------------------------
     sender_address = "all" if settings.DEBUG else settings.SENDCLOUD_SENDER_ADDRESS_ID
     auth = (
         requests.auth.HTTPBasicAuth("test", "test")
         if settings.DEBUG
         else (settings.SENDCLOUD_PUBLIC_KEY, settings.SENDCLOUD_SECRET_KEY)
     )
-
     base_url = settings.SENDCLOUD_BASE_URL
 
     def fetch_methods(to_country: str):
@@ -61,17 +62,11 @@ def get_shipping_rates(request):
         }
 
         logger.info(
-            "[Shipping] Fetching methods country=%s postcode=%s weight=%s sender=%s",
+            "[Shipping] Fetching methods country=%s postcode=%s weight=%skg sender=%s",
             to_country,
             to_postcode,
             weight,
             sender_address,
-        )
-                
-        logger.info(
-            "[Shipping][RAW] method=%s countries=%s",
-            method["id"],
-            [(c.get("iso_2"), c.get("price")) for c in method.get("countries", [])],
         )
 
         return requests.get(
@@ -82,13 +77,14 @@ def get_shipping_rates(request):
             timeout=10,
         )
 
-    # 1️⃣ Try requested country first
+    # -------------------------
+    # 1️⃣ Fetch methods
+    # -------------------------
     resp = fetch_methods(country)
 
-    # 2️⃣ DEV fallback → NL (mock server limitation)
     if settings.DEBUG and resp.status_code in (400, 404):
         logger.warning(
-            "[Shipping][DEV] No methods for %s — falling back to NL mock data",
+            "[Shipping][DEV] No methods for %s — falling back to NL",
             country,
         )
         resp = fetch_methods("NL")
@@ -96,47 +92,51 @@ def get_shipping_rates(request):
     try:
         resp.raise_for_status()
         data = resp.json()
-    except requests.RequestException:
+    except Exception as e:
         logger.exception("[Shipping] Failed to fetch shipping methods")
         return Response(
-            {"error": "Shipping method not available for destination"},
+            {"error": "Shipping method not available"},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    shipping_methods = data.get("shipping_methods", [])
     rates = []
 
-    for method in data.get("shipping_methods", []):
+    # -------------------------
+    # 2️⃣ Parse methods
+    # -------------------------
+    for method in shipping_methods:
         logger.info(
-            "[Shipping] Checking method id=%s carrier=%s min=%s max=%s",
-            method["id"],
-            method["carrier"],
-            method["min_weight"],
-            method["max_weight"],
+            "[Shipping][RAW] method_id=%s carrier=%s countries=%s",
+            method.get("id"),
+            method.get("carrier"),
+            [(c.get("iso_2"), c.get("price")) for c in method.get("countries", [])],
         )
 
-        min_w = float(method["min_weight"])
-        max_w = float(method["max_weight"])
+        min_w = float(method.get("min_weight", 0))
+        max_w = float(method.get("max_weight", 999))
 
-        # 1️⃣ Weight filtering
         if not (min_w <= weight <= max_w):
             continue
 
         countries = method.get("countries", [])
-        # Prefer exact match
+
+        # Prefer exact country
         country_cfg = next(
             (c for c in countries if c.get("iso_2") == country),
             None,
         )
-        # DEV fallback pricing (mock always returns NL)
-        if not country_cfg and settings.DEBUG and method.get("countries"):
-            country_cfg = method["countries"][0]
-            
-        # Fallback: first available price
+
+        # DEV fallback (mock server)
+        if not country_cfg and settings.DEBUG and countries:
+            country_cfg = countries[0]
+
+        # PROD fallback (better than zero rates)
         if not country_cfg and countries:
             logger.warning(
-                "[Shipping] No %s pricing for method %s, falling back to %s",
+                "[Shipping] No pricing for %s on method %s, falling back to %s",
                 country,
-                method["id"],
+                method.get("id"),
                 countries[0].get("iso_2"),
             )
             country_cfg = countries[0]
@@ -144,7 +144,6 @@ def get_shipping_rates(request):
         if not country_cfg:
             continue
 
-        # 3️⃣ Lead time conversion
         lead_hours = country_cfg.get("lead_time_hours")
         estimated_days = max(1, round(lead_hours / 24)) if lead_hours else None
 
@@ -156,14 +155,14 @@ def get_shipping_rates(request):
                 "price": float(country_cfg["price"]),
                 "currency": "GBP",
                 "estimated_days": estimated_days,
-                "service_point_required": method["service_point_input"] == "required",
+                "service_point_required": method.get("service_point_input") == "required",
             }
         )
 
     rates.sort(key=lambda r: r["price"])
 
     logger.info(
-        "[Shipping] %s valid rates returned (country=%s, weight=%s)",
+        "[Shipping] %s valid rates returned (country=%s, weight=%skg)",
         len(rates),
         country,
         weight,
