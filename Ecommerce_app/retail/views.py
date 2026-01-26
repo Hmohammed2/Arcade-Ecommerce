@@ -34,6 +34,8 @@ def get_shipping_rates(request):
     country = request.GET.get("country")
     to_postcode = request.GET.get("postcode")
     weight = float(request.GET.get("weight", 0.1))
+    MIN_WEIGHT_KG = 0.1
+    weight = max(weight, MIN_WEIGHT_KG) 
     from_postcode = settings.SENDCLOUD_FROM_POSTCODE
 
     if not country or not to_postcode or weight <= 0:

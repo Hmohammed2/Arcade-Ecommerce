@@ -16,7 +16,8 @@ export default function ShippingRatesInline() {
     : formData.shippingPostcode;
 
   const normalisedPostcode = (postcode ?? "").replace(/\s+/g, "").toUpperCase();
-  const isLikelyUKPostcode = normalisedPostcode.length >= 5;
+  const isLikelyUKPostcode =
+    Boolean(normalisedPostcode) && normalisedPostcode.length >= 5;
 
   const { data: rates, isLoading } = useShippingRates({
     address: {
