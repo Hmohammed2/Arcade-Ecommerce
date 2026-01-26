@@ -58,14 +58,15 @@ export default function ShippingRatesInline() {
         return (
           <label
             key={rate.id}
-            className={`flex justify-between items-center border rounded-md p-3 cursor-pointer transition
-              ${
-                selected
-                  ? "border-pink-500 bg-pink-50 dark:bg-pink-900/20"
-                  : "border-gray-300 dark:border-gray-700"
-              }`}
+            className={`flex flex-col sm:flex-row sm:items-center gap-3 border rounded-md p-3 cursor-pointer transition
+    ${
+      selected
+        ? "border-pink-500 bg-pink-50 dark:bg-pink-900/20"
+        : "border-gray-300 dark:border-gray-700"
+    }`}
           >
-            <div>
+            {/* Left */}
+            <div className="flex-1">
               <span className="font-medium">{rate.service_name}</span>
 
               {rate.estimated_days && (
@@ -81,19 +82,13 @@ export default function ShippingRatesInline() {
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right">
+            {/* Right */}
+            <div className="flex items-center justify-between sm:justify-end gap-3">
+              <div className="text-sm font-semibold">
                 {qualifiesForFreeShipping ? (
-                  <>
-                    <span className="line-through text-sm text-gray-400 mr-2">
-                      £{Number(rate.price).toFixed(2)}
-                    </span>
-                    <span className="font-semibold text-green-600">Free</span>
-                  </>
+                  <span className="text-green-600">Free</span>
                 ) : (
-                  <span className="font-semibold">
-                    £{Number(rate.price).toFixed(2)}
-                  </span>
+                  <>£{Number(rate.price).toFixed(2)}</>
                 )}
               </div>
 

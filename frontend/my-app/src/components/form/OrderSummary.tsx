@@ -160,17 +160,17 @@ export default function OrderSummary() {
       <div>
         <label className="block text-sm font-medium mb-1">Coupon Code</label>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             value={inputCode}
             onChange={(e) => setInputCode(e.target.value)}
-            className="flex-1 rounded-md border px-3 py-2"
+            className="w-full sm:flex-1 min-w-0 rounded-md border px-3 py-2"
             placeholder="Enter code"
           />
           <button
             onClick={handleApplyCoupon}
             disabled={loading}
-            className="px-4 py-2 bg-pink-600 text-white rounded-md"
+            className="w-full sm:w-auto px-4 py-2 bg-pink-600 text-white rounded-md"
           >
             {loading ? "…" : "Apply"}
           </button>

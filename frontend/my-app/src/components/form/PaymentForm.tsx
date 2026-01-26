@@ -275,7 +275,7 @@ export default function PaymentForm({
 
   return (
     <section className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
-      <div className="absolute top-3 right-3 flex items-center text-green-600">
+      <div className="hidden sm:flex absolute top-3 right-3 items-center text-green-600">
         <Lock size={18} className="mr-1" />
         <span className="text-xs font-medium">Secure and encrypted</span>
       </div>
@@ -294,15 +294,15 @@ export default function PaymentForm({
 
               <div
                 className="
-      flex items-center gap-2
-      h-11 sm:h-10
-      rounded-md
-      border border-gray-300 dark:border-gray-600
-      bg-white dark:bg-gray-800
-      px-3
-      focus-within:border-pink-500
-      transition-colors
-    "
+  flex items-center gap-2
+  h-11 sm:h-10
+  rounded-md
+  border border-gray-300 dark:border-gray-600
+  bg-white dark:bg-gray-800
+  px-3
+  focus-within:border-pink-500 dark:focus-within:border-pink-400
+  transition-colors
+"
               >
                 <div className="flex-1">
                   <CardNumberElement
@@ -335,20 +335,34 @@ export default function PaymentForm({
             <button
               type="submit"
               disabled={!stripe || processing}
-              className="w-full bg-pink-600 hover:bg-pink-800 text-white py-2 rounded-md font-semibold transition-colors duration-300 cursor-pointer"
+              className="
+    hidden sm:block
+    w-full bg-pink-600 hover:bg-pink-800
+    text-white py-2 rounded-md font-semibold
+    transition-colors
+  "
             >
               {processing ? "Processing…" : "Pay Now"}
             </button>
           </form>
 
           {/* Mobile sticky Stripe */}
-          <div className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white border-t">
+          <div
+            className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700
+"
+          >
             <button
               form="stripe-payment-form"
               disabled={!stripe || processing}
-              className="w-full bg-pink-600 text-white py-3 rounded-lg font-semibold text-lg"
+              className="
+    w-full py-3 rounded-lg font-semibold text-lg
+    bg-pink-600 hover:bg-pink-700
+    disabled:opacity-50 disabled:cursor-not-allowed
+    text-white
+    transition-colors
+  "
             >
-              Pay Now
+              {processing ? "Processing…" : "Pay securely"}
             </button>
           </div>
         </>
@@ -359,7 +373,13 @@ export default function PaymentForm({
           <div ref={paypalRef} className="hidden sm:block mt-4" />
           <div
             ref={paypalStickyRef}
-            className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white border-t"
+            className="
+    fixed bottom-0 left-0 right-0 sm:hidden
+    p-3
+    bg-white dark:bg-gray-900
+    border-t border-gray-200 dark:border-gray-700
+    z-50
+  "
           />
         </>
       )}
