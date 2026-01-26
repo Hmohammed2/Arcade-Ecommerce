@@ -22,9 +22,9 @@ export default function ShippingRatesInline() {
   const { data: rates, isLoading } = useShippingRates({
     address: {
       country: formData.shippingCountry || "GB",
-      postcode: normalisedPostcode || "",
+      postcode: isLikelyUKPostcode ? normalisedPostcode : "",
     },
-    parcel: { weight: formData.cartWeightKg ?? 0.005 },
+    parcel: { weight: formData.cartWeightKg ?? 0.1 },
     enabled: isLikelyUKPostcode,
   });
 
