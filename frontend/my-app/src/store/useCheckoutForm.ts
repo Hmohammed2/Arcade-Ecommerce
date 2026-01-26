@@ -19,6 +19,7 @@ interface CheckoutFormData {
   sameAsBilling: boolean;
   couponCode?: string;
   shippingRateId?: string;
+  shippingMethod?: string;
   shippingCost?: number;
   cartWeightKg?: number;
 }

@@ -10,6 +10,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import { getImageUrl } from "@/library/getImageUrl";
 import ShippingRatesInline from "./ShippingRates";
+import FixedShippingRates from "./FixedShippingRates";
 
 const FREE_SHIPPING_THRESHOLD = 45;
 
@@ -196,7 +197,7 @@ export default function OrderSummary() {
         )}
 
         {(formData.shippingPostcode || formData.sameAsBilling) && (
-          <ShippingRatesInline />
+          <FixedShippingRates />
         )}
       </div>
 

@@ -56,7 +56,7 @@ const buildCheckoutPayload = ({
   couponCode?: string | null;
   isValid: boolean;
 }) => {
-  if (!formData.shippingRateId || formData.shippingCost == null) {
+  if (!formData.shippingMethod) {
     throw new Error("Please select a shipping method first");
   }
 
@@ -76,9 +76,7 @@ const buildCheckoutPayload = ({
     shipping_country: formData.shippingCountry || "GB",
 
     // Sendcloud
-    shipping_method_id: formData.shippingRateId,
-    shipping_cost: Number(formData.shippingCost),
-
+    shipping_method_name: formData.shippingMethod || "",
     coupon_code: isValid ? couponCode : null,
   };
 };
@@ -109,6 +107,12 @@ export default function PaymentForm({
 
   const paypalRef = useRef<HTMLDivElement>(null);
   const paypalStickyRef = useRef<HTMLDivElement>(null);
+  const isReadyToPay =
+    !!stripe &&
+    !processing &&
+    !!formData.shippingMethod &&
+    !!formData.shippingPostcode &&
+    !!formData.billingEmail;
 
   /* =========================================================
      Stripe styles
@@ -335,16 +339,18 @@ export default function PaymentForm({
                 </label>
                 <div
                   className="
-      h-11
-      rounded-md
-      border border-gray-300 dark:border-gray-600
-      bg-white dark:bg-gray-800
-      px-3
-      flex items-center
-      focus-within:border-pink-500 dark:focus-within:border-pink-400
-    "
+                    h-11
+                    rounded-md
+                    border border-gray-300 dark:border-gray-600
+                    bg-white dark:bg-gray-800
+                    px-3
+                    flex items-center
+                    focus-within:border-pink-500 dark:focus-within:border-pink-400
+                    "
                 >
-                  <CardExpiryElement options={{ style: elementStyle }} />
+                  <div className="flex-1 min-w-0">
+                    <CardExpiryElement options={{ style: elementStyle }} />
+                  </div>
                 </div>
               </div>
 
@@ -352,23 +358,25 @@ export default function PaymentForm({
                 <label className="block text-sm font-medium mb-1">CVC</label>
                 <div
                   className="
-      h-11
-      rounded-md
-      border border-gray-300 dark:border-gray-600
-      bg-white dark:bg-gray-800
-      px-3
-      flex items-center
-      focus-within:border-pink-500 dark:focus-within:border-pink-400
-    "
+                        h-11
+                        rounded-md
+                        border border-gray-300 dark:border-gray-600
+                        bg-white dark:bg-gray-800
+                        px-3
+                        flex items-center
+                        focus-within:border-pink-500 dark:focus-within:border-pink-400
+                      "
                 >
-                  <CardCvcElement options={{ style: elementStyle }} />
+                  <div className="flex-1 min-w-0">
+                    <CardCvcElement options={{ style: elementStyle }} />
+                  </div>
                 </div>
               </div>
             </div>
 
             <button
               type="submit"
-              disabled={!stripe || processing}
+              disabled={!isReadyToPay}
               className="
     hidden sm:block
     w-full bg-pink-600 hover:bg-pink-800
@@ -387,7 +395,7 @@ export default function PaymentForm({
           >
             <button
               form="stripe-payment-form"
-              disabled={!stripe || processing}
+              disabled={!isReadyToPay}
               className="
     w-full py-3 rounded-lg font-semibold text-lg
     bg-pink-600 hover:bg-pink-700

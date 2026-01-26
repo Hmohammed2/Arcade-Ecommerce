@@ -13,9 +13,7 @@ from retail.services.order_builder import build_order_items_from_payload
 from retail.utils.deplete_stock import _deplete_stock_for_order
 from retail.utils.slack_notifications import send_slack_message
 from retail.utils.calculate_weight import calculate_cart_weight
-from retail.services.sendcloud_service import SendcloudService
 from users.services.SendEmail import send_payment_success_email
-from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ class PaymentService:
         shipping_city: str,
         shipping_postcode: str,
         shipping_country: str,
-        shipping_method_id: str,
+        shipping_method_name: str,
         shipping_cost: Decimal,
         total_weight_kg: Decimal,
     ) -> dict:
@@ -55,7 +53,7 @@ class PaymentService:
             "[Checkout] Start | email=%s items=%s ship_method=%s cost=%s weight=%skg",
             email,
             len(items),
-            shipping_method_id,
+            shipping_method_name,
             shipping_cost,
             total_weight_kg,
         )
@@ -77,7 +75,7 @@ class PaymentService:
             shipping_city=shipping_city,
             shipping_postcode=shipping_postcode,
             shipping_country=shipping_country,
-            shipping_method_id=shipping_method_id,
+            shipping_method_name=shipping_method_name,
             shipping_cost=Decimal(shipping_cost),
             total_weight_kg=Decimal(total_weight_kg),
 
@@ -157,7 +155,7 @@ class PaymentService:
         shipping_country: str,
 
         # 🚚 shipping selection
-        shipping_method_id: str,
+        shipping_method_name: str,
         shipping_cost: Decimal,
 
         # 💸 misc
@@ -178,7 +176,7 @@ class PaymentService:
             "[Checkout][PayPal] Start | email=%s items=%s ship_method=%s cost=%s",
             email,
             len(items),
-            shipping_method_id,
+            shipping_method_name,
             shipping_cost,
         )
 
@@ -209,7 +207,7 @@ class PaymentService:
             shipping_postcode=shipping_postcode,
             shipping_country=shipping_country,
 
-            shipping_method_id=shipping_method_id,
+            shipping_method_id=shipping_method_name,
             shipping_cost=Decimal(shipping_cost),
             total_price=Decimal("0.00"),
         )
@@ -364,26 +362,26 @@ class PaymentService:
                 e,
             )
         # 🚚 Create Sendcloud parcel
-        try:
-            # 🚚 Create Sendcloud parcel
-            parcel = SendcloudService.create_parcel(order)
-            order.label_url = parcel.get("label_url")
-            order.sendcloud_parcel_id = str(parcel.get("id"))
-            order.save(update_fields=["label_url", "sendcloud_parcel_id"])
-            logger.info(
-                "[Shipping] Sendcloud parcel created | order_id=%s parcel_id=%s",
-                order.id,
-                parcel.get("id"),
-            )
-        except Exception as e:
-            logger.exception(
-                "[Shipping] Sendcloud parcel creation failed | order_id=%s error=%s",
-                order.id,
-                e,
-            )
-            send_slack_message(
-                f"⚠️ Sendcloud parcel creation failed — Order #{order.id}: {e}"
-            )
+        # try:
+        #     # 🚚 Create Sendcloud parcel
+        #     parcel = SendcloudService.create_parcel(order)
+        #     order.label_url = parcel.get("label_url")
+        #     order.sendcloud_parcel_id = str(parcel.get("id"))
+        #     order.save(update_fields=["label_url", "sendcloud_parcel_id"])
+        #     logger.info(
+        #         "[Shipping] Sendcloud parcel created | order_id=%s parcel_id=%s",
+        #         order.id,
+        #         parcel.get("id"),
+        #     )
+        # except Exception as e:
+        #     logger.exception(
+        #         "[Shipping] Sendcloud parcel creation failed | order_id=%s error=%s",
+        #         order.id,
+        #         e,
+        #     )
+        #     send_slack_message(
+        #         f"⚠️ Sendcloud parcel creation failed — Order #{order.id}: {e}"
+        #     )
     # =====================================================
     # 🟢 PAYPAL PAYMENT FINALIZATION
     # =====================================================
@@ -470,28 +468,28 @@ class PaymentService:
         # -------------------------
         # 🚚 Create Sendcloud parcel
         # -------------------------
-        try:
-            parcel = SendcloudService.create_parcel(order)
+        # try:
+        #     parcel = SendcloudService.create_parcel(order)
 
-            order.label_url = parcel.get("label_url")
-            order.sendcloud_parcel_id = str(parcel.get("id"))
-            order.save(update_fields=["label_url", "sendcloud_parcel_id"])
+        #     order.label_url = parcel.get("label_url")
+        #     order.sendcloud_parcel_id = str(parcel.get("id"))
+        #     order.save(update_fields=["label_url", "sendcloud_parcel_id"])
 
-            logger.info(
-                "[Shipping] Sendcloud parcel created | order_id=%s parcel_id=%s",
-                order.id,
-                parcel.get("id"),
-            )
+        #     logger.info(
+        #         "[Shipping] Sendcloud parcel created | order_id=%s parcel_id=%s",
+        #         order.id,
+        #         parcel.get("id"),
+        #     )
 
-        except Exception as e:
-            logger.exception(
-                "[Shipping] Sendcloud parcel creation failed | order_id=%s error=%s",
-                order.id,
-                e,
-            )
-            send_slack_message(
-                f"⚠️ Sendcloud parcel creation failed — Order #{order.id}: {e}"
-            )
+        # except Exception as e:
+        #     logger.exception(
+        #         "[Shipping] Sendcloud parcel creation failed | order_id=%s error=%s",
+        #         order.id,
+        #         e,
+        #     )
+        #     send_slack_message(
+        #         f"⚠️ Sendcloud parcel creation failed — Order #{order.id}: {e}"
+        #     )
 
 
     # =====================================================
@@ -509,10 +507,6 @@ class PaymentService:
         subtotal = sum(
             (i.price * i.quantity) for i in order.items.all()
         )
-        # 🚚 Free shipping threshold
-        if subtotal >= settings.FREE_SHIPPING_THRESHOLD:
-            order.shipping_cost = Decimal("0.00")
-
         total = subtotal + order.shipping_cost
         coupon = None
 
