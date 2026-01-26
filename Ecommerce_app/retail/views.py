@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 def get_shipping_rates(request):
     country = request.GET.get("country")
     to_postcode = request.GET.get("postcode")
-    weight = float(request.GET.get("weight", 0))
+    weight = float(request.GET.get("weight", 0.1))
     from_postcode = settings.SENDCLOUD_FROM_POSTCODE
 
     if not country or not to_postcode or not weight:
@@ -66,6 +66,12 @@ def get_shipping_rates(request):
             to_postcode,
             weight,
             sender_address,
+        )
+                
+        logger.info(
+            "[Shipping][RAW] method=%s countries=%s",
+            method["id"],
+            [(c.get("iso_2"), c.get("price")) for c in method.get("countries", [])],
         )
 
         return requests.get(
@@ -115,15 +121,25 @@ def get_shipping_rates(request):
         if not (min_w <= weight <= max_w):
             continue
 
-        # 2️⃣ Country pricing lookup
+        countries = method.get("countries", [])
+        # Prefer exact match
         country_cfg = next(
-            (c for c in method.get("countries", []) if c["iso_2"] == country),
+            (c for c in countries if c.get("iso_2") == country),
             None,
         )
-
         # DEV fallback pricing (mock always returns NL)
         if not country_cfg and settings.DEBUG and method.get("countries"):
             country_cfg = method["countries"][0]
+            
+        # Fallback: first available price
+        if not country_cfg and countries:
+            logger.warning(
+                "[Shipping] No %s pricing for method %s, falling back to %s",
+                country,
+                method["id"],
+                countries[0].get("iso_2"),
+            )
+            country_cfg = countries[0]
 
         if not country_cfg:
             continue

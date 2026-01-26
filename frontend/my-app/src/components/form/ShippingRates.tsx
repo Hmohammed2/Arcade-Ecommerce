@@ -15,17 +15,28 @@ export default function ShippingRatesInline() {
     ? formData.billingPostcode
     : formData.shippingPostcode;
 
+  const normalisedPostcode = (postcode ?? "").replace(/\s+/g, "").toUpperCase();
+  const isLikelyUKPostcode = normalisedPostcode.length >= 5;
+
   const { data: rates, isLoading } = useShippingRates({
     address: {
       country: formData.shippingCountry || "GB",
-      postcode,
+      postcode: normalisedPostcode || "",
     },
     parcel: { weight: formData.cartWeightKg ?? 0.005 },
-    enabled: Boolean(postcode),
+    enabled: isLikelyUKPostcode,
   });
 
   if (isLoading) {
     return <p className="text-sm text-gray-500">Calculating delivery…</p>;
+  }
+
+  if (!isLikelyUKPostcode) {
+    return (
+      <p className="text-sm text-gray-500">
+        Enter your full postcode to see delivery options
+      </p>
+    );
   }
 
   if (!rates || rates.length === 0) {
