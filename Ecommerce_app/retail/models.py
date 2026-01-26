@@ -42,6 +42,13 @@ class Product(models.Model):
     short_description = models.TextField(blank=True)
     is_featured = models.BooleanField(default=False)
     is_new = models.BooleanField(default=False)
+    weight_kg = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        help_text="Product weight in kilograms",
+    )
 
     # If variants exist, this mirrors total variant stock (kept in sync via signals)
     stock = models.PositiveIntegerField(default=0, help_text="If variants exist, this mirrors total of variant stock.")
@@ -252,10 +259,11 @@ class Order(models.Model):
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     phone = models.CharField(max_length=20, blank=True)
-
     status = models.CharField(max_length=20, choices=Status.CHOICES, default=Status.PENDING)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal("0.00"))
     public_id = models.UUIDField(editable=False, default=uuid.uuid4, unique=True)
+    label_url = models.URLField(blank=True, null=True)
+    sendcloud_parcel_id = models.CharField(max_length=100, blank=True, null=True)
     tracking_number = models.CharField(max_length=100, blank=True, null=True)
     status_changed_at = models.DateTimeField(null=True, blank=True)
     coupon = models.ForeignKey("Coupon", on_delete=models.SET_NULL, null=True, blank=True)
@@ -266,18 +274,38 @@ class Order(models.Model):
         blank=True,
         editable=False
     )
-
-    def save(self, *args, **kwargs):
-        if not self.review_token:
-            self.review_token = secrets.token_urlsafe(32)
-        super().save(*args, **kwargs)
-
-    delivery_method = models.CharField(
-        max_length=20,
-        choices=[("standard", "Standard"), ("express", "Express")],
-        default="standard",
+    total_weight_kg = models.DecimalField(
+        max_digits=6,
+        decimal_places=3,
+        null=True,
+        blank=True,
     )
-    delivery_fee = models.DecimalField(max_digits=6, decimal_places=2, default=Decimal("0.00"))
+    
+     # ---- Shipping address ----
+    shipping_name = models.CharField(max_length=200, blank=True)
+    shipping_address1 = models.CharField(max_length=255, blank=True)
+    shipping_address2 = models.CharField(max_length=255, blank=True)
+    shipping_city = models.CharField(max_length=100, blank=True)
+    shipping_postcode = models.CharField(max_length=20, blank=True)
+    shipping_country = models.CharField(max_length=2, default="GB")
+
+    # ---- Shipping selection ----
+    shipping_method_id = models.CharField(
+        max_length=50,
+        help_text="Sendcloud shipping method ID",
+        blank=True,
+        null=True
+    )
+    shipping_method_name = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Checkout-visible shipping method name"
+    )
+    shipping_cost = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal("0.00")
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -290,10 +318,14 @@ class Order(models.Model):
         return f"Order #{self.id} — {self.first_name} {self.last_name} — {self.status}"
 
     def save(self, *args, **kwargs):
+        if not self.review_token:
+            self.review_token = secrets.token_urlsafe(32)
+
         if self.pk:
             old = Order.objects.get(pk=self.pk)
             if old.status != self.status:
                 self.status_changed_at = timezone.now()
+
         super().save(*args, **kwargs)
 
 
@@ -447,3 +479,19 @@ class CouponUsage(models.Model):
 
     def __str__(self) -> str:
         return f"{self.email} used {self.coupon.code}"
+
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True)
+    is_active = models.BooleanField(default=True)
+    source = models.CharField(
+        max_length=50,
+        default="footer",
+        help_text="Where the signup came from (footer, checkout, popup, etc.)",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return self.email

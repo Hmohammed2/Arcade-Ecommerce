@@ -8,7 +8,7 @@ import {
   CardCvcElement,
 } from "@stripe/react-stripe-js";
 import { Lock } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/store/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useRouter } from "next/navigation";
@@ -24,38 +24,101 @@ declare global {
   }
 }
 
-// 🧩 PaymentForm Component
-export default function PaymentForm() {
+/* =========================================================
+   🧩 Helpers
+========================================================= */
+
+const buildLineItems = (cartItems: any[]) =>
+  cartItems.map((item) =>
+    item.type === "bundle"
+      ? {
+          type: "bundle",
+          bundle_id: item.id,
+          quantity: item.quantity,
+          option_values: item.option_values || {},
+        }
+      : {
+          type: "product",
+          product_id: item.id,
+          quantity: item.quantity,
+          colour: item.colour ?? null,
+        },
+  );
+
+const buildCheckoutPayload = ({
+  items,
+  formData,
+  couponCode,
+  isValid,
+}: {
+  items: any[];
+  formData: any;
+  couponCode?: string | null;
+  isValid: boolean;
+}) => {
+  if (!formData.shippingRateId || formData.shippingCost == null) {
+    throw new Error("Please select a shipping method first");
+  }
+
+  return {
+    items,
+    email: formData.billingEmail || undefined,
+    first_name: formData.billingFirstName || undefined,
+    last_name: formData.billingLastName || undefined,
+    phone: formData.billingPhone || undefined,
+
+    // Shipping (raw)
+    shipping_name: `${formData.billingFirstName} ${formData.billingLastName}`,
+    shipping_address1: formData.shippingAddress1,
+    shipping_address2: formData.shippingAddress2 || "",
+    shipping_city: formData.shippingCity,
+    shipping_postcode: formData.shippingPostcode,
+    shipping_country: formData.shippingCountry || "GB",
+
+    // Sendcloud
+    shipping_method_id: formData.shippingRateId,
+    shipping_cost: Number(formData.shippingCost),
+
+    coupon_code: isValid ? couponCode : null,
+  };
+};
+
+/* =========================================================
+   💳 PaymentForm
+========================================================= */
+
+export default function PaymentForm({
+  method,
+}: {
+  method: "stripe" | "paypal";
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
+
   const { code: couponCode, isValid, clearCoupon } = useCoupon();
-  const { getCartItems, clearCart, getDelivery } = useCart();
-  const delivery = getDelivery();
+  const { getCartItems, clearCart } = useCart();
   const { formData } = useCheckoutForm();
   const checkoutMutation = useCheckout();
-  const [processing, setProcessing] = useState(false);
-  const [method, setMethod] = useState<"stripe" | "paypal">("stripe");
-  const paypalRef = useRef<HTMLDivElement>(null);
+
   const { resolvedTheme } = useTheme();
+
+  const [processing, setProcessing] = useState(false);
   const [cardBrand, setCardBrand] = useState<string | null>(null);
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const handleCardChange = (event: any) => {
-    // event.brand => "visa", "mastercard", "amex", etc.
-    setCardBrand(event.brand);
+  const paypalRef = useRef<HTMLDivElement>(null);
+  const paypalStickyRef = useRef<HTMLDivElement>(null);
 
-    // event.error?.message => validation errors
-    setCardError(event.error ? event.error.message : null);
-  };
+  /* =========================================================
+     Stripe styles
+  ========================================================= */
 
-  // 🌈 Stripe Element styling
   const elementStyle = {
     base: {
       fontSize: "16px",
       fontFamily: "'Inter', system-ui, sans-serif",
       color: resolvedTheme === "dark" ? "#f9fafb" : "#32325d",
-      iconColor: resolvedTheme === "dark" ? "#f9fafb" : "#32325d",
       "::placeholder": {
         color: resolvedTheme === "dark" ? "#9ca3af" : "#a0aec0",
       },
@@ -63,10 +126,17 @@ export default function PaymentForm() {
     invalid: { color: "#e01d42" },
   };
 
-  // ⚙️ Load PayPal SDK
+  const handleCardChange = (event: any) => {
+    setCardBrand(event.brand);
+    setCardError(event.error ? event.error.message : null);
+  };
+
+  /* =========================================================
+     Load PayPal SDK once
+  ========================================================= */
+
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (document.getElementById("paypal-sdk")) return; // avoid double load
+    if (document.getElementById("paypal-sdk")) return;
 
     const script = document.createElement("script");
     script.id = "paypal-sdk";
@@ -75,48 +145,36 @@ export default function PaymentForm() {
     document.body.appendChild(script);
   }, []);
 
-  // 🅿️ Render PayPal Buttons when selected
+  /* =========================================================
+     PayPal buttons (reactive to method)
+  ========================================================= */
+
   useEffect(() => {
-    if (method !== "paypal" || !window.paypal || !paypalRef.current) return;
+    if (method !== "paypal" || !window.paypal) return;
 
-    const items = getCartItems().map((item: any) => {
-      if (item.type === "bundle") {
-        return {
-          type: "bundle",
-          bundle_id: item.id,
-          quantity: item.quantity,
-          option_values: item.option_values || {}, // ✅ SEND ALL COLOUR QTY
-        };
-      }
+    const target =
+      window.innerWidth < 640 ? paypalStickyRef.current : paypalRef.current;
 
-      return {
-        type: "product",
-        product_id: item.id,
-        quantity: item.quantity,
-        colour: item.colour ?? null,
-      };
-    });
+    if (!target) return;
+    target.innerHTML = "";
 
-    const payload = {
-      items,
-      email: formData.billingEmail || undefined, // only send if present
-      first_name: formData.billingFirstName || null,
-      last_name: formData.billingLastName || null,
-      phone: formData.billingPhone || null,
-      delivery_method: delivery,
-      coupon_code: isValid ? couponCode : null,
-    };
+    let payload;
+    try {
+      payload = buildCheckoutPayload({
+        items: buildLineItems(getCartItems()),
+        formData,
+        couponCode,
+        isValid,
+      });
+    } catch (err: any) {
+      toast.error(err.message);
+      return;
+    }
 
-    // Render PayPal Buttons
     window.paypal
       .Buttons({
-        style: {
-          layout: "vertical",
-          color: "gold",
-          shape: "rect",
-          label: "paypal",
-        },
-        // Create PayPal Order via Django backend
+        style: { layout: "vertical", color: "gold", shape: "rect" },
+
         createOrder: async () => {
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/paypal/checkout/`,
@@ -124,107 +182,62 @@ export default function PaymentForm() {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
-            }
+            },
           );
+
           const data = await res.json();
-          if (!res.ok) {
-            const message = data?.error || "Unable to create PayPal order ❌";
-            toast.error(message);
-            paypalRef.current
-              ?.querySelector("button")
-              ?.setAttribute("disabled", "true");
-            setTimeout(() => {
-              paypalRef.current
-                ?.querySelector("button")
-                ?.removeAttribute("disabled");
-            }, 2000);
-            throw new Error(message);
-          }
+          if (!res.ok) throw new Error(data?.error || "PayPal failed");
+
           return data.paypal_order_id;
         },
-        // Capture order after approval
+
         onApprove: async (data: any) => {
-          try {
-            const res = await fetch(
-              `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/paypal/capture/`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ order_id: data.orderID }),
-              }
-            );
-            const capture = await res.json();
-            if (
-              capture.status === "COMPLETED" ||
-              capture.status === "captured"
-            ) {
-              clearCart();
-              clearCoupon(); // ✅ Reset coupon after success
-              toast.success("PayPal payment successful! 🎉");
-              localStorage.setItem(
-                "guest_email",
-                capture.payer?.email_address ?? ""
-              );
-              router.push(`/checkout-success/${capture.order_public_id}`);
-            } else {
-              toast.error("PayPal payment failed ❌");
-            }
-          } catch (err: any) {
-            console.error(err);
-            toast.error("PayPal capture failed ❌");
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/paypal/capture/`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ order_id: data.orderID }),
+            },
+          );
+
+          const capture = await res.json();
+          if (capture.status === "COMPLETED") {
+            clearCart();
+            clearCoupon();
+            localStorage.setItem("guest_email", formData.billingEmail || "");
+            router.push(`/checkout-success/${capture.order_public_id}`);
+          } else {
+            toast.error("PayPal payment failed");
           }
         },
-        onError: (err: any) => {
-          console.error(err);
-          toast.error("PayPal error ❌");
-        },
+
+        onError: () => toast.error("PayPal error"),
       })
-      .render(paypalRef.current);
+      .render(target);
 
-    // Cleanup old buttons on re-render
     return () => {
-      if (paypalRef.current) paypalRef.current.innerHTML = "";
+      target.innerHTML = "";
     };
-  }, [method, delivery, couponCode, isValid, formData, getCartItems]);
+  }, [method, formData, couponCode, isValid, getCartItems]);
 
-  // 💳 Stripe Card Payment Handler
+  /* =========================================================
+     Stripe submit
+  ========================================================= */
+
   const handleStripePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
+
     setProcessing(true);
 
     try {
-      const items = getCartItems().map((item: any) => {
-        if (item.type === "bundle") {
-          return {
-            type: "bundle",
-            bundle_id: item.id,
-            quantity: item.quantity,
-            option_values: item.option_values,
-          };
-        }
-
-        return {
-          type: "product",
-          product_id: item.id,
-          quantity: item.quantity,
-          colour: item.colour ?? null,
-        };
+      const payload = buildCheckoutPayload({
+        items: buildLineItems(getCartItems()),
+        formData,
+        couponCode,
+        isValid,
       });
-
-      const payload = {
-        items,
-        email: formData.billingEmail,
-        first_name: formData.billingFirstName,
-        last_name: formData.billingLastName,
-        billing_address: `${formData.billingAddress1}, ${formData.billingCity}, ${formData.billingPostcode}`,
-        shipping_address: formData.sameAsBilling
-          ? `${formData.billingAddress1}, ${formData.billingCity}, ${formData.billingPostcode}`
-          : `${formData.shippingAddress1}, ${formData.shippingCity}, ${formData.shippingPostcode}`,
-        same_as_billing: formData.sameAsBilling,
-        coupon_code: isValid ? couponCode : null,
-        delivery_method: delivery,
-      };
 
       const { clientSecret, order_id } =
         await checkoutMutation.mutateAsync(payload);
@@ -239,145 +252,117 @@ export default function PaymentForm() {
             name: `${formData.billingFirstName} ${formData.billingLastName}`,
             email: formData.billingEmail,
             phone: formData.billingPhone,
-            address: {
-              line1: formData.billingAddress1,
-              line2: formData.billingAddress2,
-              city: formData.billingCity,
-              postal_code: formData.billingPostcode,
-              country: "GB",
-            },
           },
         },
       });
 
-      if (result.error) {
-        console.error(result.error.message);
-        toast.error(result.error.message || "Payment failed ❌");
-      } else if (result.paymentIntent?.status === "succeeded") {
+      if (result.paymentIntent?.status === "succeeded") {
         clearCart();
-        clearCoupon(); // ✅ Reset coupon after success
-        toast.success("Payment successful! 🎉");
-        localStorage.setItem("guest_email", formData.billingEmail ?? "");
+        clearCoupon();
+        localStorage.setItem("guest_email", formData.billingEmail || "");
         router.push(`/checkout-success/${order_id}`);
+      } else if (result.error) {
+        toast.error(result.error.message || "Payment failed");
       }
-    } catch (err: any) {
-      console.error(err.message);
-      // 💡 NEW: Display backend error if available
-      const backendMessage =
-        err?.response?.data?.error || err.message || "Payment failed ❌";
-
-      toast.error(backendMessage);
     } finally {
       setProcessing(false);
     }
   };
 
-  // 🧾 Render
+  /* =========================================================
+     UI
+  ========================================================= */
+
   return (
-    <section className="relative bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-      <div className="absolute top-3 right-3 flex items-center text-green-600 dark:text-green-400 animate-pulse">
+    <section className="relative bg-white dark:bg-gray-900 p-6 rounded-lg shadow-sm">
+      <div className="absolute top-3 right-3 flex items-center text-green-600">
         <Lock size={18} className="mr-1" />
-        <span className="text-xs font-medium">Secure</span>
+        <span className="text-xs font-medium">Secure and encrypted</span>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">Payment Details</h2>
-
-      {/* Payment Method Toggle */}
-      <div className="flex gap-4 mb-6">
-        <button
-          type="button"
-          onClick={() => setMethod("stripe")}
-          className={`px-3 py-2 rounded-md border ${
-            method === "stripe"
-              ? "border-pink-600 text-pink-600 font-semibold"
-              : "border-gray-300 text-gray-500"
-          }`}
-        >
-          💳 Pay with Card
-        </button>
-        <button
-          type="button"
-          onClick={() => setMethod("paypal")}
-          className={`px-3 py-2 rounded-md border ${
-            method === "paypal"
-              ? "border-yellow-500 text-yellow-600 font-semibold"
-              : "border-gray-300 text-gray-500"
-          }`}
-        >
-          🅿️ Pay with PayPal
-        </button>
-      </div>
-
-      {/* Stripe Form */}
       {method === "stripe" && (
-        <form onSubmit={handleStripePayment} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              Card Number
-            </label>
-            <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 px-3 flex items-center justify-between">
-              <CardNumberElement
-                options={{ style: elementStyle }}
-                onChange={handleCardChange}
-                className="flex-1"
-              />
-              {cardBrand && (
-                <Image
-                  src={`/icons/${cardBrand}.png`}
-                  alt={cardBrand}
-                  width={36}
-                  height={24}
-                  className="ml-2"
-                />
+        <>
+          <form
+            id="stripe-payment-form"
+            onSubmit={handleStripePayment}
+            className="space-y-6"
+          >
+            <div className="relative">
+              <label className="block text-sm font-medium mb-1">
+                Card Number
+              </label>
+
+              <div
+                className="
+      flex items-center gap-2
+      h-11 sm:h-10
+      rounded-md
+      border border-gray-300 dark:border-gray-600
+      bg-white dark:bg-gray-800
+      px-3
+      focus-within:border-pink-500
+      transition-colors
+    "
+              >
+                <div className="flex-1">
+                  <CardNumberElement
+                    options={{ style: elementStyle }}
+                    onChange={handleCardChange}
+                  />
+                </div>
+
+                {cardBrand && (
+                  <Image
+                    src={`/icons/${cardBrand}.png`}
+                    alt={cardBrand}
+                    width={36}
+                    height={24}
+                    className="shrink-0"
+                  />
+                )}
+              </div>
+
+              {cardError && (
+                <p className="text-xs text-red-500 mt-1">{cardError}</p>
               )}
             </div>
-            {cardError && (
-              <p className="text-xs text-red-500 mt-1">{cardError}</p>
-            )}
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Expiry</label>
-              <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 px-3">
-                <CardExpiryElement options={{ style: elementStyle }} />
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              <CardExpiryElement options={{ style: elementStyle }} />
+              <CardCvcElement options={{ style: elementStyle }} />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">CVC</label>
-              <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 px-3">
-                <CardCvcElement options={{ style: elementStyle }} />
-              </div>
-            </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={!stripe || processing || checkoutMutation.isPending}
-            className="w-full bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white py-2 px-3 rounded-md font-semibold transition-colors disabled:opacity-50"
-          >
-            {processing ? "Processing..." : "Pay Now"}
-          </button>
+            <button
+              type="submit"
+              disabled={!stripe || processing}
+              className="w-full bg-pink-600 hover:bg-pink-800 text-white py-2 rounded-md font-semibold transition-colors duration-300 cursor-pointer"
+            >
+              {processing ? "Processing…" : "Pay Now"}
+            </button>
+          </form>
 
-          <div className="flex justify-center">
-            <div className="flex items-center gap-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md px-4 py-2 shadow-sm">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Powered by
-              </span>
-              <Image
-                src="/stripe-logo.svg"
-                alt="Stripe"
-                width={100}
-                height={40}
-                className="h-6 w-auto"
-              />
-            </div>
+          {/* Mobile sticky Stripe */}
+          <div className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white border-t">
+            <button
+              form="stripe-payment-form"
+              disabled={!stripe || processing}
+              className="w-full bg-pink-600 text-white py-3 rounded-lg font-semibold text-lg"
+            >
+              Pay Now
+            </button>
           </div>
-        </form>
+        </>
       )}
 
-      {/* PayPal Buttons */}
-      {method === "paypal" && <div ref={paypalRef} className="mt-4" />}
+      {method === "paypal" && (
+        <>
+          <div ref={paypalRef} className="hidden sm:block mt-4" />
+          <div
+            ref={paypalStickyRef}
+            className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white border-t"
+          />
+        </>
+      )}
     </section>
   );
 }

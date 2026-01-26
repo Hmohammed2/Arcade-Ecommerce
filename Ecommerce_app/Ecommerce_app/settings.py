@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+from decimal import Decimal
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -376,3 +377,16 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+# SendCloud settings
+SENDCLOUD_SECRET_KEY = os.getenv("SENDCLOUD_SECRET_KEY")
+SENDCLOUD_PUBLIC_KEY = os.getenv("SENDCLOUD_PUBLIC_KEY")
+
+if DEBUG:
+    SENDCLOUD_BASE_URL = "https://stoplight.io/mocks/sendcloud/sendcloud-public-api:v2/299107081"
+else:
+    SENDCLOUD_BASE_URL = "https://panel.sendcloud.sc/api/v2"
+
+SENDCLOUD_FROM_POSTCODE = os.getenv("SENDCLOUD_FROM_POSTCODE")
+SENDCLOUD_SENDER_ADDRESS_ID = os.getenv("SENDCLOUD_SENDER_ADDRESS_ID")
+FREE_SHIPPING_THRESHOLD = Decimal("45.00")

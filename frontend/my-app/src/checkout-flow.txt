@@ -1,0 +1,13 @@
+Frontend
+  ↓
+Checkout API (creates Order + PaymentIntent)
+  ↓
+Stripe / PayPal payment
+  ↓
+Webhook / Capture SUCCESS
+  ↓
+Create Sendcloud parcel (ONCE)
+  ↓
+Save tracking_number + label_url
+  ↓
+Email customer + show tracking

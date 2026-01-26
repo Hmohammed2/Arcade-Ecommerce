@@ -1,6 +1,9 @@
 import requests
 from django.conf import settings
 from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_graph_access_token():
     tenant_id = settings.GRAPH_TENANT_ID
@@ -72,10 +75,7 @@ def send_payment_success_email(
 
     # 🧾 Compute subtotal & amounts
     subtotal = 0.0
-    if items:
-        for item in items:
-            line_price = float(item.get("price", 0)) * float(item.get("quantity", 0))
-            subtotal += line_price
+    subtotal = sum(float(item["line_total"]) for item in items)
 
     # If not provided, assume 0 delivery (for backwards compatibility)
     delivery_fee_val = float(delivery_fee) if delivery_fee is not None else 0.0
@@ -105,9 +105,9 @@ def send_payment_success_email(
         for item in items:
             items_html += f"""
               <tr>
-                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['name']}</td>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['title']}</td>
                 <td style="padding:8px; border-bottom:1px solid #f3f4f6;">{item['quantity']}</td>
-                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">£{float(item['price']):.2f}</td>
+                <td style="padding:8px; border-bottom:1px solid #f3f4f6;">£{float(item['unit_price']):.2f}</td>
               </tr>
             """
         items_html += """
@@ -227,7 +227,12 @@ def send_payment_success_email(
         """
 
     if settings.DEBUG:
-        print("DEV MODE – Email suppressed:", to_email, subject, body)
+        logger.info(
+            "[Email Debug] Payment success email | to=%s subject=%s body=%s",
+            to_email,
+            subject,
+            body,
+        )
         return
     
     send_graph_email(to_email, subject, body)

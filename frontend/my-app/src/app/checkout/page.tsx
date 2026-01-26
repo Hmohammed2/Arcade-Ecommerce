@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function CheckoutPage() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-6">
-      <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 p-8 rounded-xl shadow-md">
+      <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[
@@ -30,9 +30,6 @@ export default function CheckoutPage() {
             { label: "Checkout" },
           ]}
         />
-        <h1 className="text-3xl font-bold mb-6 text-gray-900  dark:text-gray-100">
-          Checkout
-        </h1>
         <CheckoutPageClient />
       </div>
     </main>

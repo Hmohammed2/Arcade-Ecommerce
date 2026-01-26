@@ -8,6 +8,7 @@ import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import RouteTracker from "@/components/RouteTracker";
 import "./globals.css";
+import TopBanner from "@/components/TopBanner";
 
 const baseUrl = "https://arcadesticklabs.co.uk"; // hard canonical
 
@@ -98,6 +99,7 @@ export default function RootLayout({
           <GoogleAnalytics />
           <RouteTracker />
           <AuthHydration />
+          <TopBanner />
           <Navbar />
           {children}
           <Footer />

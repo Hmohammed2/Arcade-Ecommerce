@@ -1,4 +1,5 @@
 // app/page.tsx (or wherever LandingPage lives)
+export const dynamic = "force-dynamic";
 import { fetchProducts } from "@/library/fetchProducts";
 import Link from "next/link";
 import { Package, Box, Truck } from "lucide-react";

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
 import { gaEvent } from "@/library/ga";
-import { useRef } from "react";
 
 interface Props {
   orderId: string;
@@ -32,10 +31,10 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
     const subtotal = order.items.reduce(
       (sum: number, item: any) =>
         sum + Number(item.price) * Number(item.quantity),
-      0
+      0,
     );
 
-    const deliveryFee = Number(order.delivery_fee ?? 0);
+    const deliveryFee = Number(order.shipping_cost ?? 0);
     const totalPaid = Number(order.total_price ?? 0);
 
     // discount = (items + delivery) - total

@@ -18,30 +18,40 @@ interface CheckoutFormData {
   additionalNotes?: string;
   sameAsBilling: boolean;
   couponCode?: string;
+  shippingRateId?: string;
+  shippingCost?: number;
+  cartWeightKg?: number;
 }
 
 interface CheckoutFormState {
   formData: Partial<CheckoutFormData>;
   updateField: (
     field: keyof CheckoutFormData,
-    value: string | boolean | undefined
+    value: string | boolean | number | undefined,
   ) => void;
   setSameAsBilling: (value: boolean) => void;
   resetForm: () => void;
+  setCartWeight: (weightKg: number) => void;
 }
 
 export const useCheckoutForm = create<CheckoutFormState>((set, get) => ({
   formData: {
     billingCountry: "GB",
     shippingCountry: "GB",
-    sameAsBilling: false,
+    sameAsBilling: true,
   },
 
   updateField: (field, value) =>
     set((state) => ({
       formData: { ...state.formData, [field]: value },
     })),
-
+  setCartWeight: (weightKg) =>
+    set((state) => ({
+      formData: {
+        ...state.formData,
+        cartWeightKg: Math.max(weightKg, 0.1), // avoid zero-weight shipments
+      },
+    })),
   setSameAsBilling: (value) => {
     const current = get().formData;
 

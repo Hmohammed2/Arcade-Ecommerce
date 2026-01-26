@@ -30,24 +30,6 @@ export default function CartPage() {
     <div className="min-h-screen max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
       {/* Breadcrumbs */}
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Cart" }]} />
-      {/* 🟡 Notice Bar */}
-      <div className="mb-6 rounded-md bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-300 dark:border-yellow-700 p-4 text-sm text-yellow-900 dark:text-yellow-100 text-center">
-        <p>
-          <strong>Note:</strong> As of now we are only supplying curated
-          products to fellow enthusiasts in the{" "}
-          <span className="font-semibold">United Kingdom</span>. This may change
-          in the near future once we scale up. If you’d like to discuss orders
-          outside the UK, please email{" "}
-          <a
-            href="mailto:sales@arcadesticklabs.co.uk"
-            className="underline font-medium text-yellow-800 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-200"
-          >
-            sales@arcadesticklabs.co.uk
-          </a>
-          .
-        </p>
-      </div>
-
       <h1 className="text-3xl font-bold mb-8 text-center sm:text-left">
         Shopping Cart
       </h1>

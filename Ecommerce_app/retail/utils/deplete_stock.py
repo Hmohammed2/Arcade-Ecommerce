@@ -1,8 +1,8 @@
-from django.db import transaction
 from django.db.models import F
 from retail.models import (
     Order,
     Product,
+    Bundle,
     ProductVariant,
     BundleComponent,
 )

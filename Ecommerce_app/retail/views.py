@@ -4,8 +4,9 @@ from rest_framework.decorators import api_view, action, permission_classes, auth
 from rest_framework.permissions import IsAuthenticatedOrReadOnly , IsAuthenticated, AllowAny
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.response import Response
+from decimal import Decimal
 from django.shortcuts import get_object_or_404
-from .models import Category, Product, Order, Payment, Coupon, Bundle
+from .models import Category, Product, Order, Payment, Coupon, Bundle, NewsletterSubscriber
 from .serializers import (
     CategorySerializer,
     ProductSerializer,
@@ -17,11 +18,142 @@ from .serializers import (
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
 from .services.payment_service import PaymentService
+from .services.shipping_service import fetch_shipping_method_price
 from .facades.stripe_facade import StripePaymentFacade
 from .facades.paypal_facade import PayPalFacade
+from .utils.calculate_weight import calculate_cart_weight
+import requests
+from django.conf import settings
 
 # Configure logger
 logger = logging.getLogger(__name__)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_shipping_rates(request):
+    country = request.GET.get("country")
+    to_postcode = request.GET.get("postcode")
+    weight = float(request.GET.get("weight", 0))
+    from_postcode = settings.SENDCLOUD_FROM_POSTCODE
+
+    if not country or not to_postcode or not weight:
+        return Response(
+            {"error": "country, postcode and weight are required"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # 🔀 ENV-BASED CONFIG
+    sender_address = "all" if settings.DEBUG else settings.SENDCLOUD_SENDER_ADDRESS_ID
+    auth = (
+        requests.auth.HTTPBasicAuth("test", "test")
+        if settings.DEBUG
+        else (settings.SENDCLOUD_PUBLIC_KEY, settings.SENDCLOUD_SECRET_KEY)
+    )
+
+    base_url = settings.SENDCLOUD_BASE_URL
+
+    def fetch_methods(to_country: str):
+        params = {
+            "to_country": to_country,
+            "to_postal_code": to_postcode,
+            "from_postal_code": from_postcode,
+            "sender_address": sender_address,
+        }
+
+        logger.info(
+            "[Shipping] Fetching methods country=%s postcode=%s weight=%s sender=%s",
+            to_country,
+            to_postcode,
+            weight,
+            sender_address,
+        )
+
+        return requests.get(
+            f"{base_url}/shipping_methods",
+            params=params,
+            auth=auth,
+            headers={"Accept": "application/json"},
+            timeout=10,
+        )
+
+    # 1️⃣ Try requested country first
+    resp = fetch_methods(country)
+
+    # 2️⃣ DEV fallback → NL (mock server limitation)
+    if settings.DEBUG and resp.status_code in (400, 404):
+        logger.warning(
+            "[Shipping][DEV] No methods for %s — falling back to NL mock data",
+            country,
+        )
+        resp = fetch_methods("NL")
+
+    try:
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.RequestException:
+        logger.exception("[Shipping] Failed to fetch shipping methods")
+        return Response(
+            {"error": "Shipping method not available for destination"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    rates = []
+
+    for method in data.get("shipping_methods", []):
+        logger.info(
+            "[Shipping] Checking method id=%s carrier=%s min=%s max=%s",
+            method["id"],
+            method["carrier"],
+            method["min_weight"],
+            method["max_weight"],
+        )
+
+        min_w = float(method["min_weight"])
+        max_w = float(method["max_weight"])
+
+        # 1️⃣ Weight filtering
+        if not (min_w <= weight <= max_w):
+            continue
+
+        # 2️⃣ Country pricing lookup
+        country_cfg = next(
+            (c for c in method.get("countries", []) if c["iso_2"] == country),
+            None,
+        )
+
+        # DEV fallback pricing (mock always returns NL)
+        if not country_cfg and settings.DEBUG and method.get("countries"):
+            country_cfg = method["countries"][0]
+
+        if not country_cfg:
+            continue
+
+        # 3️⃣ Lead time conversion
+        lead_hours = country_cfg.get("lead_time_hours")
+        estimated_days = max(1, round(lead_hours / 24)) if lead_hours else None
+
+        rates.append(
+            {
+                "id": str(method["id"]),
+                "carrier": method["carrier"],
+                "service_name": method["name"],
+                "price": float(country_cfg["price"]),
+                "currency": "GBP",
+                "estimated_days": estimated_days,
+                "service_point_required": method["service_point_input"] == "required",
+            }
+        )
+
+    rates.sort(key=lambda r: r["price"])
+
+    logger.info(
+        "[Shipping] %s valid rates returned (country=%s, weight=%s)",
+        len(rates),
+        country,
+        weight,
+    )
+
+    return Response({"rates": rates}, status=status.HTTP_200_OK)
 
 # Categories
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -45,7 +177,7 @@ class BundleViewSet(viewsets.ReadOnlyModelViewSet):
         Bundle.objects.filter(is_active=True)
         .prefetch_related(
             "items__product",
-            "options__values",          # 👈 NEW
+            "options__values",          
             "components__product",      # optional but useful later
             "components__variant",
         )
@@ -187,53 +319,77 @@ def stripe_webhook(request):
 @authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def checkout(request):
-    
-    """
-    Create Order + PaymentIntent
-    """
     try:
-        user = request.user if request.user.is_authenticated else None
         data = request.data
-
         items = data.get("items", [])
-        email = data.get("email")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        phone = data.get("phone", "")
-        delivery_method = data.get("delivery_method", "standard")
+        shipping_method_id = data.get("shipping_method_id")
 
         if not items:
-            logger.warning("[Checkout] No items provided")
-            return Response({"error": "No items provided"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "No items provided"}, status=400)
 
-        logger.info(f"[Checkout] Creating order + PaymentIntent for user={user} email={email}")
-        
-        coupon_code = data.get("coupon_code")
+        if not shipping_method_id:
+            return Response(
+                {"error": "Shipping method required"},
+                status=400,
+            )
 
+        # 1️⃣ Calculate weight server-side
+        total_weight = calculate_cart_weight(items)
+        logger.info("[Checkout] Total cart weight: %s kg", total_weight)
+
+        # 2️⃣ Determine destination
+        country = data.get("shipping_country", "GB")
+        postcode = data.get("shipping_postcode")
+
+        if not postcode:
+            return Response(
+                {"error": "Shipping postcode required"},
+                status=400,
+            )
+
+        # 3️⃣ Validate shipping method & price
+        shipping_cost = fetch_shipping_method_price(
+            shipping_method_id,
+            country,
+            postcode,
+        )
+
+        # 4️⃣ Create order + payment
         result = PaymentService.create_order_and_payment(
-            user=user,
+            user=request.user if request.user.is_authenticated else None,
             items=items,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            delivery_method=delivery_method,
-            coupon_code=coupon_code
+
+            email=data.get("email"),
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
+            phone=data.get("phone", ""),
+
+            coupon_code=data.get("coupon_code"),
+
+            # 🚚 shipping
+            shipping_name=data.get("shipping_name"),
+            shipping_address1=data.get("shipping_address1"),
+            shipping_address2=data.get("shipping_address2"),
+            shipping_city=data.get("shipping_city"),
+            shipping_postcode=postcode,
+            shipping_country=country,
+
+            shipping_method_id=shipping_method_id,
+            shipping_cost=shipping_cost,
+            total_weight_kg=total_weight,
         )
 
-        logger.info(
-            f"[Checkout] Order {result['order_id']} created with PaymentIntent {result['clientSecret']}"
-        )
-        return Response(result, status=status.HTTP_201_CREATED)
-    
+        return Response(result, status=201)
+
     except ValueError as e:
-        # 💡 This handles stock errors and validation issues gracefully
-        logger.warning(f"[Checkout] Validation error: {e}")
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": str(e)}, status=400)
 
-    except Exception as e:
-        logger.exception("[Checkout] Unexpected failure during order creation")
-        return Response({"error": "Something went wrong during checkout."}, status=500)
+    except Exception:
+        logger.exception("[Checkout] Failed")
+        return Response(
+            {"error": "Checkout failed"},
+            status=500,
+        )
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -241,37 +397,109 @@ def paypal_checkout(request):
     try:
         user = request.user if request.user.is_authenticated else None
         data = request.data
+
         items = data.get("items", [])
-        email = data.get("email")
-        first_name = data.get("first_name")
-        last_name = data.get("last_name")
-        phone = data.get("phone", "")
-        delivery_method = data.get("delivery_method", "standard")
-        
         if not items:
             return Response({"error": "No items provided"}, status=400)
 
+        # -------------------------
+        # 1️⃣ Shipping method required
+        # -------------------------
+        shipping_method_id = data.get("shipping_method_id")
+        if not shipping_method_id:
+            return Response(
+                {"error": "Shipping method required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # -------------------------
+        # 2️⃣ Destination
+        # -------------------------
+        shipping_country = data.get("shipping_country", "GB")
+        shipping_postcode = data.get("shipping_postcode")
+
+        if not shipping_postcode:
+            return Response(
+                {"error": "Shipping postcode required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # -------------------------
+        # 3️⃣ Calculate weight (server-side)
+        # -------------------------
+        total_weight = calculate_cart_weight(items)
+        logger.info(
+            "[PayPal Checkout] Cart weight calculated | weight=%skg",
+            total_weight,
+        )
+
+        # -------------------------
+        # 4️⃣ Validate shipping method + price
+        # -------------------------
+        shipping_cost = fetch_shipping_method_price(
+            shipping_method_id=shipping_method_id,
+            country=shipping_country,
+            postcode=shipping_postcode,
+        )
+
+        logger.info(
+            "[PayPal Checkout] Shipping validated | method=%s cost=%s",
+            shipping_method_id,
+            shipping_cost,
+        )
+
+        # -------------------------
+        # 5️⃣ Create PayPal order
+        # -------------------------
         result = PaymentService.create_paypal_order(
             user=user,
             items=items,
-            email=email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=phone,
-            delivery_method=delivery_method,
+
+            # PayPal-specific (email may be None)
+            email=data.get("email"),
+            first_name=data.get("first_name"),
+            last_name=data.get("last_name"),
+            phone=data.get("phone", ""),
+
+            # 📦 shipping snapshot (REQUIRED for Sendcloud later)
+            shipping_name=data.get("shipping_name")
+            or f"{data.get('first_name', '')} {data.get('last_name', '')}".strip(),
+
+            shipping_address1=data.get("shipping_address1"),
+            shipping_address2=data.get("shipping_address2"),
+            shipping_city=data.get("shipping_city"),
+            shipping_postcode=shipping_postcode,
+            shipping_country=shipping_country,
+
+            shipping_method_id=shipping_method_id,
+            shipping_cost=shipping_cost,
+            total_weight_kg=total_weight,
+
+            # optional
+            coupon_code=data.get("coupon_code"),
+        )
+
+        logger.info(
+            "[PayPal Checkout] Order created | paypal_order_id=%s",
+            result.get("paypal_order_id"),
         )
 
         return Response(result, status=status.HTTP_201_CREATED)
-    
+
     except ValueError as e:
-        # 💡 This handles stock errors and validation issues gracefully
-        logger.warning(f"[Checkout] Validation error: {e}")
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        # Stock issues, invalid shipping, coupon errors, etc.
+        logger.warning("[PayPal Checkout] Validation error: %s", e)
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
-    except Exception as e:
-        logger.exception("[Checkout] Unexpected failure during PayPal order creation")
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
+    except Exception:
+        logger.exception("[PayPal Checkout] Unexpected failure")
+        return Response(
+            {"error": "PayPal checkout failed"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def paypal_capture(request):
@@ -300,7 +528,7 @@ def paypal_capture(request):
                 order.save(update_fields=["email"])
             
             # 🧩 Step 2: Mark payment succeeded in our database
-            PaymentService.mark_paypal_payment_succeeded(order_id)
+            PaymentService.mark_paypal_payment_succeeded(capture_data)
 
             return Response(
                 {
@@ -353,4 +581,39 @@ def validate_coupon(request):
             "valid": False,
             "message": "Coupon not valid for this account or expired.",
         }, status=400)
+        
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def subscribe_newsletter(request):
+    email = request.data.get("email", "").strip().lower()
+    source = request.data.get("source", "footer")
 
+    if not email or "@" not in email:
+        return Response(
+            {"error": "Invalid email address"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    subscriber, created = NewsletterSubscriber.objects.get_or_create(
+        email=email,
+        defaults={"source": source},
+    )
+
+    if not created and not subscriber.is_active:
+        subscriber.is_active = True
+        subscriber.save(update_fields=["is_active"])
+
+    logger.info(
+        "[Newsletter] %s | email=%s source=%s",
+        "created" if created else "existing",
+        email,
+        source,
+    )
+
+    return Response(
+        {
+            "success": True,
+            "created": created,
+        },
+        status=status.HTTP_201_CREATED,
+    )

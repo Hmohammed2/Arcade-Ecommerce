@@ -14,18 +14,38 @@ const Footer = () => {
   >("idle");
   const { isAuthenticated, user, logout } = useAuth();
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email) return;
+
     setStatus("loading");
 
-    setTimeout(() => {
-      if (email.includes("@")) {
-        setStatus("success");
-        setEmail("");
-      } else {
-        setStatus("error");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/newsletter/subscribe/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            source: "footer",
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Subscription failed");
       }
-    }, 1000);
+
+      setStatus("success");
+      setEmail("");
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+    }
   };
 
   return (

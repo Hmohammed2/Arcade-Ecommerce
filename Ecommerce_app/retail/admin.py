@@ -4,7 +4,7 @@ from .models import (
     Category, Product, Order, OrderItem, Payment,
     ProductImage, ProductVariant,
     Bundle, BundleItem, BundleOption,
-    BundleOptionValue, BundleComponent, Coupon,
+    BundleOptionValue, BundleComponent, Coupon, NewsletterSubscriber
 )
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
@@ -203,7 +203,7 @@ class ProductAdmin(ImportExportModelAdmin):
     resource_class = ProductResource
     inlines = [ProductImageInline, ProductVariantInline]
 
-    list_display = ("name", "price", "stock")
+    list_display = ("id", "name", "price", "stock")
     prepopulated_fields = {"slug": ("name",)}
     search_fields = ("name", "slug")
 
@@ -329,3 +329,48 @@ class BundleOptionValueAdmin(admin.ModelAdmin):
     search_fields = ("label", "option__name")
     list_display = ("label", "option")
     autocomplete_fields = ("option",)
+
+# ------------------------------------------------------------------
+# NEWSLETTER SUBSCRIBER ADMIN
+# --------------------------------------------------
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = (
+        "email",
+        "is_active",
+        "source",
+        "created_at",
+    )
+
+    list_filter = (
+        "is_active",
+        "source",
+        "created_at",
+    )
+
+    search_fields = (
+        "email",
+    )
+
+    ordering = ("-created_at",)
+
+    readonly_fields = ("created_at",)
+
+    actions = [
+        "mark_active",
+        "mark_inactive",
+        "export_as_csv",
+    ]
+
+    def mark_active(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f"{updated} subscribers activated.")
+
+    mark_active.short_description = "Activate selected subscribers"
+
+    def mark_inactive(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f"{updated} subscribers deactivated.")
+
+    mark_inactive.short_description = "Deactivate selected subscribers"

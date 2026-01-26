@@ -1,9 +1,27 @@
 "use client";
 
 import { useCheckoutForm } from "@/store/useCheckoutForm";
+import { useEffect } from "react";
 
 export default function ShippingForm() {
   const { formData, updateField, setSameAsBilling } = useCheckoutForm();
+
+  useEffect(() => {
+    if (!formData.sameAsBilling) return;
+
+    updateField("shippingAddress1", formData.billingAddress1 || "");
+    updateField("shippingAddress2", formData.billingAddress2 || "");
+    updateField("shippingCity", formData.billingCity || "");
+    updateField("shippingPostcode", formData.billingPostcode || "");
+    updateField("shippingCountry", formData.billingCountry || "GB");
+  }, [
+    formData.sameAsBilling,
+    formData.billingAddress1,
+    formData.billingAddress2,
+    formData.billingCity,
+    formData.billingPostcode,
+    formData.billingCountry,
+  ]);
 
   return (
     <section className="space-y-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">
@@ -106,12 +124,25 @@ export default function ShippingForm() {
             >
               Country / Region
             </label>
-            <input
+
+            <select
               id="shippingCountry"
-              value="United Kingdom"
-              disabled
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-400 py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500 sm:text-sm transition-colors duration-300 disabled:opacity-60"
-            />
+              value={formData.shippingCountry || "GB"}
+              onChange={(e) => updateField("shippingCountry", e.target.value)}
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600
+               bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+               py-2 px-3 shadow-sm focus:border-pink-500 focus:ring-pink-500
+               sm:text-sm transition-colors duration-300"
+            >
+              <option value="GB">United Kingdom</option>
+              <option value="FR">France</option>
+              <option value="DE">Germany</option>
+              <option value="NL">Netherlands</option>
+              <option value="BE">Belgium</option>
+              <option value="ES">Spain</option>
+              <option value="IT">Italy</option>
+              <option value="IE">Ireland</option>
+            </select>
           </div>
         </div>
       )}
