@@ -18,6 +18,23 @@ declare global {
   }
 }
 
+const buildLineItems = (cartItems: any[]) =>
+  cartItems.map((item) =>
+    item.type === "bundle"
+      ? {
+          type: "bundle",
+          bundle_id: item.id,
+          quantity: item.quantity,
+          option_values: item.option_values || {},
+        }
+      : {
+          type: "product",
+          product_id: item.id,
+          quantity: item.quantity,
+          colour: item.colour ?? null,
+        },
+  );
+
 export default function PaymentForm({
   method,
   orderPublicId,
@@ -29,13 +46,14 @@ export default function PaymentForm({
   const elements = useElements();
   const router = useRouter();
 
-  const { clearCart } = useCart();
+  const { clearCart, getCartItems } = useCart();
   const { formData } = useCheckoutForm();
-  const { clearCoupon } = useCoupon();
+  const { code: couponCode, isValid, clearCoupon } = useCoupon();
 
   const [processing, setProcessing] = useState(false);
   const paypalRef = useRef<HTMLDivElement>(null);
-  const paypalStickyRef = useRef<HTMLDivElement>(null);
+  const paypalRendered = useRef(false);
+  const [paypalReady, setPaypalReady] = useState(false);
 
   /* ---------------- Stripe submit ---------------- */
 
@@ -74,39 +92,72 @@ export default function PaymentForm({
 
   useEffect(() => {
     if (method !== "paypal") return;
-    if (document.getElementById("paypal-sdk")) return;
+
+    // Already loaded
+    if (window.paypal) {
+      setPaypalReady(true);
+      return;
+    }
+
+    const existing = document.getElementById("paypal-sdk");
+    if (existing) return;
 
     const script = document.createElement("script");
     script.id = "paypal-sdk";
     script.src = `https://www.paypal.com/sdk/js?client-id=${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}&currency=GBP`;
     script.async = true;
+
+    script.onload = () => {
+      setPaypalReady(true);
+    };
+
+    script.onerror = () => {
+      toast.error("Failed to load PayPal");
+    };
+
     document.body.appendChild(script);
   }, [method]);
 
   /* ---------------- PayPal Buttons ---------------- */
 
   useEffect(() => {
-    if (method !== "paypal" || !window.paypal) return;
+    if (method !== "paypal") return;
+    if (!paypalReady) return;
+    if (!paypalRef.current) return;
+    if (paypalRendered.current) return;
 
-    const target =
-      window.innerWidth < 640 ? paypalStickyRef.current : paypalRef.current;
-
-    if (!target) return;
-    target.innerHTML = "";
+    paypalRendered.current = true;
 
     window.paypal
       .Buttons({
-        style: { layout: "vertical", color: "gold", shape: "rect" },
+        style: {
+          layout: "vertical",
+          color: "gold",
+          shape: "rect",
+          label: "paypal",
+        },
 
         createOrder: async () => {
+          const payload = {
+            first_name: formData.billingFirstName,
+            last_name: formData.billingLastName,
+            items: buildLineItems(getCartItems()),
+            shipping_name: `${formData.billingFirstName} ${formData.billingLastName}`,
+            shipping_method_name: formData.shippingMethod,
+            shipping_postcode: formData.shippingPostcode,
+            shipping_country: formData.shippingCountry || "GB",
+            shipping_address1: formData.shippingAddress1,
+            shipping_address2: formData.shippingAddress2,
+            shipping_city: formData.shippingCity,
+            email: formData.billingEmail,
+            coupon_code: isValid ? couponCode : null,
+          };
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/paypal/checkout/`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: formData.billingEmail,
-              }),
+              body: JSON.stringify(payload),
             },
           );
 
@@ -140,38 +191,85 @@ export default function PaymentForm({
 
         onError: () => toast.error("PayPal error"),
       })
-      .render(target);
-
-    return () => {
-      target.innerHTML = "";
-    };
-  }, [method]);
+      .render(paypalRef.current);
+  }, [method, paypalReady]);
 
   /* ---------------- UI ---------------- */
 
   if (method === "stripe") {
     return (
-      <form onSubmit={handleStripePayment} className="space-y-4">
-        <PaymentElement options={{ layout: "tabs" }} />
-
-        <button
-          type="submit"
-          disabled={!stripe || processing}
-          className="w-full bg-pink-600 hover:bg-pink-700 text-white py-3 rounded-lg font-semibold"
+      <>
+        <form
+          id="stripe-payment-form"
+          onSubmit={handleStripePayment}
+          className="space-y-4"
         >
-          {processing ? "Processing…" : "Pay now"}
-        </button>
-      </form>
+          <PaymentElement options={{ layout: "tabs" }} />
+
+          {/* Desktop button */}
+          <button
+            type="submit"
+            disabled={!stripe || processing}
+            className="
+            hidden sm:block
+            w-full
+            bg-pink-600 hover:bg-pink-700
+            text-white py-3 rounded-lg
+            font-semibold
+            disabled:opacity-50
+          "
+          >
+            {processing ? "Processing…" : "Pay now"}
+          </button>
+        </form>
+
+        {/* Mobile sticky button */}
+        <div
+          className="
+          fixed sm:hidden
+          bottom-0 left-0 right-0
+          p-3
+          bg-white dark:bg-gray-900
+          border-t
+          z-50
+        "
+        >
+          <button
+            form="stripe-payment-form"
+            type="submit"
+            disabled={!stripe || processing}
+            className="
+            w-full
+            bg-pink-600 hover:bg-pink-700
+            text-white py-3 rounded-lg
+            font-semibold
+            disabled:opacity-50 disabled:cursor-not-allowed
+          "
+          >
+            {processing ? "Processing…" : "Pay securely"}
+          </button>
+        </div>
+      </>
     );
   }
 
   return (
-    <>
-      <div ref={paypalRef} className="hidden sm:block mt-4" />
+    <div
+      className="
+      sm:static
+      fixed sm:bottom-auto
+      bottom-0 left-0 right-0
+      bg-white dark:bg-gray-900
+      border-t sm:border-0
+      p-3 sm:p-0
+      z-50
+    "
+    >
       <div
-        ref={paypalStickyRef}
-        className="fixed bottom-0 left-0 right-0 sm:hidden p-3 bg-white dark:bg-gray-900 border-t z-50"
+        ref={paypalRef}
+        className="max-w-full mx-auto"
+        style={{ minHeight: 55 }}
       />
-    </>
+    </div>
   );
 }

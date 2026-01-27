@@ -265,7 +265,7 @@ class PaymentService:
         )
 
         paypal_order_id = paypal_order["id"]
-
+        
         logger.info(
             "[Checkout][PayPal] PayPal order created | order_id=%s paypal_id=%s",
             order.id,
@@ -277,7 +277,7 @@ class PaymentService:
         # -------------------------
         Payment.objects.create(
             order=order,
-            stripe_payment_intent=paypal_order_id,  # reused field
+            paypal_order_id=paypal_order_id, 
             payment_method="paypal",
             status="pending",
             amount=order.total_price,
@@ -354,7 +354,7 @@ class PaymentService:
                 first_name=order.first_name,
                 order_id=order.public_id,
                 amount=float(order.total_price),
-                payment_method=method,  # or "paypal"
+                payment_method=method['label'],  # or "paypal"
                 delivery_fee=float(order.shipping_cost),
                 coupon_code=order.coupon.code if order.coupon else None,
                 discount_amount=discount_amount,
@@ -413,108 +413,101 @@ class PaymentService:
     @staticmethod
     @transaction.atomic
     def mark_paypal_payment_succeeded(paypal_capture: dict) -> None:
-        """
-        Finalises a PayPal payment after successful capture.
-        Called explicitly from /paypal/capture/ endpoint.
-        """
+            """
+            Finalises a PayPal payment after successful capture.
+            """
 
-        paypal_order_id = paypal_capture.get("id")
-        if not paypal_order_id:
-            logger.error("[PayPal] Capture succeeded without order id")
-            return
+            paypal_order_id = paypal_capture.get("id")
+            if not paypal_order_id:
+                logger.error("[PayPal] Missing PayPal order id in capture")
+                return
 
-        try:
-            payment = Payment.objects.select_related("order").get(
-                stripe_payment_intent=paypal_order_id,
-                payment_method="paypal",
-            )
-        except Payment.DoesNotExist:
-            logger.error(
-                "[PayPal] No payment found for paypal_order_id=%s",
+            try:
+                payment = Payment.objects.select_related("order").get(
+                    paypal_order_id=paypal_order_id,
+                    payment_method="paypal",
+                )
+            except Payment.DoesNotExist:
+                logger.error(
+                    "[PayPal] No payment found for paypal_order_id=%s",
+                    paypal_order_id,
+                )
+                return
+
+            # 🔁 Idempotency guard
+            if payment.status == Payment.Status.SUCCEEDED:
+                logger.info(
+                    "[PayPal] Payment already succeeded | order_id=%s",
+                    payment.order.id,
+                )
+                return
+
+            payment.status = Payment.Status.SUCCEEDED
+            payment.save(update_fields=["status"])
+
+            order = payment.order
+
+            logger.info(
+                "[PayPal] Payment succeeded | order_id=%s paypal_id=%s",
+                order.id,
                 paypal_order_id,
             )
-            return
 
-        # 🔁 Idempotency guard
-        if payment.status == Payment.Status.SUCCEEDED:
-            logger.info(
-                "[PayPal] Payment already succeeded | order_id=%s",
-                payment.order.id,
-            )
-            return
+            # 🧺 Reserve / deplete stock
+            ok, _ = PaymentService._reserve_stock_or_hold(order)
+            if not ok:
+                logger.error("[Stock] Reservation failed | order_id=%s", order.id)
+                return
 
-        payment.status = Payment.Status.SUCCEEDED
-        payment.save(update_fields=["status"])
+            order.status = "processing"
+            order.save(update_fields=["status"])
 
-        order = payment.order
+            # 💸 Discount calculation
+            discount_amount = None
+            if order.coupon:
+                subtotal = sum(i.price * i.quantity for i in order.items.all())
+                discount_amount = float(
+                    (subtotal + order.shipping_cost) - order.total_price
+                )
 
-        logger.info(
-            "[PayPal] Payment succeeded | order_id=%s paypal_id=%s",
-            order.id,
-            paypal_order_id,
-        )
+            send_slack_message(f"🟡 PayPal paid — Order #{order.id}")
 
-        # -------------------------
-        # 🧺 Reserve / deplete stock
-        # -------------------------
-        ok, _ = PaymentService._reserve_stock_or_hold(order)
-        if not ok:
-            return
-
-        order.status = "processing"
-        order.save(update_fields=["status"])
-        discount_amount = None
-        if order.coupon:
-            subtotal = sum(i.price * i.quantity for i in order.items.all())
-            discount_amount = float(
-                (subtotal + order.shipping_cost) - order.total_price
-            )
-        send_slack_message(f"🟡 PayPal paid — Order #{order.id}")
-        send_payment_success_email(
-        to_email=order.email,
-        first_name=order.first_name,
-        order_id=order.public_id,
-        amount=float(order.total_price),
-        payment_method="paypal",  # or "paypal"
-        delivery_fee=float(order.shipping_cost),
-        coupon_code=order.coupon.code if order.coupon else None,
-        discount_amount=discount_amount,
-        items=[
-            {
-                "title": item.product.name if item.product else item.bundle.name,
-                "quantity": item.quantity,
-                "unit_price": float(item.price),
-                "line_total": float(item.price * item.quantity),
-            }
-            for item in order.items.all()
-        ],
-        )
-        logger.info("[Email] Payment success email sent | order_id=%s", order.id)
-        # -------------------------
-        # 🚚 Create Sendcloud parcel
-        # -------------------------
-        # try:
-        #     parcel = SendcloudService.create_parcel(order)
-
-        #     order.label_url = parcel.get("label_url")
-        #     order.sendcloud_parcel_id = str(parcel.get("id"))
-        #     order.save(update_fields=["label_url", "sendcloud_parcel_id"])
-
-        #     logger.info(
-        #         "[Shipping] Sendcloud parcel created | order_id=%s parcel_id=%s",
-        #         order.id,
-        #         parcel.get("id"),
-        #     )
-
-        # except Exception as e:
-        #     logger.exception(
-        #         "[Shipping] Sendcloud parcel creation failed | order_id=%s error=%s",
-        #         order.id,
-        #         e,
-        #     )
-        #     send_slack_message(
-        #         f"⚠️ Sendcloud parcel creation failed — Order #{order.id}: {e}"
-        #     )
+            # ✉️ Email (never crash payment flow)
+            try:
+                send_payment_success_email(
+                    to_email=order.email,
+                    first_name=order.first_name,
+                    order_id=order.public_id,
+                    amount=float(order.total_price),
+                    payment_method="paypal",
+                    delivery_fee=float(order.shipping_cost),
+                    coupon_code=order.coupon.code if order.coupon else None,
+                    discount_amount=discount_amount,
+                    items=[
+                        {
+                            "title": (
+                                item.product.name
+                                if item.product
+                                else item.bundle.name
+                                if item.bundle
+                                else "Unknown item"
+                            ),
+                            "quantity": item.quantity,
+                            "unit_price": float(item.price),
+                            "line_total": float(item.price * item.quantity),
+                        }
+                        for item in order.items.all()
+                    ],
+                )
+                logger.info(
+                    "[Email] PayPal success email sent | order_id=%s",
+                    order.id,
+                )
+            except Exception:
+                logger.exception(
+                    "[Email] PayPal success email failed | order_id=%s",
+                    order.id,
+                )
 
 
     # =====================================================

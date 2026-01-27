@@ -206,7 +206,7 @@ def send_payment_success_email(
             <p>Hi {first_name},</p>
             <p>Thank you for your purchase! We’ve successfully processed your payment for:</p>
             <h2 style="margin-bottom:10px;">Order #{order_id}</h2>
-            <p><strong>Payment Method:</strong> {payment_method['label']}</p>
+            <p><strong>Payment Method:</strong> {payment_method}</p>
             {totals_html}
             {items_html}
             <p style="margin-top:20px;">

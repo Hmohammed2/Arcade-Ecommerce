@@ -142,7 +142,6 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
           )}
         </>
       )}
-
       {paymentMethod === "paypal" && <PaymentForm method="paypal" />}
     </section>
   );

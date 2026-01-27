@@ -396,9 +396,9 @@ class Payment(models.Model):
         )
 
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="payment")
-    stripe_payment_intent = models.CharField(max_length=255, unique=True)
+    stripe_payment_intent = models.CharField(max_length=255, unique=True, blank=True, null=True)
     stripe_charge_id = models.CharField(max_length=255, blank=True, null=True)
-    
+    paypal_order_id = models.CharField(max_length=255, blank=True, null=True, unique=True)
 
     amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
     currency = models.CharField(max_length=10, default="GBP")

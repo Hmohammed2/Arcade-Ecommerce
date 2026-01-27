@@ -561,14 +561,17 @@ def paypal_capture(request):
             return Response({"error": "Missing order_id"}, status=status.HTTP_400_BAD_REQUEST)
 
         # 🧩 Step 1: Capture the payment via PayPal
+        
         capture_data = PayPalFacade.capture_order(order_id)
+        
+        logger.info("PayPal capture_data type=%s value=%s", type(capture_data), capture_data)
 
         if capture_data.get("status") in ["COMPLETED", "captured"]:
             payer = capture_data.get("payer", {})
             paypal_email = payer.get("email_address")
 
             # Attach email to your Order if it was missing
-            payment = Payment.objects.get(stripe_payment_intent=order_id)
+            payment = Payment.objects.get(paypal_order_id=order_id)
             order = payment.order
 
             if not order.email and paypal_email:
@@ -581,13 +584,8 @@ def paypal_capture(request):
             return Response(
                 {
                     "id": capture_data.get("id"),
-                    "order_public_id": str(order.public_id), 
-                    "status": capture_data.get("status"),
-                    "payer": capture_data.get("payer", {}),
-                    "amount": capture_data.get("purchase_units", [{}])[0]
-                    .get("payments", {})
-                    .get("captures", [{}])[0]
-                    .get("amount", {}),
+                    "order_public_id": order.public_id, 
+                    "status": "COMPLETED",
                     "message": "PayPal payment captured successfully.",
                 },
                 status=status.HTTP_200_OK,
@@ -600,6 +598,7 @@ def paypal_capture(request):
 
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
     
 @api_view(["POST"])
 @permission_classes([AllowAny])
