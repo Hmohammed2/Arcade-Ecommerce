@@ -58,6 +58,18 @@ def format_bundle_options(meta: dict | None) -> str:
 
 admin.site.register(Category)
 admin.site.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "order",
+        "status",
+        "payment_method_label",
+        "created_at",
+    )
+    readonly_fields = (
+        "payment_method_type",
+        "payment_method_label",
+    )
 
 # ------------------------------------------------------------------
 # IMPORT / EXPORT RESOURCES

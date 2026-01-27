@@ -273,6 +273,42 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({"error": "Order not found."}, status=404)
 
         return Response(self.get_serializer(order).data)
+    
+    # -------------------------------
+    # 🔗 Stripe redirect resolver
+    # -------------------------------
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="by-payment-intent",
+        permission_classes=[AllowAny],
+    )
+    def by_payment_intent(self, request):
+        """
+        Resolve an order from a Stripe PaymentIntent.
+        Used ONLY for redirect-based payment success pages.
+        """
+        payment_intent = request.query_params.get("pi")
+
+        if not payment_intent:
+            return Response(
+                {"error": "Missing payment_intent"},
+                status=400,
+            )
+
+        payment = get_object_or_404(
+            Payment,
+            stripe_payment_intent=payment_intent,
+        )
+
+        order = payment.order
+
+        return Response(
+            {
+                "order_public_id": str(order.public_id),
+                "status": order.status,
+            }
+        )
 
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated], authentication_classes=[JWTAuthentication])
     def history(self, request):

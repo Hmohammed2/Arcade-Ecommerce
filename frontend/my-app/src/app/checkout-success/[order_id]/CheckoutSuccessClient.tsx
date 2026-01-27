@@ -114,17 +114,45 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
   // ✅ Error state
   if (error)
     return (
-      <div className="min-h-screen max-w-4xl mx-auto text-center py-16 text-gray-800 dark:text-gray-100 transition-colors duration-300">
-        <h1 className="text-2xl font-bold text-red-600 dark:text-red-400">
-          Order not found
+      <div className="min-h-screen max-w-3xl mx-auto text-center py-20 px-6 text-gray-800 dark:text-gray-100">
+        <h1 className="text-2xl font-bold text-green-600 dark:text-green-400">
+          Payment successful ✅
         </h1>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">{error}</p>
-        <Link
-          href="/"
-          className="mt-6 inline-block bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 text-white px-4 py-2 rounded-md font-medium transition-colors"
-        >
-          Back to Shop
-        </Link>
+
+        <p className="mt-4 text-gray-700 dark:text-gray-300">
+          Your payment has been received and your order is being processed.
+        </p>
+
+        <p className="mt-4 text-sm text-gray-600 dark:text-gray-400">
+          We’ve sent a confirmation email with your order details. Please check
+          your inbox (and spam folder).
+        </p>
+
+        <p className="mt-6 text-sm text-gray-500">
+          If you don’t receive the email within a few minutes, contact us at{" "}
+          <a
+            href="mailto:support@arcadesticklabs.co.uk"
+            className="text-pink-600 hover:underline"
+          >
+            support@arcadesticklabs.co.uk
+          </a>
+        </p>
+
+        <div className="mt-8 flex justify-center gap-4">
+          <Link
+            href="/"
+            className="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-md font-semibold"
+          >
+            Continue shopping
+          </Link>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-md font-semibold"
+          >
+            Try loading order again
+          </button>
+        </div>
       </div>
     );
 

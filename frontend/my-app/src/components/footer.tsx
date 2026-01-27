@@ -197,6 +197,30 @@ const Footer = () => {
                 width={44}
                 height={28}
               />
+              <Image
+                src="/icons/apple_pay.png"
+                alt="Apple Pay"
+                width={44}
+                height={28}
+              />
+              <Image
+                src="/icons/google_pay.png"
+                alt="google_pay"
+                width={44}
+                height={28}
+              />
+              <Image
+                src="/icons/klarna.jpeg"
+                alt="Klarna"
+                width={44}
+                height={28}
+              />
+              <Image
+                src="/icons/revolut_pay.svg"
+                alt="Revolut Pay"
+                width={44}
+                height={28}
+              />
               <Image src="/icons/jcb.png" alt="jcb" width={44} height={28} />
               <Image
                 src="/icons/mastercard.png"

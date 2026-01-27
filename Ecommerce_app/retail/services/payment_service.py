@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import F
-
+import stripe
 from retail.facades.paypal_facade import PayPalFacade
 from retail.facades.stripe_facade import StripePaymentFacade
 from retail.models import Order, Payment, Coupon
@@ -315,32 +315,46 @@ class PaymentService:
             stripe_payment_intent=intent_id
         )
 
+        # 🔎 Resolve payment method
+        method = PaymentService.resolve_stripe_payment_method(intent)
+
         payment.status = "succeeded"
-        payment.save(update_fields=["status"])
+        payment.payment_method_type = method["type"]
+        payment.payment_method_label = method["label"]
+        payment.save(
+            update_fields=[
+                "status",
+                "payment_method_type",
+                "payment_method_label",
+            ]
+        )
 
         order = payment.order
-        logger.info("[Webhook] Stripe payment succeeded | order_id=%s", order.id)
-
-        ok, _ = PaymentService._reserve_stock_or_hold(order)
-        if not ok:
-            return
+        logger.info(
+        "[Webhook] Stripe payment succeeded | order_id=%s method=%s",
+        order.id,
+        method["label"],
         
+        )
+        # 🔁 Idempotency guard
         order.status = "processing"
         order.save(update_fields=["status"])
         discount_amount = None
+        
         if order.coupon:
             subtotal = sum(i.price * i.quantity for i in order.items.all())
             discount_amount = float(
                 (subtotal + order.shipping_cost) - order.total_price
             )
         send_slack_message(f"✅ Stripe paid — Order #{order.id}")
+        
         try:
             send_payment_success_email(
                 to_email=order.email,
                 first_name=order.first_name,
                 order_id=order.public_id,
                 amount=float(order.total_price),
-                payment_method="card",  # or "paypal"
+                payment_method=method,  # or "paypal"
                 delivery_fee=float(order.shipping_cost),
                 coupon_code=order.coupon.code if order.coupon else None,
                 discount_amount=discount_amount,
@@ -360,6 +374,17 @@ class PaymentService:
                 "[Email] Payment success email failed | order_id=%s error=%s",
                 order.id,
                 e,
+            )
+        # 📦 THEN try stock reservation
+        ok, reason = PaymentService._reserve_stock_or_hold(order)
+        if not ok:
+            logger.error(
+                "[Stock] Reservation failed | order_id=%s reason=%s",
+                order.id,
+                reason,
+            )
+            send_slack_message(
+                f"⚠️ Stock reservation failed — Order #{order.id}"
             )
         # 🚚 Create Sendcloud parcel
         # try:
@@ -546,3 +571,69 @@ class PaymentService:
         return int(
             (amount.quantize(PaymentService.MONEY_2DP) * 100).to_integral_value()
         )
+    # Helper to resolve payment method details
+    def resolve_stripe_payment_method(intent: dict) -> dict:
+        """
+        Returns a normalized payment method dict for receipts/admin.
+        """
+        charge_id = intent.get("latest_charge")
+        if not charge_id:
+            logger.warning("[Payment] No latest_charge on intent %s", intent.get("id"))
+            return {
+                "type": "unknown",
+                "label": "Unknown",
+            }
+
+        charge = stripe.Charge.retrieve(
+            charge_id,
+            expand=["payment_method_details"],
+        )
+
+        details = charge.payment_method_details
+        method_type = details.get("type")
+
+        # --------------------
+        # Card & wallets
+        # --------------------
+        if method_type == "card":
+            card = details["card"]
+            brand = card.get("brand", "").title()
+            last4 = card.get("last4", "")
+            wallet = card.get("wallet")
+
+            if wallet:
+                wallet_name = wallet.replace("_", " ").title()
+                label = f"{wallet_name} ({brand})"
+            else:
+                label = f"{brand} •••• {last4}"
+
+            return {
+                "type": "card",
+                "label": label,
+            }
+
+        # --------------------
+        # Klarna
+        # --------------------
+        if method_type == "klarna":
+            return {
+                "type": "klarna",
+                "label": "Klarna",
+            }
+
+        # --------------------
+        # Link
+        # --------------------
+        if method_type == "link":
+            return {
+                "type": "link",
+                "label": "Link",
+            }
+
+        # --------------------
+        # Fallback
+        # --------------------
+        return {
+            "type": method_type or "unknown",
+            "label": (method_type or "Unknown").replace("_", " ").title(),
+        }
