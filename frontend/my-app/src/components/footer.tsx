@@ -190,51 +190,33 @@ const Footer = () => {
               Secure payments accepted
             </p>
 
-            <div className="flex items-center gap-4 opacity-80">
-              <Image
-                src="/icons/paypal.svg"
-                alt="paypal"
-                width={44}
-                height={28}
-              />
-              <Image
-                src="/icons/apple_pay.png"
-                alt="Apple Pay"
-                width={44}
-                height={28}
-              />
-              <Image
-                src="/icons/google_pay.png"
-                alt="google_pay"
-                width={44}
-                height={28}
-              />
-              <Image
-                src="/icons/klarna.jpeg"
-                alt="Klarna"
-                width={44}
-                height={28}
-              />
-              <Image
-                src="/icons/revolut_pay.svg"
-                alt="Revolut Pay"
-                width={44}
-                height={28}
-              />
-              <Image src="/icons/jcb.png" alt="jcb" width={44} height={28} />
-              <Image
-                src="/icons/mastercard.png"
-                alt="Mastercard"
-                width={44}
-                height={28}
-              />
-              <Image src="/icons/visa.png" alt="Visa" width={44} height={28} />
-              <Image
-                src="/icons/maestro.png"
-                alt="Maestro"
-                width={44}
-                height={28}
-              />
+            <div
+              className="
+        flex flex-wrap justify-center gap-4
+        max-w-full
+        opacity-80
+      "
+            >
+              {[
+                "paypal.svg",
+                "apple_pay.png",
+                "google_pay.png",
+                "klarna.jpeg",
+                "revolut_pay.svg",
+                "jcb.png",
+                "mastercard.png",
+                "visa.png",
+                "maestro.png",
+              ].map((icon) => (
+                <Image
+                  key={icon}
+                  src={`/icons/${icon}`}
+                  alt={icon.replace(/[-_.]/g, " ")}
+                  width={44}
+                  height={28}
+                  className="object-contain"
+                />
+              ))}
             </div>
           </div>
         </div>

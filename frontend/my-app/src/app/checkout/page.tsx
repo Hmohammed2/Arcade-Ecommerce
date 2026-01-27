@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export default function CheckoutPage() {
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-6">
-      <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md">
+      <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 p-4 rounded-xl shadow-md pb-28 sm:pb-0">
         {/* Breadcrumbs */}
         <Breadcrumbs
           items={[

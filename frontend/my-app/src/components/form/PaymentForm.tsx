@@ -226,28 +226,30 @@ export default function PaymentForm({
         {/* Mobile sticky button */}
         <div
           className="
-          fixed sm:hidden
-          bottom-0 left-0 right-0
-          p-3
-          bg-white dark:bg-gray-900
-          border-t
-          z-50
-        "
+    fixed sm:hidden
+    bottom-0 inset-x-0
+    bg-white dark:bg-gray-900
+    border-t
+    z-50
+    pb-[env(safe-area-inset-bottom)]
+  "
         >
-          <button
-            form="stripe-payment-form"
-            type="submit"
-            disabled={!stripe || processing}
-            className="
-            w-full
-            bg-pink-600 hover:bg-pink-700
-            text-white py-3 rounded-lg
-            font-semibold
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-          >
-            {processing ? "Processing…" : "Pay securely"}
-          </button>
+          <div className="max-w-7xl mx-auto px-4 py-3">
+            <button
+              form="stripe-payment-form"
+              type="submit"
+              disabled={!stripe || processing}
+              className="
+        w-full
+        bg-pink-600 hover:bg-pink-700
+        text-white py-3 rounded-lg
+        font-semibold
+        disabled:opacity-50 disabled:cursor-not-allowed
+      "
+            >
+              {processing ? "Processing…" : "Pay securely"}
+            </button>
+          </div>
         </div>
       </>
     );
@@ -256,20 +258,17 @@ export default function PaymentForm({
   return (
     <div
       className="
-      sm:static
-      fixed sm:bottom-auto
-      bottom-0 left-0 right-0
+      fixed sm:static
+      bottom-0 inset-x-0
       bg-white dark:bg-gray-900
       border-t sm:border-0
-      p-3 sm:p-0
       z-50
+      pb-[env(safe-area-inset-bottom)]
     "
     >
-      <div
-        ref={paypalRef}
-        className="max-w-full mx-auto"
-        style={{ minHeight: 55 }}
-      />
+      <div className="max-w-7xl mx-auto px-4 py-3 sm:p-0">
+        <div ref={paypalRef} className="w-full" style={{ minHeight: 55 }} />
+      </div>
     </div>
   );
 }
