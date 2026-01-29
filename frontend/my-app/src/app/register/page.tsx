@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import RegisterPageClient from "./RegisterPageClient";
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const baseUrl = "https://arcadesticklabs.co.uk";
 
 export const metadata: Metadata = {
   title: "Create Account | ArcadeStickLabs",

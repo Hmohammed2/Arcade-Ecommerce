@@ -20,9 +20,10 @@ from .models import UserAddress, PasswordResetToken
 from .services.SendEmail import send_graph_email
 from django.conf import settings
 from django.contrib.auth import authenticate
-
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from dj_rest_auth.registration.views import SocialLoginView
+from rest_framework.decorators import api_view, permission_classes
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -297,3 +298,32 @@ class PasswordResetEmailView(APIView):
         # e.g., PasswordResetToken.objects.create(user=user, token=token)
 
         return Response({"detail": "If an account exists a password reset email has been sent"}, status=status.HTTP_200_OK)
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def contact_view(request):
+    name = request.data.get("name")
+    email = request.data.get("email")
+    message = request.data.get("message")
+
+    if not all([name, email, message]):
+        return Response(
+            {"error": "Missing fields"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    subject = f"New Contact Form Enquiry from {name}"
+    body = f"""
+        <p><strong>Name:</strong> {name}</p>
+        <p><strong>Email:</strong> {email}</p>
+        <hr />
+        <p>{message}</p>
+    """
+
+    send_graph_email(
+        to_email="sales@arcadesticklabs.co.uk",
+        subject=subject,
+        body=body,
+    )
+
+    return Response({"success": True})

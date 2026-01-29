@@ -1,13 +1,14 @@
-import { fetchArticleBySlug } from "@/library/fetchArticles";
-import ArticleClient from "./ArticleClient";
 import type { Metadata } from "next";
+import Script from "next/script";
+import ArticleClient from "./ArticleClient";
+import { fetchArticleBySlug } from "@/library/fetchArticles";
 
 interface ArticlePageProps {
   params: { slug: string };
 }
 
 /* -----------------------------------
-   Dynamic SEO Metadata (Next 14+)
+   Dynamic SEO Metadata
 ----------------------------------- */
 export async function generateMetadata({
   params,
@@ -48,8 +49,56 @@ export async function generateMetadata({
 }
 
 /* -----------------------------------
-   Page
+   Page (single fetch, JSON-LD here)
 ----------------------------------- */
-export default function ArticlePage({ params }: ArticlePageProps) {
-  return <ArticleClient slug={params.slug} />;
+export default async function ArticlePage({ params }: ArticlePageProps) {
+  const article = await fetchArticleBySlug(params.slug);
+
+  if (!article) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-16">
+        <p className="text-red-500">Article not found</p>
+      </div>
+    );
+  }
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: article.title,
+    description: article.excerpt || article.title,
+    image: article.thumbnail
+      ? `https://arcadesticklabs.co.uk${article.thumbnail}`
+      : "https://arcadesticklabs.co.uk/og-default.jpg",
+    author: {
+      "@type": "Person",
+      name: article.author_name ?? "ArcadeStickLabs",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "ArcadeStickLabs",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://arcadesticklabs.co.uk/logo.png",
+      },
+    },
+    datePublished: article.published_at,
+    dateModified: article.updated_at ?? article.published_at,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://arcadesticklabs.co.uk/resources/articles/${article.slug}`,
+    },
+  };
+
+  return (
+    <>
+      <Script
+        id="article-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
+      <ArticleClient article={article} />
+    </>
+  );
 }

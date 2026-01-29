@@ -81,6 +81,13 @@ const Navbar = () => {
             FAQS
           </Link>
 
+          <Link
+            href="/contact"
+            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+          >
+            Contact Us
+          </Link>
+
           <form
             onSubmit={handleSearch}
             className="flex items-center border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 w-72 relative transition-colors"
@@ -342,6 +349,13 @@ const Navbar = () => {
               onClick={() => setIsMobileOpen(false)}
             >
               FAQS
+            </Link>
+            <Link
+              href="/contact"
+              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
+              onClick={() => setIsMobileOpen(false)}
+            >
+              Contact Us
             </Link>
 
             {!isAuthenticated ? (
