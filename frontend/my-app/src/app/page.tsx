@@ -6,6 +6,7 @@ import { Package, Box, Truck } from "lucide-react";
 import { ProductCarousel } from "@/components/ProductCarousel";
 import type { Metadata } from "next";
 import Script from "next/script";
+import Image from "next/image";
 
 const SITE_URL = "https://arcadesticklabs.co.uk";
 
@@ -99,11 +100,19 @@ export default async function LandingPage() {
         <main className="flex-grow">
           {/* HERO SECTION */}
           <section className="relative overflow-hidden">
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/arcade-image.webp')" }}
+            <Image
+              src="/arcade-image.webp"
+              alt="ArcadeStickLabs arcade stick parts hero"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover object-center"
             />
+
+            {/* GRADIENT OVERLAY */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-black/70 to-pink-900/70" />
+
+            {/* GRID OVERLAY */}
             <div
               className="absolute inset-0 opacity-20"
               style={{
