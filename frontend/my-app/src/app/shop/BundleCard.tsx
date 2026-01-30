@@ -25,64 +25,6 @@ export default function BundleCard({ bundle }: { bundle: Bundle }) {
           sizes="(max-width: 768px) 100vw, 33vw"
           priority={false}
         />
-
-        {/* Floating cart controls */}
-        {!outOfStock && (
-          <div className="absolute bottom-2 right-2">
-            {qty === 0 ? (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  addItem({
-                    type: "bundle",
-                    id: bundle.id,
-                    title: bundle.name,
-                    price: Number(bundle.price),
-                    image: bundle.image ?? undefined,
-                    quantity: 1,
-                  });
-                }}
-                className="flex items-center justify-center w-9 h-9 rounded-full bg-[#14485A] text-white text-xl shadow-md hover:bg-[#0e2f3d] transition"
-              >
-                +
-              </button>
-            ) : (
-              <div className="flex items-center gap-2 bg-white/95 dark:bg-gray-900/95 rounded-full shadow-md px-2 py-1">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    updateQuantity(bundle.id, "bundle", qty - 1);
-                  }}
-                  className={`flex items-center justify-center w-7 h-7 rounded-full border text-sm font-bold transition ${
-                    qty === 1
-                      ? "border-[#E01D42] text-[#E01D42] hover:bg-[#E01D42] hover:text-white"
-                      : "border-[#14485A] text-[#14485A] hover:bg-[#14485A] hover:text-white"
-                  }`}
-                >
-                  {qty === 1 ? "🗑" : "−"}
-                </button>
-
-                <span className="min-w-[1.5rem] text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
-                  {qty}
-                </span>
-
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    updateQuantity(bundle.id, "bundle", qty + 1);
-                  }}
-                  className="flex items-center justify-center w-7 h-7 rounded-full border border-[#14485A] text-[#14485A] text-sm font-bold hover:bg-[#14485A] hover:text-white transition"
-                  disabled={qty >= bundle.max_available}
-                >
-                  +
-                </button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* TEXT AREA */}
