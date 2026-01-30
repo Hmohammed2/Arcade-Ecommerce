@@ -101,7 +101,7 @@ export default async function LandingPage() {
           <section className="relative overflow-hidden">
             <div
               className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: "url('/arcade-image.png')" }}
+              style={{ backgroundImage: "url('/arcade-image.webp')" }}
             />
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/70 via-black/70 to-pink-900/70" />
             <div
