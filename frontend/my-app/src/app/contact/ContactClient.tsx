@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import Turnstile from "react-turnstile";
+import { useTheme } from "next-themes";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL_CLIENT;
 
 export default function ContactClient() {
+  const { theme } = useTheme();
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -62,7 +65,12 @@ export default function ContactClient() {
           placeholder="Your name"
           value={form.name}
           onChange={handleChange}
-          className="rounded-md border px-4 py-3"
+          className="
+            rounded-md border px-4 py-3
+            bg-white text-gray-900 border-gray-300
+            focus:border-pink-500 focus:ring-pink-500
+            dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600
+          "
         />
 
         <input
@@ -72,7 +80,12 @@ export default function ContactClient() {
           placeholder="Your email"
           value={form.email}
           onChange={handleChange}
-          className="rounded-md border px-4 py-3"
+          className="
+            rounded-md border px-4 py-3
+            bg-white text-gray-900 border-gray-300
+            focus:border-pink-500 focus:ring-pink-500
+            dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600
+          "
         />
 
         <textarea
@@ -82,13 +95,19 @@ export default function ContactClient() {
           placeholder="Your message"
           value={form.message}
           onChange={handleChange}
-          className="col-span-full rounded-md border px-4 py-3"
+          className="
+            col-span-full rounded-md border px-4 py-3
+            bg-white text-gray-900 border-gray-300
+            focus:border-pink-500 focus:ring-pink-500
+            dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600
+          "
         />
 
         {/* Turnstile */}
         <div className="col-span-full">
           <Turnstile
             sitekey={process.env.NEXT_PUBLIC_API_SITE_KEY!}
+            theme={theme === "dark" ? "dark" : "light"}
             onVerify={(t) => setToken(t)}
             onExpire={() => setToken(null)}
             onError={() => setToken(null)}
@@ -99,20 +118,27 @@ export default function ContactClient() {
           <button
             type="submit"
             disabled={status === "loading" || !token}
-            className="inline-flex items-center justify-center rounded-full bg-pink-600 px-8 py-3 font-semibold text-white transition hover:bg-pink-700 disabled:opacity-50"
+            className="
+              inline-flex items-center justify-center rounded-full
+              bg-pink-600 px-8 py-3 font-semibold text-white
+              transition
+              hover:bg-pink-700
+              dark:hover:bg-pink-500
+              disabled:opacity-50
+            "
           >
             {status === "loading" ? "Sending…" : "Send message"}
           </button>
         </div>
 
         {status === "success" && (
-          <p className="col-span-full text-green-600">
+          <p className="col-span-full text-green-600 dark:text-green-400">
             Thanks! Your message has been sent.
           </p>
         )}
 
         {status === "error" && (
-          <p className="col-span-full text-red-600">
+          <p className="col-span-full text-red-600 dark:text-red-400">
             Something went wrong. Please try again later.
           </p>
         )}
