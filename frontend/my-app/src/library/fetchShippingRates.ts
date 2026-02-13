@@ -1,35 +1,14 @@
-// src/lib/shipping/fetchShippingRates.ts
-
-export type AddressInput = {
-  country: string; // ISO-2 e.g. "GB", "FR", "DE"
-  postcode?: string; // Optional for some countries
-};
-
-export type ParcelInput = {
-  weight: number; // kg
-  length?: number; // cm
-  width?: number; // cm
-  height?: number; // cm
-};
-
-export type ShippingRate = {
-  id: string;
-  carrier: "evri" | "royal_mail" | string;
-  service_code: string;
-  service_name: string;
-  price: number; // in GBP
-  currency: "GBP" | string;
-  estimated_days?: number;
-  tracking: boolean;
-};
-
-export type ShippingRatesResponse = {
-  rates: ShippingRate[];
-};
+import { clientEnv } from "@/env/client";
+import {
+  AddressInput,
+  ParcelInput,
+  ShippingRate,
+  ShippingRatesResponse,
+} from "@/types/shipping";
 
 export async function fetchShippingRates(
   address: AddressInput,
-  parcel: ParcelInput
+  parcel: ParcelInput,
 ): Promise<ShippingRate[]> {
   const params = new URLSearchParams({
     country: address.country,
@@ -41,7 +20,7 @@ export async function fetchShippingRates(
   });
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/api/shipping/estimate/?${params.toString()}`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/api/shipping/estimate/?${params.toString()}`,
     {
       method: "GET",
       credentials: "include",
@@ -49,7 +28,7 @@ export async function fetchShippingRates(
         "Content-Type": "application/json",
       },
       cache: "no-store",
-    }
+    },
   );
 
   if (!res.ok) {

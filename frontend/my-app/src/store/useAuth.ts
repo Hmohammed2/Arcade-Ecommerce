@@ -23,7 +23,7 @@ interface AuthState {
   login: (
     identifier: string,
     password: string,
-    turnstileToken: string
+    turnstileToken: string,
   ) => Promise<void>;
   logout: () => void;
   fetchUser: () => Promise<void>;
@@ -57,7 +57,7 @@ export const useAuth = create<AuthState>()(
                   password,
                   token: turnstileToken,
                 }),
-              }
+              },
             );
 
             const data = await res.json();
@@ -74,9 +74,15 @@ export const useAuth = create<AuthState>()(
             toast.success("Logged in successfully 🎉");
 
             await get().fetchUser();
-          } catch (err: any) {
+          } catch (err: unknown) {
             console.error("Login error:", err);
-            toast.error(err.message || "Invalid credentials");
+            const message =
+              err instanceof Error
+                ? err.message
+                : typeof err === "string"
+                  ? err
+                  : "Invalid credentials";
+            toast.error(message);
             set({ isAuthenticated: false });
             throw err;
           }
@@ -105,7 +111,7 @@ export const useAuth = create<AuthState>()(
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
                 },
-              }
+              },
             );
 
             if (!res.ok) {
@@ -154,8 +160,8 @@ export const useAuth = create<AuthState>()(
           user: state.user,
           isAuthenticated: state.isAuthenticated,
         }),
-      }
+      },
     ),
-    { name: "AuthStore" }
-  )
+    { name: "AuthStore" },
+  ),
 );

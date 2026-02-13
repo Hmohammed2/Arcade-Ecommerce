@@ -9,27 +9,30 @@ import { useCheckoutForm } from "@/store/useCheckoutForm";
 import { useCoupon } from "@/store/useCoupon";
 import { toast } from "react-hot-toast";
 import PaymentForm from "./PaymentForm";
+import { CartItem, LineItem } from "@/types/cart";
+import { CreatePaymentIntentPayload } from "@/types/stripe";
 
 type Props = {
   paymentMethod: "stripe" | "paypal";
   onChange: (method: "stripe" | "paypal") => void;
 };
 
-const buildLineItems = (cartItems: any[]) =>
-  cartItems.map((item) =>
-    item.type === "bundle"
-      ? {
-          type: "bundle",
-          bundle_id: item.id,
-          quantity: item.quantity,
-          option_values: item.option_values || {},
-        }
-      : {
-          type: "product",
-          product_id: item.id,
-          quantity: item.quantity,
-          colour: item.colour ?? null,
-        },
+const buildLineItems = (cartItems: CartItem[]): LineItem[] =>
+  cartItems.map(
+    (item): LineItem =>
+      item.type === "bundle"
+        ? {
+            type: "bundle",
+            bundle_id: item.id,
+            quantity: item.quantity,
+            option_values: item.option_values ?? {},
+          }
+        : {
+            type: "product",
+            product_id: item.id,
+            quantity: item.quantity,
+            colour: item.colour ?? null,
+          },
   );
 
 export default function PaymentSelection({ paymentMethod, onChange }: Props) {
@@ -61,7 +64,7 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
       try {
         setLoadingIntent(true);
 
-        const payload = {
+        const payload: CreatePaymentIntentPayload = {
           first_name: formData.billingFirstName,
           last_name: formData.billingLastName,
           items: buildLineItems(getCartItems()),
@@ -76,7 +79,7 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
           coupon_code: isValid ? couponCode : null,
         };
 
-        const res = await checkoutMutation.mutateAsync(payload);
+        const res = await checkoutMutation.mutateAsync(payload as any);
 
         if (!cancelled) {
           setClientSecret(res.clientSecret);

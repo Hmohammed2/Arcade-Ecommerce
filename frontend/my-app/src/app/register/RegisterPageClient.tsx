@@ -41,7 +41,7 @@ export default function RegisterPageClient() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
-        }
+        },
       );
 
       if (!res.ok) {
@@ -51,8 +51,14 @@ export default function RegisterPageClient() {
 
       toast.success("Registration successful! 🎉");
       router.push("/login");
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Registration failed. Please try again.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

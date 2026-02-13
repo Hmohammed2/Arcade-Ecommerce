@@ -1,11 +1,13 @@
+import { clientEnv } from "@/env/client";
+
 export async function refreshAccessToken(refreshToken: string) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/token/refresh/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/token/refresh/`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refresh: refreshToken }),
-    }
+    },
   );
 
   const data = await res.json();

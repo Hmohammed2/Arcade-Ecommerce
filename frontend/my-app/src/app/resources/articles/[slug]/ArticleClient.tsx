@@ -13,7 +13,7 @@ interface ArticleClientProps {
 }
 
 export default function ArticleClient({ article }: ArticleClientProps) {
-  const user = useAuth((s: any) => s.user);
+  const user = useAuth((s) => s.user);
 
   /* -----------------------------------
      Persist last viewed article

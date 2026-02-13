@@ -32,6 +32,7 @@ export type Product = {
   image?: string;
   images?: ProductImage[];
   variants?: ProductVariant[];
+  is_featured: boolean;
   created_at: string; // ISO datetime
   updated_at: string; // ISO datetime
 };

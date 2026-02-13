@@ -22,6 +22,7 @@ const Navbar = () => {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [query, setQuery] = useState("");
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -38,192 +39,193 @@ const Navbar = () => {
         setIsDropdownOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
+
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (query.trim()) console.log("Searching for:", query);
+    if (query.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(query)}`);
+      setQuery("");
+    }
   };
 
   return (
-    <header className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 shadow-sm w-full top-0 left-0 z-50 transition-colors duration-300">
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-        {/* Left: Logo */}
-        <Link href="/" className="flex items-center gap-2">
+    <header className="bg-pink-50 text-black border-b-2 top-0 z-50">
+      <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-3">
           <Image
-            width={140}
-            height={40}
             src="/Logo.webp"
-            alt="ArcadeStickLabs Logo"
+            alt="ArcadeStickLabs"
+            width={150}
+            height={40}
+            priority
           />
         </Link>
 
-        {/* Desktop Center: Shop + Search */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Desktop Nav */}
+        <div className="hidden md:flex items-center gap-6">
           <Link
             href="/shop"
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
           >
             Shop
           </Link>
+
           <Link
             href="/resources"
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
           >
             Resources
           </Link>
+
           <Link
             href="/faqs"
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
           >
-            FAQS
+            FAQs
           </Link>
 
           <Link
             href="/contact"
-            className="px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
           >
-            Contact Us
+            Contact
           </Link>
 
+          {/* Search */}
           <form
             onSubmit={handleSearch}
             className="flex items-center border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 w-72 relative transition-colors"
           >
             <input
-              type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products..."
-              className="flex-grow outline-none text-sm text-gray-700 dark:text-gray-200 bg-transparent"
+              className="flex-grow outline-none text-sm bg-transparent"
             />
-            <button type="submit" aria-label="Search">
-              <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+
+            <button type="submit">
+              <Search className="w-5 h-5" />
             </button>
 
-            {/* 🔍 Live Search */}
+            {/* Live Search */}
             {query && (
-              <div className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg mt-1 z-50 max-h-80 overflow-y-auto">
+              <div className="absolute top-full left-0 w-full bg-white shadow-lg mt-1 max-h-80 overflow-y-auto z-50">
                 {isLoading ? (
-                  <p className="p-3 text-sm text-gray-500 dark:text-gray-400">
-                    Searching...
-                  </p>
+                  <p className="p-3 text-sm">Searching...</p>
                 ) : results.length > 0 ? (
-                  results.map((p: any) => (
+                  results.map((p) => (
                     <Link
                       key={p.id}
                       href={`/products/${p.slug}`}
                       onClick={() => setQuery("")}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition text-sm text-gray-700 dark:text-gray-200"
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-pink-50"
                     >
-                      {p.image ? (
-                        (console.log(getImageUrl(p.image)),
-                        (
-                          <div className="flex-shrink-0 w-10 h-10 rounded-md overflow-hidden border border-gray-100 dark:border-gray-700">
-                            <Image
-                              src={getImageUrl(p.image)}
-                              alt={p.name}
-                              width={20}
-                              height={20}
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
-                        ))
-                      ) : (
-                        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-md" />
+                      {p.image && (
+                        <Image
+                          src={getImageUrl(p.image)}
+                          alt={p.name}
+                          width={40}
+                          height={40}
+                          className="border"
+                        />
                       )}
-                      <div className="flex flex-col">
-                        <span className="font-medium text-gray-800 dark:text-gray-100 truncate">
-                          {p.name}
-                        </span>
-                        {p.price && (
-                          <span className="text-xs text-gray-500 dark:text-gray-400">
-                            £{Number(p.price).toFixed(2)}
-                          </span>
-                        )}
+
+                      <div>
+                        <div className="">{p.name}</div>
+                        <div className="text-sm text-pink-600">
+                          £{Number(p.price).toFixed(2)}
+                        </div>
                       </div>
                     </Link>
                   ))
                 ) : (
-                  <p className="p-3 text-sm text-gray-500 dark:text-gray-400">
-                    No results found
-                  </p>
+                  <p className="p-3 text-sm">No results</p>
                 )}
               </div>
             )}
           </form>
         </div>
 
-        {/* Desktop Right: Cart + Auth */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link href="/cart" className="relative">
-            <ShoppingCart className="w-6 h-6 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition" />
+        {/* Desktop Right */}
+        <div className="hidden md:flex items-center gap-4">
+          {/* Cart */}
+          <Link
+            href="/cart"
+            className="relative flex items-center gap-2 bg-pink-600 text-white px-4 py-2 border-2 font-semibold hover:bg-pink-700"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            Cart
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-pink-600 text-white text-xs rounded-full px-1.5">
+              <span className="absolute -top-2 -right-2 bg-black text-white text-xs px-1.5 border">
                 {totalItems}
               </span>
             )}
           </Link>
 
+          {/* Auth */}
           {!isAuthenticated ? (
-            <div className="flex items-center gap-3">
+            <>
               <Link
                 href="/login"
-                className="px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 text-sm text-gray-800 dark:text-gray-100 hover:text-pink-800 dark:hover:text-pink-400 transition"
+                className="px-4 py-2 border-2 font-semibold hover:bg-gray-100"
               >
                 Login
               </Link>
+
               <Link
                 href="/register"
-                className="px-4 py-2 rounded-md border text-sm text-white bg-pink-600 hover:bg-pink-700 dark:hover:bg-pink-500 transition"
+                className="px-4 py-2 bg-black text-white border-2 font-semibold hover:bg-pink-600"
               >
                 Register
               </Link>
-            </div>
+            </>
           ) : (
             <div ref={dropdownRef} className="relative">
               <button
-                onClick={() => setIsDropdownOpen((p) => !p)}
-                className="flex items-center gap-2 px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-2 font-semibold"
               >
-                <div className="w-8 h-8 flex items-center justify-center rounded-full bg-pink-600 text-white text-sm font-semibold">
-                  {user?.first_name?.[0]?.toUpperCase() || "U"}
+                <div className="w-8 h-8 bg-pink-600 text-white flex items-center justify-center font-bold">
+                  {user?.first_name?.[0] ?? "U"}
                 </div>
-                <span className="text-sm text-gray-700 dark:text-gray-200 hidden sm:block">
-                  Hello, <span className="font-medium">{user?.first_name}</span>{" "}
-                  👋
-                </span>
+
+                {user?.first_name}
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg z-50">
+                <div className="absolute right-0 mt-2 bg-white border-2 w-48">
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50"
                     onClick={() => setIsDropdownOpen(false)}
                   >
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
+                    <LayoutDashboard size={16} />
+                    Dashboard
                   </Link>
-                  <Link
-                    href="/login"
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                    onClick={(e) => {
-                      e.preventDefault();
+
+                  <button
+                    onClick={() => {
                       logout();
-                      router.replace("/login");
+                      router.push("/login");
                     }}
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50 w-full text-left"
                   >
-                    <LogOutIcon className="w-4 h-4" /> Logout
-                  </Link>
+                    <LogOutIcon size={16} />
+                    Logout
+                  </button>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Mobile Right: Cart + Search + Menu */}
+        {/* Mobile Buttons */}
         <div className="md:hidden flex items-center gap-3 relative">
           {!isMobileSearchOpen && (
             <Link

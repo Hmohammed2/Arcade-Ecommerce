@@ -15,11 +15,11 @@ export default function AuthProvider({
       () => {
         refreshAccessToken();
       },
-      1000 * 60 * 10
-    ); // every 10 minutes
+      1000 * 60 * 10,
+    );
 
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshAccessToken]);
 
   return <>{children}</>;
 }

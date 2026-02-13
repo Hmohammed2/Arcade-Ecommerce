@@ -1,5 +1,7 @@
+import { clientEnv } from "@/env/client";
+
 // lib/createPaymentIntent.ts or lib/checkout.ts
-const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT;
+const baseUrl = clientEnv.NEXT_PUBLIC_API_URL_CLIENT;
 
 /**
  * Checkout request to Django backend.
@@ -18,7 +20,7 @@ export async function checkout(
     coupon_code?: string;
   },
   isAuthenticated: boolean,
-  accessToken?: string | null
+  accessToken?: string | null,
 ) {
   const res = await fetch(`${baseUrl}/api/checkout/`, {
     method: "POST",

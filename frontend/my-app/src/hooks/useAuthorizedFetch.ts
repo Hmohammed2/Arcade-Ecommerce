@@ -7,7 +7,7 @@ export function useAuthorizedFetch() {
   const { accessToken, refreshToken, logout, setAccessToken } = useAuth();
 
   const authorizedFetch = async (url: string, options: RequestInit = {}) => {
-    let token = accessToken;
+    const token = accessToken;
 
     const makeRequest = async (token: string | null) => {
       const headers = {

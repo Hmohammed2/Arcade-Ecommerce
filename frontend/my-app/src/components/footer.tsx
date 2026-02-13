@@ -49,7 +49,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="border-t shadow-md mx-auto px-6 py-10 bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <footer className="bg-gray-100 border-t-2 border-black shadow-md mx-auto px-6 py-10 text-pink-600 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -65,7 +65,7 @@ const Footer = () => {
               height={128}
               className="w-32 mb-4 rounded-lg"
             />
-            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">
               Custom arcade sticks built with passion and precision. Designed to
               enhance your gameplay.
             </p>
@@ -74,7 +74,7 @@ const Footer = () => {
           {/* 🧭 Explore Links */}
           <div>
             <h4 className="text-xl font-semibold mb-4">Explore</h4>
-            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
+            <ul className="space-y-2 text-gray-500 dark:text-gray-300">
               <li>
                 <Link
                   href="/shop"
@@ -137,7 +137,7 @@ const Footer = () => {
           {/* ✉️ Newsletter & Social */}
           <div>
             <h4 className="text-xl font-semibold mb-4">Stay Connected</h4>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Subscribe to our newsletter for updates and product launches.
             </p>
 
@@ -147,7 +147,7 @@ const Footer = () => {
                 placeholder="Your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-l-full text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-pink-600 border border-gray-300 dark:border-gray-600"
+                className="w-full px-4 py-2 rounded-l-full text-black dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-pink-600 border border-gray-300 dark:border-gray-600"
                 required
               />
               <button
@@ -214,7 +214,7 @@ const Footer = () => {
                   alt={icon.replace(/[-_.]/g, " ")}
                   width={44}
                   height={28}
-                  className="object-contain"
+                  className="object-contain w-15"
                 />
               ))}
             </div>

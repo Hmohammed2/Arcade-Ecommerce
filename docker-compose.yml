@@ -97,9 +97,9 @@ services:
     command:
       ["listen", "--forward-to", "http://django:8000/api/payments/webhook/"]
     volumes:
-      - stripe-cli-config:/root/.config/stripe
+      - stripe-cli-config-2:/root/.config/stripe
     depends_on:
       - django
 volumes:
   postgres_data:
-  stripe-cli-config:
+  stripe-cli-config-2:

@@ -1,5 +1,7 @@
 // library/fetchArticles.ts
 
+import { clientEnv } from "@/env/client";
+
 export interface Article {
   id: number;
   title: string;
@@ -16,11 +18,9 @@ export interface Article {
   updated_at: string;
 }
 
-const baseUrlServer = process.env.NEXT_PUBLIC_API_URL_SERVER;
-const baseUrlClient = process.env.NEXT_PUBLIC_API_URL_CLIENT;
-
+const baseUrlServer = clientEnv.NEXT_PUBLIC_API_URL_SERVER;
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL_CLIENT ?? "http://localhost:8000/";
+  clientEnv.NEXT_PUBLIC_API_URL_CLIENT ?? "http://localhost:8000/";
 
 /* -----------------------------
    PUBLIC (READ)
@@ -74,7 +74,7 @@ export async function createArticle(
     content: string;
   },
   accessToken: string,
-  thumbnail?: File | null
+  thumbnail?: File | null,
 ): Promise<Article> {
   const body = new FormData();
 
@@ -109,7 +109,7 @@ export async function updateArticle(
     content: string;
     thumbnail?: File | null;
   }>,
-  accessToken: string
+  accessToken: string,
 ): Promise<Article> {
   const hasFile = data.thumbnail instanceof File;
 

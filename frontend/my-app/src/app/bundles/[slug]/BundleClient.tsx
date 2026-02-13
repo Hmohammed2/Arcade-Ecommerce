@@ -6,6 +6,7 @@ import { useCart } from "@/store/useCart";
 import { useBundleBySlug } from "@/hooks/useBundleBySlug";
 import { getImageUrl } from "@/library/getImageUrl";
 import Breadcrumbs from "@/components/BreadCrumb";
+import { BundleOptionMetaValue } from "@/types/bundle";
 
 export default function BundlePageClient({ slug }: { slug: string }) {
   const { data: bundle, isLoading, isError } = useBundleBySlug(slug);
@@ -25,26 +26,23 @@ export default function BundlePageClient({ slug }: { slug: string }) {
 
   // ---- How many units per kit for this option ----
   const getUnitsPerKit = (optionId: number) => {
-    const opt = bundle.options?.find((o: any) => o.id === optionId);
+    const opt = bundle.options?.find((o) => o.id === optionId);
     if (!opt || !bundle.items) return 0;
 
     // Case 1: option values reference a variant → find its product
-    const variantValue = opt.values.find((v: any) => v.variant_id);
+    const variantValue = opt.values.find((v) => v.variant_id);
 
     if (variantValue?.variant_id) {
       // We assume: all variants in this option belong to SAME product
-      const variantProduct = bundle.items.find((item: any) =>
-        item.product.name.toLowerCase().includes("obsf")
+      const variantProduct = bundle.items.find((item) =>
+        item.product.name.toLowerCase().includes("obsf"),
       );
 
       return variantProduct?.quantity ?? 0;
     }
 
-    // Case 2: no variant_id → infer by option name
-    const keyword = opt.name.toLowerCase();
-
-    const match = bundle.items.find((item: any) =>
-      item.product.name.toLowerCase().includes("ball")
+    const match = bundle.items.find((item) =>
+      item.product.name.toLowerCase().includes("ball"),
     );
 
     return match?.quantity ?? 0;
@@ -90,7 +88,7 @@ export default function BundlePageClient({ slug }: { slug: string }) {
   };
 
   // ---- Validation: must exactly match kit requirement ----
-  const allValid = bundle.options?.every((opt: any) => {
+  const allValid = bundle.options?.every((opt) => {
     const total = getSelectedTotalForOption(opt.id);
     const max = getMaxForOption(opt.id);
     return total === max;
@@ -105,16 +103,19 @@ export default function BundlePageClient({ slug }: { slug: string }) {
       image: bundle.image ?? undefined,
       quantity,
       option_values: optionQuantities,
-      option_meta: bundle.options?.map((opt: any) => ({
+      option_meta: bundle.options?.map((opt) => ({
         option_id: opt.id,
-        product_name: opt.product?.name ?? opt.name,
-        values: opt.values.reduce((acc: any, v: any) => {
-          acc[v.id] = {
-            label: v.label,
-            hex: v.colour_hex,
-          };
-          return acc;
-        }, {}),
+        product_name: opt.name,
+        values: opt.values.reduce<Record<number, BundleOptionMetaValue>>(
+          (acc, v) => {
+            acc[v.id] = {
+              label: v.label,
+              hex: v.colour_hex,
+            };
+            return acc;
+          },
+          {},
+        ),
       })),
     });
   };
@@ -195,7 +196,7 @@ export default function BundlePageClient({ slug }: { slug: string }) {
                   </span>
                 </p>
 
-                {opt.values.map((v: any) => {
+                {opt.values.map((v) => {
                   const qty = optionQuantities[opt.id]?.[v.id] || 0;
 
                   return (
@@ -231,7 +232,7 @@ export default function BundlePageClient({ slug }: { slug: string }) {
       <div className="md:hidden border-t pt-4 space-y-4">
         <h3 className="text-sm font-semibold">Customise your colours</h3>
 
-        {bundle.options?.map((opt: any) => {
+        {bundle.options?.map((opt) => {
           const selected = getSelectedTotalForOption(opt.id);
           const max = getMaxForOption(opt.id);
           const remaining = max - selected;
@@ -253,7 +254,7 @@ export default function BundlePageClient({ slug }: { slug: string }) {
                 </span>
               </p>
 
-              {opt.values.map((v: any) => {
+              {opt.values.map((v) => {
                 const currentQty = optionQuantities[opt.id]?.[v.id] || 0;
 
                 return (
@@ -349,7 +350,13 @@ export default function BundlePageClient({ slug }: { slug: string }) {
   );
 }
 
-function QuantitySelect({ maxQty, value, onChange }: any) {
+interface QuantitySelectProps {
+  maxQty: number;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+function QuantitySelect({ maxQty, value, onChange }: QuantitySelectProps) {
   return (
     <div>
       <label className="block text-sm font-medium mb-1">Quantity</label>
@@ -368,7 +375,12 @@ function QuantitySelect({ maxQty, value, onChange }: any) {
   );
 }
 
-function AddToCartButton({ disabled, onClick }: any) {
+interface AddToCartButtonProps {
+  disabled: boolean;
+  onClick: () => void;
+}
+
+function AddToCartButton({ disabled, onClick }: AddToCartButtonProps) {
   return (
     <button
       onClick={onClick}

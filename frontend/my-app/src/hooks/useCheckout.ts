@@ -5,7 +5,7 @@ import { useAuth } from "@/store/useAuth";
 export function useCheckout() {
   const { isAuthenticated, accessToken } = useAuth();
   return useMutation({
-    mutationFn: (payload: any) =>
+    mutationFn: (payload: Parameters<typeof checkout>[0]) =>
       checkout(payload, isAuthenticated, accessToken),
   });
 }

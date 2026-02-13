@@ -21,6 +21,7 @@ export default function ShippingForm() {
     formData.billingCity,
     formData.billingPostcode,
     formData.billingCountry,
+    updateField,
   ]);
 
   return (

@@ -1,13 +1,15 @@
+import { clientEnv } from "@/env/client";
+
 // lib/api/account.ts
 export const getAccountInfo = async (accessToken: string) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
       cache: "no-store",
-    }
+    },
   );
 
   if (!res.ok) throw new Error("Failed to fetch user account info");
@@ -26,7 +28,7 @@ export const updateAccountInfo = async ({
   };
 }) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       method: "PUT",
       headers: {
@@ -34,7 +36,7 @@ export const updateAccountInfo = async ({
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(payload),
-    }
+    },
   );
 
   if (!res.ok) throw new Error("Failed to update account info");
@@ -51,7 +53,7 @@ export const changePassword = async ({
   new_password: string;
 }) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/password-change/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/password-change/`,
     {
       method: "POST",
       headers: {
@@ -59,7 +61,7 @@ export const changePassword = async ({
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({ old_password, new_password }),
-    }
+    },
   );
 
   if (!res.ok) throw new Error("Failed to change password");
@@ -71,13 +73,13 @@ export const changePassword = async ({
 
 export const deleteAccount = async (accessToken: string) => {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/user/`,
     {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
-    }
+    },
   );
 
   if (res.status === 204) return true; // success (no content)

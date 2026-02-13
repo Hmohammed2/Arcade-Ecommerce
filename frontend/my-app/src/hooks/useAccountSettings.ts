@@ -16,6 +16,14 @@ export const useAccountSettings = () => {
   const { accessToken, fetchUser } = useAuth();
   const queryClient = useQueryClient();
 
+  // helper to safely extract message from unknown error
+  const getErrorMessage = (err: unknown, fallback = "An error occurred") =>
+    err instanceof Error
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : JSON.stringify(err) || fallback;
+
   // ✅ Fetch user info
   const { data: user, isLoading } = useQuery({
     queryKey: ["account-info"],
@@ -35,8 +43,8 @@ export const useAccountSettings = () => {
       await fetchUser(); // sync Zustand
       queryClient.invalidateQueries({ queryKey: ["account-info"] });
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to update account info");
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to update account info"));
     },
   });
 
@@ -47,8 +55,8 @@ export const useAccountSettings = () => {
     onSuccess: () => {
       toast.success("Password updated successfully 🔒");
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to change password");
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to change password"));
     },
   });
 
@@ -60,8 +68,8 @@ export const useAccountSettings = () => {
       queryClient.clear();
       router.push("/register"); // redirect user
     },
-    onError: (err: any) => {
-      toast.error(err.message || "Failed to delete account");
+    onError: (err: unknown) => {
+      toast.error(getErrorMessage(err, "Failed to delete account"));
     },
   });
 

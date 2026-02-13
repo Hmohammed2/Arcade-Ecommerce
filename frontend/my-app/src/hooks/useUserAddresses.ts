@@ -30,7 +30,7 @@ export function useUserAddresses() {
     queryKey: ["user-addresses"],
     queryFn: async () => {
       const res = await authorizedFetch(
-        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`
+        `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
       );
       if (!res.ok) throw new Error("Failed to fetch addresses");
       return res.json();
@@ -47,7 +47,7 @@ export function useUserAddresses() {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        }
+        },
       );
       if (!res.ok) throw new Error("Failed to update addresses");
       return res.json();
@@ -57,10 +57,13 @@ export function useUserAddresses() {
     onMutate: async (newData) => {
       await queryClient.cancelQueries({ queryKey: ["user-addresses"] });
       const previousData = queryClient.getQueryData(["user-addresses"]);
-      queryClient.setQueryData(["user-addresses"], (old: any) => ({
-        ...old,
-        ...newData,
-      }));
+      queryClient.setQueryData(
+        ["user-addresses"],
+        (old: UpdateAddressPayload) => ({
+          ...old,
+          ...newData,
+        }),
+      );
       return { previousData };
     },
 

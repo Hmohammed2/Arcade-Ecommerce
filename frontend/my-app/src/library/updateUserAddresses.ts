@@ -1,3 +1,5 @@
+import { clientEnv } from "@/env/client";
+
 // lib/updateUserAddresses.ts
 export interface UpdateAddressPayload {
   billing_first_name: string;
@@ -17,10 +19,10 @@ export interface UpdateAddressPayload {
 
 export async function updateUserAddresses(
   accessToken: string,
-  payload: UpdateAddressPayload
+  payload: UpdateAddressPayload,
 ) {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
+    `${clientEnv.NEXT_PUBLIC_API_URL_CLIENT}/users/addresses/`,
     {
       method: "PUT",
       headers: {
@@ -28,7 +30,7 @@ export async function updateUserAddresses(
         Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify(payload),
-    }
+    },
   );
 
   if (!res.ok) {

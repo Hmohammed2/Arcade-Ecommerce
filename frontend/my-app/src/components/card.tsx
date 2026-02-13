@@ -6,11 +6,9 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { toast } from "react-hot-toast";
 import type { Product } from "@/types/product";
 
-interface CardProps extends Product {}
-
 const baseUrl = process.env.NEXT_PUBLIC_API_URL_CLIENT;
 
-const Card: React.FC<CardProps> = ({ id, name, description, price, image }) => {
+const Card: React.FC<Product> = ({ id, name, description, price, image }) => {
   const [quantity, setQuantity] = useState(1);
   const [email, setEmail] = useState("");
 

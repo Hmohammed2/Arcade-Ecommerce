@@ -1,4 +1,6 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL_SERVER || "";
+import { clientEnv } from "@/env/client";
+
+const baseUrl = clientEnv.NEXT_PUBLIC_API_URL_SERVER || "";
 
 export function getImageUrl(path?: string | null): string {
   if (!path) {

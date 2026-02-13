@@ -62,7 +62,7 @@ export default function CartPage() {
                     {!isBundle && item.colour && (
                       <span
                         className={`${getColourTextClass(
-                          item.colour
+                          item.colour,
                         )} text-sm ml-1`}
                       >
                         ({item.colour})
@@ -96,7 +96,7 @@ export default function CartPage() {
                                   {qty} × {meta.label} {opt.product_name}
                                 </li>
                               );
-                            }
+                            },
                           );
                         })}
                       </ul>
@@ -120,7 +120,7 @@ export default function CartPage() {
                       updateQuantity(
                         item.id,
                         item.colour || "",
-                        Number(e.target.value) || 1
+                        Number(e.target.value) || 1,
                       )
                     }
                     className="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-center text-sm bg-white dark:bg-gray-800"
@@ -148,7 +148,7 @@ export default function CartPage() {
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button
             onClick={clearCart}
-            className="px-4 py-2 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium w-full sm:w-auto border border-gray-200 dark:border-gray-700 transition"
+            className="cursor-pointer px-4 py-2 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium w-full sm:w-auto border border-gray-200 dark:border-gray-700 transition"
           >
             Clear Cart
           </button>
@@ -170,7 +170,7 @@ export default function CartPage() {
 
               window.location.href = "/checkout";
             }}
-            className="px-6 py-2 rounded bg-pink-600 text-white hover:bg-pink-700 dark:hover:bg-pink-500 text-sm font-medium text-center w-full sm:w-auto transition"
+            className="cursor-pointer px-6 py-2 rounded bg-pink-600 text-white hover:bg-pink-700 dark:hover:bg-pink-500 text-sm font-medium text-center w-full sm:w-auto transition"
           >
             Checkout
           </button>

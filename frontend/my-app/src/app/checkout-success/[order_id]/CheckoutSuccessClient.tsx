@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useAuth } from "@/store/useAuth";
 import { getColourTextClass } from "@/app/utils/colour-text";
 import { gaEvent } from "@/library/ga";
+import { Order } from "@/types/order";
 
 interface Props {
   orderId: string;
 }
 
 export default function CheckoutSuccessClient({ orderId }: Props) {
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +30,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
     }
 
     const subtotal = order.items.reduce(
-      (sum: number, item: any) =>
-        sum + Number(item.price) * Number(item.quantity),
+      (sum: number, item) => sum + Number(item.price) * Number(item.quantity),
       0,
     );
 
@@ -49,7 +49,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
     const fetchOrder = async () => {
       try {
         let endpoint = "";
-        let headers: HeadersInit = { "Content-Type": "application/json" };
+        const headers: HeadersInit = { "Content-Type": "application/json" };
 
         if (isAuthenticated && accessToken) {
           const email = user?.email || "";
@@ -73,15 +73,16 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
         setOrder(data);
 
         if (!isAuthenticated) localStorage.removeItem("guest_email");
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [orderId, isAuthenticated, accessToken]);
+  }, [orderId, isAuthenticated, accessToken, user?.email]);
 
   /* 2️⃣ Fire GA purchase event */
   useEffect(() => {
@@ -93,8 +94,8 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
       value: totalPaid,
       shipping: deliveryFee,
       coupon: discountAmount > 0 ? "PROMO" : undefined,
-      items: order.items.map((item: any) => ({
-        item_id: item.product?.public_id ?? item.product?.id,
+      items: order.items.map((item) => ({
+        item_id: item.product?.id,
         item_name: item.product?.name,
         item_variant: item.colour || "default",
         price: Number(item.price),
@@ -171,10 +172,10 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
           Order Summary
         </h2>
         <p>
-          <span className="font-medium">Order ID:</span> #{order.id}
+          <span className="font-medium">Order ID:</span> #{order?.id}
         </p>
         <p>
-          <span className="font-medium">Status:</span> {order.status}
+          <span className="font-medium">Status:</span> {order?.status}
         </p>
 
         {/* 💰 Breakdown showing discount */}
@@ -204,7 +205,7 @@ export default function CheckoutSuccessClient({ orderId }: Props) {
             Items:
           </h3>
           <ul className="space-y-2">
-            {order.items?.map((item: any) => (
+            {order?.items?.map((item) => (
               <li
                 key={item.id}
                 className="flex justify-between pb-2 border-b border-gray-200 dark:border-gray-700"

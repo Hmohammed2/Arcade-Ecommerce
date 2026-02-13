@@ -38,7 +38,7 @@ export default function BillingForm({
         updateField(localKey as keyof typeof formData, value);
       }
     });
-  }, [useAccountBilling, addresses]);
+  }, [useAccountBilling, addresses, updateField]);
 
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-md rounded-xl p-6 text-gray-800 dark:text-gray-100 transition-colors duration-300">

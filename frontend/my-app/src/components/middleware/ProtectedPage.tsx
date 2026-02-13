@@ -10,13 +10,13 @@ export default function ProtectedPage(children: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchUser(); // ensures user is loaded
-  }, []);
+  }, [fetchUser]);
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   if (!isAuthenticated) return null;
 

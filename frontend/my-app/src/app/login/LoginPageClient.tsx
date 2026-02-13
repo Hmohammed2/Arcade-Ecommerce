@@ -29,8 +29,14 @@ export default function LoginPageClient() {
     try {
       await login(formData.identifier, formData.password, token ?? "");
       router.push("/dashboard");
-    } catch (err: any) {
-      toast.error(err.message || "Login failed");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Login failed. Please check your credentials and try again.";
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +54,7 @@ export default function LoginPageClient() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ access_token: tokenResponse.access_token }),
-          }
+          },
         );
 
         const data = await res.json();
@@ -61,8 +67,14 @@ export default function LoginPageClient() {
 
         await useAuth.getState().fetchUser();
         router.push("/dashboard");
-      } catch (err: any) {
-        toast.error(err.message || "Google login failed");
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : typeof err === "string"
+              ? err
+              : "Google login failed. Please try again.";
+        toast.error(message);
       } finally {
         setIsOAuthLoading(null);
       }

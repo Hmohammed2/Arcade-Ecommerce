@@ -6,7 +6,7 @@ import { useCart } from "@/store/useCart";
 import { useProductBySlug } from "@/hooks/useProductsBySlug";
 import { getImageUrl } from "@/library/getImageUrl";
 import { ZoomModal } from "@/components/ZoomModal";
-import { ProductVariant } from "@/types/product";
+import { FeatureItem, ProductVariant } from "@/types/product";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Thumbs, FreeMode } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper";
@@ -21,9 +21,12 @@ export default function ProductPageClient({ slug }: Props) {
   const [mainSwiper, setMainSwiper] = useState<SwiperType | null>(null);
 
   // 🧩 Variants
-  const variants: ProductVariant[] = product?.variants ?? [];
+  const variants = useMemo<ProductVariant[]>(
+    () => product?.variants ?? [],
+    [product?.variants],
+  );
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -38,10 +41,10 @@ export default function ProductPageClient({ slug }: Props) {
     const raw = product?.features ?? [];
     if (!Array.isArray(raw)) return [];
     return raw
-      .map((f: any) =>
+      .map((f: FeatureItem) =>
         typeof f === "string"
           ? { label: f }
-          : { label: f?.label, value: f?.value }
+          : { label: f?.label, value: f?.value },
       )
       .filter((f) => !!f.label);
   }, [product]);
@@ -51,7 +54,7 @@ export default function ProductPageClient({ slug }: Props) {
     if (!product) return [];
     const primary = product.image ? [product.image] : [];
     const gallery =
-      product.images?.map((img: any) => img.image).filter(Boolean) || [];
+      product.images?.map((img) => img.image).filter(Boolean) || [];
     return [...primary, ...gallery];
   }, [product]);
 
@@ -71,7 +74,7 @@ export default function ProductPageClient({ slug }: Props) {
     if (selectedVariant && product.images?.length) {
       const selectedColour = selectedVariant.colour?.toLowerCase().trim();
 
-      const match = product.images.find((img: any) => {
+      const match = product.images.find((img) => {
         if (!img.colour) return false;
         return img.colour.toLowerCase().trim() === selectedColour;
       });
@@ -84,7 +87,7 @@ export default function ProductPageClient({ slug }: Props) {
 
     // If current selectedImage is still valid, keep it
     setSelectedImage((prev) =>
-      prev && allImages.includes(prev) ? prev : allImages[0]
+      prev && allImages.includes(prev) ? prev : allImages[0],
     );
   }, [product, images, selectedVariant]);
 
@@ -303,6 +306,7 @@ export default function ProductPageClient({ slug }: Props) {
           onChange={setQuantity}
         />
         <AddToCartButton
+          id="add-to-cart-button-mobile"
           disabled={
             (selectedVariant && selectedVariant.stock === 0) ||
             (!selectedVariant && (product.stock ?? 0) === 0)
@@ -322,6 +326,7 @@ export default function ProductPageClient({ slug }: Props) {
             onChange={setQuantity}
           />
           <AddToCartButton
+            id="add-to-cart-button"
             disabled={
               (selectedVariant && selectedVariant.stock === 0) ||
               (!selectedVariant && (product.stock ?? 0) === 0)
@@ -431,7 +436,7 @@ function QuantitySelect({
             <option key={num} value={num}>
               {num}
             </option>
-          )
+          ),
         )}
       </select>
     </div>
@@ -439,15 +444,18 @@ function QuantitySelect({
 }
 
 function AddToCartButton({
+  id,
   disabled,
   onClick,
 }: {
+  id: string;
   disabled: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
+      id={id}
       disabled={disabled}
       className={`w-full py-3 px-4 rounded-lg font-semibold transition ${
         !disabled

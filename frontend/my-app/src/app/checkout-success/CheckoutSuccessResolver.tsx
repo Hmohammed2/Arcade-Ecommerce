@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "react-hot-toast";
 
 export default function CheckoutSuccessResolver() {
   const router = useRouter();
@@ -39,7 +38,7 @@ export default function CheckoutSuccessResolver() {
 
         // ✅ Redirect to final success page
         router.replace(`/checkout-success/${data.order_public_id}`);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
         setError(
           err.message || "Payment completed but order could not be loaded",

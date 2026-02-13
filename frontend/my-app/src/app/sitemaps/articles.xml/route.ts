@@ -4,7 +4,7 @@ export async function GET() {
   const articles = await fetchArticles();
 
   const urls = articles
-    .map((a: any) => {
+    .map((a) => {
       const rawDate = a.updated_at || a.created_at;
       const lastmod =
         rawDate && !isNaN(Date.parse(rawDate))
@@ -28,6 +28,6 @@ export async function GET() {
   </urlset>`,
     {
       headers: { "Content-Type": "application/xml" },
-    }
+    },
   );
 }

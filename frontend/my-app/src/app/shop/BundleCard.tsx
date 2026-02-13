@@ -1,13 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getImageUrl } from "@/library/getImageUrl";
-import { useCart } from "@/store/useCart";
 import { Bundle } from "@/types/bundle";
 
 export default function BundleCard({ bundle }: { bundle: Bundle }) {
-  const { addItem, updateQuantity, getItemCount } = useCart();
-
-  const qty = getItemCount(bundle.id, "bundle");
   const outOfStock = !bundle.is_in_stock;
 
   return (

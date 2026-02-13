@@ -39,7 +39,7 @@ export default function BillingClient() {
         updateField(localKey as keyof typeof formData, addresses[backendKey]);
       }
     });
-  }, [addresses]);
+  }, [addresses, updateField]);
 
   const handleSave = async () => {
     try {
@@ -61,9 +61,15 @@ export default function BillingClient() {
 
       await updateAddresses(payload);
       toast.success("Billing & Shipping information updated ✅");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || "Failed to save information");
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Failed to save billing and shipping information";
+      toast.error(message);
     }
   };
 
