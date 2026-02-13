@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 const baseUrl = clientEnv.NEXT_PUBLIC_API_URL_SERVER || "";
 

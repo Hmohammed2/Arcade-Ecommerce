@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 // lib/api/account.ts
 export const getAccountInfo = async (accessToken: string) => {

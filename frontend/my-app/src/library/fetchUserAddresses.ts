@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 // lib/fetchUserAddresses.ts
 export async function fetchUserAddresses(accessToken: string) {

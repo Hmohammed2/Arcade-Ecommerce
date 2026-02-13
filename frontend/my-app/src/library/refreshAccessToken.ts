@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 export async function refreshAccessToken(refreshToken: string) {
   const res = await fetch(

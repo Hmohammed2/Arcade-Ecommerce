@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 // lib/createPaymentIntent.ts or lib/checkout.ts
 const baseUrl = clientEnv.NEXT_PUBLIC_API_URL_CLIENT;

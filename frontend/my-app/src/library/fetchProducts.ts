@@ -1,4 +1,4 @@
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 import {
   fetchWithTimeout,
   ExtendedFetchOptions,

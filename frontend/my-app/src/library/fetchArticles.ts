@@ -1,6 +1,6 @@
 // library/fetchArticles.ts
 
-import { clientEnv } from "@/env/client";
+import { clientEnv } from "@/env-zod-schema/client";
 
 export interface Article {
   id: number;
