@@ -20,36 +20,55 @@ export default async function FAQPage() {
   const faqs = await getFAQs();
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-12">
-      {/* FAQ Schema */}
-      <Script
-        id="faq-schema"
-        type="application/ld+json"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: faqs.map((faq) => ({
-              "@type": "Question",
-              name: faq.question,
-              acceptedAnswer: {
-                "@type": "Answer",
-                text: faq.answer,
-              },
-            })),
-          }),
-        }}
-      />
+    <section
+      className="
+        py-20
+        bg-white dark:bg-gray-900
+        text-black dark:text-white
+        transition-colors
+      "
+    >
+      <main className="max-w-7xl mx-auto px-6">
+        {/* FAQ Schema */}
+        <Script
+          id="faq-schema"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "FAQPage",
+              mainEntity: faqs.map((faq) => ({
+                "@type": "Question",
+                name: faq.question,
+                acceptedAnswer: {
+                  "@type": "Answer",
+                  text: faq.answer,
+                },
+              })),
+            }),
+          }}
+        />
 
-      <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "FAQs" }]} />
+        {/* Breadcrumbs */}
+        <Breadcrumbs
+          items={[{ label: "Home", href: "/" }, { label: "FAQs" }]}
+        />
 
-      <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-gray-100">
-        Frequently Asked Questions
-      </h1>
+        {/* Heading */}
+        <h1
+          className="
+            text-3xl font-bold mb-8
+            text-black dark:text-white
+          "
+        >
+          Frequently Asked Questions
+        </h1>
 
-      <FAQClient faqs={faqs} />
-    </main>
+        {/* FAQ accordion */}
+        <FAQClient faqs={faqs} />
+      </main>
+    </section>
   );
 }
 

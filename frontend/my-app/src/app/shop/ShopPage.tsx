@@ -26,10 +26,10 @@ export default function ShopPage() {
     () => [
       "all",
       ...Array.from(new Set(products.map((p) => p.category?.name))).filter(
-        Boolean
+        Boolean,
       ),
     ],
-    [products]
+    [products],
   );
 
   // ✅ Compute stock availability per product (variant-aware)
@@ -246,8 +246,6 @@ export default function ShopPage() {
                 <BundleCard
                   key={bundle.id}
                   bundle={bundle}
-                  addItem={addItem}
-                  isInCart={isInCart}
                   getItemCount={getItemCount}
                 />
               ))}

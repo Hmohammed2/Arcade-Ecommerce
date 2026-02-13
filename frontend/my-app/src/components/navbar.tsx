@@ -41,7 +41,6 @@ const Navbar = () => {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
@@ -50,11 +49,21 @@ const Navbar = () => {
     if (query.trim()) {
       router.push(`/shop?search=${encodeURIComponent(query)}`);
       setQuery("");
+      setIsMobileSearchOpen(false);
+      setIsMobileOpen(false);
     }
   };
 
   return (
-    <header className="bg-pink-50 text-black border-b-2 top-0 z-50">
+    <header
+      className="
+        sticky top-0 z-50
+        bg-pink-50 dark:bg-gray-900
+        text-black dark:text-white
+        border-b-2 border-black dark:border-gray-700
+        transition-colors
+      "
+    >
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3">
@@ -71,60 +80,62 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-6">
           <Link
             href="/shop"
-            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
           >
             Shop
           </Link>
 
           <Link
             href="/resources"
-            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
           >
             Resources
           </Link>
 
           <Link
             href="/faqs"
-            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
           >
             FAQs
           </Link>
 
           <Link
             href="/contact"
-            className=" px-4 py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition"
+            className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
           >
             Contact
           </Link>
 
-          {/* Search */}
+          {/* Desktop Search */}
           <form
             onSubmit={handleSearch}
-            className="flex items-center border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 w-72 relative transition-colors"
+            className="relative flex items-center border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg px-3 py-1.5 w-72 transition-colors"
           >
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products..."
-              className="flex-grow outline-none text-sm bg-transparent"
+              className="flex-grow outline-none text-sm bg-transparent text-gray-800 dark:text-gray-200"
             />
 
             <button type="submit">
-              <Search className="w-5 h-5" />
+              <Search className="w-5 h-5 text-gray-600 dark:text-gray-300" />
             </button>
 
-            {/* Live Search */}
+            {/* Live Search Dropdown */}
             {query && (
-              <div className="absolute top-full left-0 w-full bg-white shadow-lg mt-1 max-h-80 overflow-y-auto z-50">
+              <div className="absolute top-full left-0 w-full mt-1 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg max-h-80 overflow-y-auto">
                 {isLoading ? (
-                  <p className="p-3 text-sm">Searching...</p>
+                  <p className="p-3 text-sm text-gray-500 dark:text-gray-400">
+                    Searching...
+                  </p>
                 ) : results.length > 0 ? (
                   results.map((p) => (
                     <Link
                       key={p.id}
                       href={`/products/${p.slug}`}
                       onClick={() => setQuery("")}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-pink-50"
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-pink-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       {p.image && (
                         <Image
@@ -132,12 +143,12 @@ const Navbar = () => {
                           alt={p.name}
                           width={40}
                           height={40}
-                          className="border"
+                          className="border border-black dark:border-gray-600"
                         />
                       )}
 
                       <div>
-                        <div className="">{p.name}</div>
+                        <div>{p.name}</div>
                         <div className="text-sm text-pink-600">
                           £{Number(p.price).toFixed(2)}
                         </div>
@@ -145,7 +156,9 @@ const Navbar = () => {
                     </Link>
                   ))
                 ) : (
-                  <p className="p-3 text-sm">No results</p>
+                  <p className="p-3 text-sm text-gray-500 dark:text-gray-400">
+                    No results
+                  </p>
                 )}
               </div>
             )}
@@ -157,12 +170,12 @@ const Navbar = () => {
           {/* Cart */}
           <Link
             href="/cart"
-            className="relative flex items-center gap-2 bg-pink-600 text-white px-4 py-2 border-2 font-semibold hover:bg-pink-700"
+            className="relative flex items-center gap-2 bg-pink-600 text-white px-4 py-2 border-2 border-black dark:border-gray-700 font-semibold hover:bg-pink-700 transition-colors"
           >
             <ShoppingCart className="w-5 h-5" />
             Cart
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-black text-white text-xs px-1.5 border">
+              <span className="absolute -top-2 -right-2 bg-black dark:bg-gray-700 text-white text-xs px-1.5 border border-black dark:border-gray-600">
                 {totalItems}
               </span>
             )}
@@ -173,14 +186,14 @@ const Navbar = () => {
             <>
               <Link
                 href="/login"
-                className="px-4 py-2 border-2 font-semibold hover:bg-gray-100"
+                className="px-4 py-2 border-2 border-black dark:border-gray-700 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
                 Login
               </Link>
 
               <Link
                 href="/register"
-                className="px-4 py-2 bg-black text-white border-2 font-semibold hover:bg-pink-600"
+                className="px-4 py-2 bg-black dark:bg-gray-800 text-white border-2 border-black dark:border-gray-700 font-semibold hover:bg-pink-600 transition-colors"
               >
                 Register
               </Link>
@@ -189,9 +202,9 @@ const Navbar = () => {
             <div ref={dropdownRef} className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 font-semibold"
+                className="flex items-center gap-2 px-3 py-2 font-semibold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               >
-                <div className="w-8 h-8 bg-pink-600 text-white flex items-center justify-center font-bold">
+                <div className="w-8 h-8 bg-pink-600 text-white flex items-center justify-center font-bold border border-black dark:border-gray-700">
                   {user?.first_name?.[0] ?? "U"}
                 </div>
 
@@ -199,10 +212,10 @@ const Navbar = () => {
               </button>
 
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 bg-white border-2 w-48">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border-2 border-black dark:border-gray-700 shadow-lg">
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50 dark:hover:bg-gray-700 transition-colors"
                     onClick={() => setIsDropdownOpen(false)}
                   >
                     <LayoutDashboard size={16} />
@@ -214,7 +227,7 @@ const Navbar = () => {
                       logout();
                       router.push("/login");
                     }}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50 w-full text-left"
+                    className="flex items-center gap-2 px-4 py-2 hover:bg-pink-50 dark:hover:bg-gray-700 w-full text-left transition-colors"
                   >
                     <LogOutIcon size={16} />
                     Logout
@@ -225,181 +238,55 @@ const Navbar = () => {
           )}
         </div>
 
-        {/* Mobile Buttons */}
-        <div className="md:hidden flex items-center gap-3 relative">
-          {!isMobileSearchOpen && (
-            <Link
-              href="/cart"
-              className="relative p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs rounded-full px-1.5">
-                  {totalItems}
-                </span>
-              )}
-            </Link>
-          )}
+        {/* Mobile Right */}
+        <div className="md:hidden flex items-center gap-3">
+          <Link
+            href="/cart"
+            className="relative p-2 rounded-md text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition-colors"
+          >
+            <ShoppingCart className="w-6 h-6" />
 
-          <div className="flex items-center relative">
-            {!isMobileSearchOpen ? (
-              <button
-                onClick={() => setIsMobileSearchOpen(true)}
-                className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-              >
-                <Search className="w-6 h-6" />
-              </button>
-            ) : (
-              <form
-                onSubmit={handleSearch}
-                className="relative flex items-center border border-gray-300 dark:border-gray-700 rounded-full px-3 py-1 w-[70vw] bg-white dark:bg-gray-900 shadow-sm transition-all duration-300"
-              >
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search..."
-                  autoFocus
-                  className="flex-grow outline-none text-sm text-gray-700 dark:text-gray-200 bg-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileSearchOpen(false);
-                    setQuery("");
-                  }}
-                >
-                  <X className="w-5 h-5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition" />
-                </button>
-
-                {query && (
-                  <div className="absolute top-full left-0 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-                    {isLoading ? (
-                      <p className="p-2 text-sm text-gray-500 dark:text-gray-400">
-                        Searching...
-                      </p>
-                    ) : results.length > 0 ? (
-                      results.map((p: any) => (
-                        <Link
-                          key={p.id}
-                          href={`/products/${p.slug}`}
-                          className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-200"
-                          onClick={() => {
-                            setQuery("");
-                            setIsMobileSearchOpen(false);
-                          }}
-                        >
-                          {p.image && (
-                            <Image
-                              src={getImageUrl(p.image)}
-                              alt={p.name}
-                              width={36}
-                              height={36}
-                              className="rounded-md object-cover"
-                            />
-                          )}
-                          <span>{p.name}</span>
-                        </Link>
-                      ))
-                    ) : (
-                      <p className="p-2 text-sm text-gray-500 dark:text-gray-400">
-                        No results found
-                      </p>
-                    )}
-                  </div>
-                )}
-              </form>
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-pink-600 text-white text-xs rounded-full px-1.5">
+                {totalItems}
+              </span>
             )}
-          </div>
+          </Link>
 
-          {!isMobileSearchOpen && (
-            <button
-              onClick={() => setIsMobileOpen(!isMobileOpen)}
-              className="p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-2 focus:ring-pink-500 transition"
-            >
-              {isMobileOpen ? (
-                <X className="w-6 h-6" />
-              ) : (
-                <Menu className="w-6 h-6" />
-              )}
-            </button>
-          )}
+          <button
+            onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+            className="p-2 text-gray-700 dark:text-gray-200"
+          >
+            <Search className="w-6 h-6" />
+          </button>
+
+          <button
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
+            className="p-2 text-gray-700 dark:text-gray-200"
+          >
+            {isMobileOpen ? <X /> : <Menu />}
+          </button>
         </div>
       </div>
 
       {/* Mobile Menu */}
       {isMobileOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-4 px-6 space-y-4 animate-slide-down transition-colors">
-          <nav className="flex flex-col gap-2">
-            <Link
-              href="/shop"
-              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              Shop
-            </Link>
-            <Link
-              href="/resources"
-              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              Resources
-            </Link>
-            <Link
-              href="/faqs"
-              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              FAQS
-            </Link>
-            <Link
-              href="/contact"
-              className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-              onClick={() => setIsMobileOpen(false)}
-            >
-              Contact Us
-            </Link>
+        <div className="md:hidden bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-4 px-6 space-y-4">
+          <Link href="/shop" onClick={() => setIsMobileOpen(false)}>
+            Shop
+          </Link>
 
-            {!isAuthenticated ? (
-              <>
-                <Link
-                  href="/login"
-                  className="py-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="py-2 text-white bg-pink-600 text-center rounded-md hover:bg-pink-700 dark:hover:bg-pink-500 transition"
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  Register
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="py-2 flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-                  onClick={() => setIsMobileOpen(false)}
-                >
-                  <LayoutDashboard className="w-4 h-4" /> Dashboard
-                </Link>
-                <Link
-                  href="/login"
-                  className="py-2 flex items-center gap-2 text-gray-700 dark:text-gray-200 hover:text-pink-600 dark:hover:text-pink-400 transition"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    logout();
-                    router.replace("/login");
-                  }}
-                >
-                  <LogOutIcon className="w-4 h-4" /> Logout
-                </Link>
-              </>
-            )}
-          </nav>
+          <Link href="/resources" onClick={() => setIsMobileOpen(false)}>
+            Resources
+          </Link>
+
+          <Link href="/faqs" onClick={() => setIsMobileOpen(false)}>
+            FAQs
+          </Link>
+
+          <Link href="/contact" onClick={() => setIsMobileOpen(false)}>
+            Contact
+          </Link>
         </div>
       )}
     </header>

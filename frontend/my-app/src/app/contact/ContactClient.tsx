@@ -54,7 +54,7 @@ export default function ContactClient() {
   };
 
   return (
-    <div className="max-w-7xl">
+    <div className="max-w-7xl ">
       <form
         onSubmit={handleSubmit}
         className="grid grid-cols-1 gap-4 md:grid-cols-2"

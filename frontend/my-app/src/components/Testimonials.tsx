@@ -31,20 +31,39 @@ export function Testimonials() {
   return (
     <section
       id="testimonials"
-      className="py-20 bg-pink-50 border-y-2 border-black"
+      className="
+        py-20
+        bg-pink-50 dark:bg-gray-900
+        border-y-2 border-black dark:border-gray-700
+        text-black dark:text-white
+        transition-colors
+      "
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Heading */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">
+          <h2
+            className="
+            text-4xl font-bold mb-4
+            text-black dark:text-white
+          "
+          >
             What Our <span className="text-pink-600">Customers Say</span>
           </h2>
         </div>
 
+        {/* Testimonials Grid */}
         <div className="grid md:grid-cols-3 gap-8">
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-white border-2 border-black p-6 hover:shadow-xl transition-shadow"
+              className="
+                bg-white dark:bg-gray-800
+                border-2 border-black dark:border-gray-700
+                p-6
+                hover:shadow-xl dark:hover:bg-gray-700
+                transition-all duration-300
+              "
             >
               {/* Star Rating */}
               <div className="flex gap-1 mb-4">
@@ -57,12 +76,39 @@ export function Testimonials() {
               </div>
 
               {/* Content */}
-              <p className="text-gray-700 mb-6 italic">{testimonial.content}</p>
+              <p
+                className="
+                text-gray-700 dark:text-gray-300
+                mb-6 italic
+              "
+              >
+                {testimonial.content}
+              </p>
 
               {/* Author */}
-              <div className="border-t-2 border-black pt-4">
-                <p className="font-bold">{testimonial.name}</p>
-                <p className="text-sm text-gray-600">{testimonial.role}</p>
+              <div
+                className="
+                border-t-2 border-black dark:border-gray-700
+                pt-4
+              "
+              >
+                <p
+                  className="
+                  font-bold
+                  text-black dark:text-white
+                "
+                >
+                  {testimonial.name}
+                </p>
+
+                <p
+                  className="
+                  text-sm
+                  text-gray-600 dark:text-gray-400
+                "
+                >
+                  {testimonial.role}
+                </p>
               </div>
             </div>
           ))}

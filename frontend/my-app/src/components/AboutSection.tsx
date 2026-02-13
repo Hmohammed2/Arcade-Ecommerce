@@ -30,13 +30,26 @@ const features = [
 
 export default function About() {
   return (
-    <section id="about" className="py-20 bg-white">
+    <section
+      id="about"
+      className="
+        py-20
+        bg-white dark:bg-gray-900
+        text-black dark:text-white
+        transition-colors
+      "
+    >
       <div className="max-w-7xl mx-auto px-6">
         {/* Founder section */}
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
           {/* Image */}
           <div className="order-2 md:order-1">
-            <div className="border-2 border-black overflow-hidden relative aspect-square">
+            <div
+              className="
+              border-2 border-black dark:border-gray-700
+              overflow-hidden relative aspect-square
+            "
+            >
               <Image
                 src="/about_picture.webp"
                 alt="Packing arcade stick parts"
@@ -49,11 +62,21 @@ export default function About() {
 
           {/* Text */}
           <div className="order-1 md:order-2">
-            <h2 className="text-4xl font-bold mb-6">
+            <h2
+              className="
+              text-4xl font-bold mb-6
+              text-black dark:text-white
+            "
+            >
               About <span className="text-pink-600">ArcadeStickLabs</span>
             </h2>
 
-            <div className="space-y-4 text-lg text-gray-700">
+            <div
+              className="
+              space-y-4 text-lg
+              text-gray-700 dark:text-gray-300
+            "
+            >
               <p>Hi, I'm Hamza — the founder of ArcadeStickLabs.</p>
 
               <p>
@@ -75,22 +98,48 @@ export default function About() {
                 the usual friction.
               </p>
 
-              <p className="font-semibold text-gray-900">
+              <p
+                className="
+                font-semibold
+                text-gray-900 dark:text-gray-100
+              "
+              >
                 Thank you for supporting an independent enthusiast-run store.
               </p>
             </div>
 
             {/* Trust badges */}
             <div className="mt-6 flex flex-wrap gap-4">
-              <div className="border-2 border-black px-4 py-2 bg-black text-white font-semibold">
+              <div
+                className="
+                border-2 border-black dark:border-gray-700
+                px-4 py-2
+                bg-black dark:bg-gray-800
+                text-white font-semibold
+              "
+              >
                 UK Based
               </div>
 
-              <div className="border-2 border-black px-4 py-2 bg-pink-600 text-white font-semibold">
+              <div
+                className="
+                border-2 border-black dark:border-gray-700
+                px-4 py-2
+                bg-pink-600
+                text-white font-semibold
+              "
+              >
                 Independent Store
               </div>
 
-              <div className="border-2 border-black px-4 py-2 font-semibold">
+              <div
+                className="
+                border-2 border-black dark:border-gray-700
+                px-4 py-2
+                font-semibold
+                bg-white dark:bg-gray-800
+              "
+              >
                 Enthusiast Run
               </div>
             </div>
@@ -106,10 +155,10 @@ export default function About() {
               <div
                 key={index}
                 className="
-                  border-2 border-black
+                  border-2 border-black dark:border-gray-700
                   p-6
-                  bg-white
-                  hover:bg-pink-50
+                  bg-white dark:bg-gray-800
+                  hover:bg-pink-50 dark:hover:bg-gray-700
                   transition-colors
                   text-center
                 "
@@ -117,7 +166,7 @@ export default function About() {
                 <div
                   className="
                     bg-pink-600
-                    border-2 border-black
+                    border-2 border-black dark:border-gray-700
                     w-16 h-16
                     flex items-center justify-center
                     mx-auto mb-4
@@ -126,9 +175,23 @@ export default function About() {
                   <Icon className="w-8 h-8 text-white" />
                 </div>
 
-                <h3 className="font-bold text-lg mb-2">{feature.title}</h3>
+                <h3
+                  className="
+                  font-bold text-lg mb-2
+                  text-black dark:text-white
+                "
+                >
+                  {feature.title}
+                </h3>
 
-                <p className="text-gray-600 text-sm">{feature.description}</p>
+                <p
+                  className="
+                  text-gray-600 dark:text-gray-400
+                  text-sm
+                "
+                >
+                  {feature.description}
+                </p>
               </div>
             );
           })}

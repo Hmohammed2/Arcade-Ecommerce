@@ -12,22 +12,43 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-16 dark:bg-gray-900 bg-white">
-      <h1 className="mb-4 text-3xl font-bold">Contact Us</h1>
-
-      <p className="mb-8 max-w-2xl text-muted-foreground">
-        Have a sales enquiry, partnership idea, or general question? Fill out
-        the form below or email us directly at{" "}
-        <a
-          href="mailto:sales@arcadesticklabs.co.uk"
-          className="font-medium text-pink-600 hover:underline"
+    <section
+      className="
+        py-20
+        bg-white dark:bg-gray-900
+        text-black dark:text-white
+        transition-colors
+      "
+    >
+      <div className="mx-auto max-w-7xl px-6">
+        <h1
+          className="
+          mb-4 text-3xl font-bold
+          text-black dark:text-white
+        "
         >
-          sales@arcadesticklabs.co.uk
-        </a>
-        .
-      </p>
+          Contact Us
+        </h1>
 
-      <ContactClient />
-    </div>
+        <p
+          className="
+          mb-8 max-w-2xl
+          text-gray-700 dark:text-gray-300
+        "
+        >
+          Have a sales enquiry, partnership idea, or general question? Fill out
+          the form below or email us directly at{" "}
+          <a
+            href="mailto:sales@arcadesticklabs.co.uk"
+            className="font-medium text-pink-600 hover:underline"
+          >
+            sales@arcadesticklabs.co.uk
+          </a>
+          .
+        </p>
+
+        <ContactClient />
+      </div>
+    </section>
   );
 }

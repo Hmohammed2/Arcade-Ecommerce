@@ -4,7 +4,6 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingCart } from "lucide-react";
 import { getImageUrl } from "@/library/getImageUrl";
 
 export function ProductCarousel({
@@ -23,15 +22,33 @@ export function ProductCarousel({
   if (!featuredProducts?.length) return null;
 
   return (
-    <section id="products" className="py-20 bg-white">
+    <section
+      id="products"
+      className="
+        py-20
+        bg-white dark:bg-gray-900
+        text-black dark:text-white
+        transition-colors
+      "
+    >
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-3">
+          <h2
+            className="
+            text-4xl font-bold mb-3
+            text-black dark:text-white
+          "
+          >
             Featured <span className="text-pink-600">Products</span>
           </h2>
 
-          <p className="text-lg text-gray-700">
+          <p
+            className="
+            text-lg
+            text-gray-700 dark:text-gray-300
+          "
+          >
             Check out our most popular arcade parts and components
           </p>
         </div>
@@ -66,32 +83,69 @@ export function ProductCarousel({
                   >
                     <div
                       className={`
-          border-2 border-black bg-white overflow-hidden
-          transition-all duration-300 cursor-pointer
-          ${!isSoldOut ? "group-hover:shadow-xl group-hover:-translate-y-1" : "opacity-60"}
-        `}
+                        border-2 border-black dark:border-gray-700
+                        bg-white dark:bg-gray-800
+                        overflow-hidden
+                        transition-all duration-300 cursor-pointer
+                        ${
+                          !isSoldOut
+                            ? "group-hover:shadow-xl group-hover:-translate-y-1"
+                            : "opacity-60"
+                        }
+                      `}
                     >
                       {/* Image */}
-                      <div className="aspect-square bg-gray-100 overflow-hidden relative">
+                      <div
+                        className="
+                        aspect-square
+                        bg-gray-100 dark:bg-gray-700
+                        overflow-hidden relative
+                      "
+                      >
                         <Image
                           src={getImageUrl(product.image)}
                           alt={product.name}
                           fill
                           className={`
-              object-cover transition-transform duration-300
-              ${!isSoldOut ? "group-hover:scale-105" : ""}
-            `}
+                            object-cover
+                            transition-transform duration-300
+                            ${!isSoldOut ? "group-hover:scale-105" : ""}
+                          `}
                         />
 
+                        {/* NEW badge */}
                         {product.is_new && !isSoldOut && (
-                          <div className="absolute top-3 left-3 bg-pink-600 text-white text-xs font-bold px-3 py-1 border-2 border-black">
+                          <div
+                            className="
+                            absolute top-3 left-3
+                            bg-pink-600 text-white
+                            text-xs font-bold
+                            px-3 py-1
+                            border-2 border-black dark:border-gray-700
+                          "
+                          >
                             NEW
                           </div>
                         )}
 
+                        {/* SOLD OUT overlay */}
                         {isSoldOut && (
-                          <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                            <span className="bg-black text-white px-4 py-2 border-2 border-white font-bold text-sm">
+                          <div
+                            className="
+                            absolute inset-0
+                            bg-black/70
+                            flex items-center justify-center
+                          "
+                          >
+                            <span
+                              className="
+                              bg-black dark:bg-gray-800
+                              text-white
+                              px-4 py-2
+                              border-2 border-white dark:border-gray-600
+                              font-bold text-sm
+                            "
+                            >
                               SOLD OUT
                             </span>
                           </div>
@@ -100,11 +154,22 @@ export function ProductCarousel({
 
                       {/* Content */}
                       <div className="p-6">
-                        <h3 className="text-xl font-bold mb-2 group-hover:text-pink-600 transition-colors">
+                        <h3
+                          className="
+                          text-xl font-bold mb-2
+                          text-black dark:text-white
+                          group-hover:text-pink-600
+                          transition-colors
+                        "
+                        >
                           {product.name}
                         </h3>
 
-                        <span className="text-2xl font-bold text-pink-600">
+                        <span
+                          className="
+                          text-2xl font-bold text-pink-600
+                        "
+                        >
                           £{product.price}
                         </span>
                       </div>
@@ -124,7 +189,7 @@ export function ProductCarousel({
               inline-block
               bg-pink-600 text-white
               px-6 py-3
-              border-2 border-black
+              border-2 border-black dark:border-gray-700
               font-bold
               hover:bg-pink-700
               transition-colors
