@@ -53,6 +53,11 @@ const nextConfig = {
         hostname: "arcadesticklabs.co.uk",
         pathname: "/articles/**",
       },
+      {
+        protocol: "https",
+        hostname: "img.youtube.com",
+        pathname: "/vi/**",
+      },
     ],
   },
 };
