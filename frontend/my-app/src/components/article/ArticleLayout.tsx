@@ -7,6 +7,12 @@ import rehypeHighlight from "rehype-highlight";
 import { getImageUrl } from "@/library/getImageUrl";
 import Breadcrumbs from "@/components/BreadCrumb";
 import { slugify } from "@/library/slugify";
+import StickyCTA from "./StickyCTA";
+
+interface ArticleCTA {
+  label: string;
+  href: string;
+}
 
 interface ArticleLayoutProps {
   title: string;
@@ -18,6 +24,7 @@ interface ArticleLayoutProps {
   comments: ReactNode;
   canEdit?: boolean;
   editHref?: string;
+  cta?: ArticleCTA;
 }
 
 export default function ArticleLayout({
@@ -30,9 +37,10 @@ export default function ArticleLayout({
   comments,
   canEdit = false,
   editHref,
+  cta,
 }: ArticleLayoutProps) {
   return (
-    <article className="relative min-h-screen bg-gradient-to-br from-gray-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-colors duration-300">
+    <article className="relative min-h-screen pb-24 bg-gradient-to-br from-gray-50 via-white to-pink-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-800 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 py-12">
         <Breadcrumbs
           items={[
@@ -123,7 +131,7 @@ export default function ArticleLayout({
             <div className="mt-16 lg:hidden">{comments}</div>
           </div>
 
-          {/* Sidebar Glass Cards */}
+          {/* Desktop Sidebar */}
           <aside className="hidden lg:block space-y-10">
             <div className="sticky top-24 space-y-8">
               <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-xl p-6 shadow ring-1 ring-black/5 dark:ring-white/10">
@@ -137,6 +145,12 @@ export default function ArticleLayout({
           </aside>
         </div>
       </div>
+      {/* Mobile TOC (Floating Button + Drawer) */}
+      <div className="lg:hidden">
+        <TableOfContents />
+      </div>
+      {/* Sticky Bottom CTA */}
+      {cta && <StickyCTA label={cta.label} href={cta.href} />}
     </article>
   );
 }

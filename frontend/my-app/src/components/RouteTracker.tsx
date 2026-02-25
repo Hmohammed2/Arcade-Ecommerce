@@ -9,7 +9,7 @@ export default function RouteTracker() {
   useEffect(() => {
     if (!window.gtag || !GA_ID) return;
     window.gtag("config", GA_ID, { page_path: pathname });
-  }, [pathname]);
+  }, [pathname, GA_ID]);
 
   return null;
 }

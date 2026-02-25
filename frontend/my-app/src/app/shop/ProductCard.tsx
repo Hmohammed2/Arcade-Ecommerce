@@ -11,13 +11,11 @@ export function ProductCard({
   addItem,
   updateQuantity,
   getItemCount,
-  isInCart,
 }: {
   product: Product;
   addItem: (item: CartItem) => void;
   updateQuantity: (id: number, colour: string | null, quantity: number) => void;
   getItemCount: (id: number, colour?: string | null) => number;
-  isInCart: (id: number, colour?: string | null) => boolean;
 }) {
   const variants: ProductVariant[] = useMemo(
     () => product.variants ?? [],

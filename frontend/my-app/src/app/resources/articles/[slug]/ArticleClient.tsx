@@ -51,6 +51,11 @@ export default function ArticleClient({ article }: ArticleClientProps) {
       comments={<Comments />}
       canEdit={user?.is_staff}
       editHref={`/dashboard/articles/edit/${article.slug}`}
+      cta={
+        article.cta_label && article.cta_url
+          ? { label: article.cta_label, href: article.cta_url }
+          : undefined
+      }
     >
       {article.content}
     </ArticleLayout>

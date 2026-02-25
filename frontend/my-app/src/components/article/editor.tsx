@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useState } from "react";
 
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), {
@@ -31,10 +32,15 @@ export default function ArticleEditor({
         <p className="text-sm font-medium">Thumbnail Cover</p>
 
         {(preview || thumbnailUrl) && (
-          <img
-            src={preview ?? thumbnailUrl ?? ""}
-            className="h-40 w-full rounded-md object-cover"
-          />
+          <div className="relative h-40 w-full rounded-md overflow-hidden">
+            <Image
+              src={preview ?? thumbnailUrl ?? ""}
+              alt="Video thumbnail preview"
+              fill
+              sizes="(max-width: 768px) 100vw, 400px"
+              className="object-cover"
+            />
+          </div>
         )}
 
         <input

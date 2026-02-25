@@ -15,6 +15,8 @@ class Article(models.Model):
 
     is_published = models.BooleanField(default=False)
     published_at = models.DateTimeField(blank=True, null=True)
+    cta_label = models.CharField(max_length=255, blank=True)
+    cta_url = models.CharField(max_length=255, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

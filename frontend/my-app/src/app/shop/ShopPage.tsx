@@ -243,11 +243,7 @@ export default function ShopPage() {
 
             <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {bundles.map((bundle: Bundle) => (
-                <BundleCard
-                  key={bundle.id}
-                  bundle={bundle}
-                  getItemCount={getItemCount}
-                />
+                <BundleCard key={bundle.id} bundle={bundle} />
               ))}
             </div>
           </section>
@@ -284,7 +280,6 @@ export default function ShopPage() {
                         <ProductCard
                           product={product}
                           addItem={addItem}
-                          isInCart={isInCart}
                           updateQuantity={updateQuantity}
                           getItemCount={getItemCount}
                         />

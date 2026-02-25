@@ -25,6 +25,10 @@ class ArticleAdmin(admin.ModelAdmin):
         ("Content", {
             "fields": ("content",)
         }),
+        ("Sticky CTA", {   # 👈 new section
+            "fields": ("cta_label", "cta_url"),
+            "description": "Leave blank to disable sticky CTA for this article."
+        }),
         ("Publishing", {
             "fields": ("is_published", "published_at")
         }),

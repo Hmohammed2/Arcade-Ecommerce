@@ -8,6 +8,7 @@ import { LogIn, Loader2 } from "lucide-react";
 import { useAuth } from "@/store/useAuth"; // ✅ import your store
 import { useGoogleLogin } from "@react-oauth/google";
 import Turnstile from "react-turnstile";
+import Image from "next/image";
 
 export default function LoginPageClient() {
   const router = useRouter();
@@ -164,7 +165,13 @@ export default function LoginPageClient() {
           {isOAuthLoading === "google" ? (
             <Loader2 className="animate-spin w-5 h-5" />
           ) : (
-            <img src="/google-icon.png" alt="Google" className="w-5 h-5" />
+            <Image
+              src="/google-icon.png"
+              alt="Google"
+              width={20}
+              height={20}
+              className="w-5 h-5"
+            />
           )}
           Continue with Google
         </button>

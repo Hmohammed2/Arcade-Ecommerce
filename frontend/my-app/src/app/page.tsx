@@ -115,34 +115,3 @@ export default async function LandingPage() {
     </>
   );
 }
-
-function Trust({ title, desc }: { title: string; desc: string }) {
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all">
-      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-        {title}
-      </h4>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{desc}</p>
-    </div>
-  );
-}
-
-function Feature({
-  title,
-  desc,
-  icon,
-}: {
-  title: string;
-  desc: string;
-  icon: React.ReactNode;
-}) {
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-all duration-200 text-center">
-      <div className="flex justify-center mb-4">{icon}</div>
-      <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-lg">
-        {title}
-      </h4>
-      <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{desc}</p>
-    </div>
-  );
-}

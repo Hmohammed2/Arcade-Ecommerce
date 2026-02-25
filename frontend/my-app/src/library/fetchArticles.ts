@@ -14,6 +14,8 @@ export interface Article {
   author_name?: string;
   is_published: boolean;
   published_at: string | null;
+  cta_label?: string;
+  cta_url?: string;
   created_at: string;
   updated_at: string;
 }
@@ -31,7 +33,7 @@ const API_BASE =
  * GET /articles/
  */
 export async function fetchArticles(): Promise<Article[]> {
-  const res = await fetch(`${baseUrlServer}/articles/fetcharticles/`, {
+  const res = await fetch(`${API_BASE}/articles/fetcharticles/`, {
     next: { revalidate: 60 }, // ISR friendly
   });
 
@@ -47,7 +49,7 @@ export async function fetchArticles(): Promise<Article[]> {
  * GET /articles/:slug/
  */
 export async function fetchArticleBySlug(slug: string): Promise<Article> {
-  const res = await fetch(`${API_BASE}/articles/article/${slug}/`, {
+  const res = await fetch(`${baseUrlServer}/articles/article/${slug}/`, {
     next: { revalidate: 60 },
   });
 

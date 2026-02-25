@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type Video = {
   title: string;
   description: string;
@@ -18,12 +20,15 @@ export function VideoCard({ video }: { video: Video }) {
         video.featured ? "sm:col-span-2" : ""
       }`}
     >
-      <div className="aspect-video bg-black">
-        <img
+      {/* Thumbnail */}
+      <div className="relative aspect-video bg-black overflow-hidden">
+        <Image
           src={video.thumbnail}
           alt={`Thumbnail for ${video.title}`}
-          loading="lazy"
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          priority={video.featured}
         />
       </div>
 
