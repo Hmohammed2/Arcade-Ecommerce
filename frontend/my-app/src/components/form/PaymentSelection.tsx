@@ -2,7 +2,7 @@
 
 import { Elements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/library/loadStripe";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useCart } from "@/store/useCart";
 import { useCheckoutForm } from "@/store/useCheckoutForm";
@@ -45,67 +45,58 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
   const [orderPublicId, setOrderPublicId] = useState<string | null>(null);
   const [loadingIntent, setLoadingIntent] = useState(false);
 
-  // Create Stripe PaymentIntent when ready
-  useEffect(() => {
-    if (paymentMethod !== "stripe") return;
+  const cartItems = getCartItems();
 
-    if (
-      !formData.shippingMethod ||
-      !formData.shippingPostcode ||
-      !formData.billingEmail ||
-      getCartItems().length === 0
-    ) {
+  // 🔒 Strict readiness validation
+  const isBillingComplete =
+    formData.billingFirstName &&
+    formData.billingLastName &&
+    formData.billingEmail;
+
+  const isDeliveryComplete =
+    formData.shippingMethod &&
+    formData.shippingPostcode &&
+    formData.shippingAddress1 &&
+    formData.shippingCity;
+
+  const isReady =
+    isBillingComplete && isDeliveryComplete && cartItems.length > 0;
+
+  const createIntent = async () => {
+    if (!isReady) {
+      toast.error("Please complete delivery details before continuing.");
       return;
     }
 
-    let cancelled = false;
+    try {
+      setLoadingIntent(true);
 
-    const createIntent = async () => {
-      try {
-        setLoadingIntent(true);
+      const payload: CreatePaymentIntentPayload = {
+        first_name: formData.billingFirstName,
+        last_name: formData.billingLastName,
+        items: buildLineItems(cartItems),
+        shipping_name: `${formData.billingFirstName} ${formData.billingLastName}`,
+        shipping_method_name: formData.shippingMethod,
+        shipping_postcode: formData.shippingPostcode,
+        shipping_country: formData.shippingCountry || "GB",
+        shipping_address1: formData.shippingAddress1,
+        shipping_address2: formData.shippingAddress2,
+        shipping_city: formData.shippingCity,
+        email: formData.billingEmail,
+        coupon_code: isValid ? couponCode : null,
+      };
 
-        const payload: CreatePaymentIntentPayload = {
-          first_name: formData.billingFirstName,
-          last_name: formData.billingLastName,
-          items: buildLineItems(getCartItems()),
-          shipping_name: `${formData.billingFirstName} ${formData.billingLastName}`,
-          shipping_method_name: formData.shippingMethod,
-          shipping_postcode: formData.shippingPostcode,
-          shipping_country: formData.shippingCountry || "GB",
-          shipping_address1: formData.shippingAddress1,
-          shipping_address2: formData.shippingAddress2,
-          shipping_city: formData.shippingCity,
-          email: formData.billingEmail,
-          coupon_code: isValid ? couponCode : null,
-        };
+      const res = await checkoutMutation.mutateAsync(payload as any);
 
-        const res = await checkoutMutation.mutateAsync(payload as any);
-
-        if (!cancelled) {
-          setClientSecret(res.clientSecret);
-          setOrderPublicId(res.order_id);
-        }
-      } catch (err: any) {
-        toast.error(err.message || "Unable to initialise payment");
-        setClientSecret(null);
-      } finally {
-        setLoadingIntent(false);
-      }
-    };
-
-    createIntent();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    paymentMethod,
-    formData.shippingMethod,
-    formData.shippingPostcode,
-    formData.billingEmail,
-    couponCode,
-    isValid,
-  ]);
+      setClientSecret(res.clientSecret);
+      setOrderPublicId(res.order_id);
+    } catch (err: any) {
+      toast.error(err.message || "Unable to initialise payment");
+      setClientSecret(null);
+    } finally {
+      setLoadingIntent(false);
+    }
+  };
 
   return (
     <section className="space-y-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
@@ -114,7 +105,7 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
         All transactions are secure and encrypted
       </p>
 
-      {/* Selector */}
+      {/* Payment Selector */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <PaymentOption
           active={paymentMethod === "stripe"}
@@ -131,11 +122,26 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
         />
       </div>
 
-      {/* Accordion content */}
+      {/* 🔒 Locked State */}
+      {!isReady && (
+        <div className="bg-amber-50 text-amber-700 text-sm p-3 rounded border border-amber-200">
+          Complete billing and delivery details to unlock payment.
+        </div>
+      )}
+
+      {/* STRIPE FLOW */}
       {paymentMethod === "stripe" && (
         <>
-          {loadingIntent && (
-            <p className="text-sm text-gray-500">Preparing secure payment…</p>
+          {!clientSecret && isReady && (
+            <button
+              onClick={createIntent}
+              disabled={loadingIntent}
+              className="w-full bg-black text-white py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
+            >
+              {loadingIntent
+                ? "Preparing secure payment..."
+                : "Continue to Secure Payment"}
+            </button>
           )}
 
           {clientSecret && (
@@ -145,7 +151,9 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
           )}
         </>
       )}
-      {paymentMethod === "paypal" && <PaymentForm method="paypal" />}
+
+      {/* PAYPAL FLOW */}
+      {paymentMethod === "paypal" && isReady && <PaymentForm method="paypal" />}
     </section>
   );
 }

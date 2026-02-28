@@ -5,6 +5,7 @@ import BillingForm from "./BillingForm";
 import ShippingForm from "./ShippingForm";
 import OrderSummary from "./OrderSummary";
 import PaymentSelection from "./PaymentSelection";
+import CheckoutProgress from "./CheckoutProgress";
 
 export default function CheckoutForm() {
   const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">(
@@ -16,6 +17,7 @@ export default function CheckoutForm() {
       <h1 className="text-3xl font-bold mb-6 text-gray-900  dark:text-gray-100">
         Checkout
       </h1>
+      <CheckoutProgress />
       <div className="flex flex-col lg:flex-row gap-8 dark:bg-gray-900 dark:text-gray-100">
         {/* LEFT COLUMN */}
         <div className="flex-1 space-y-8 min-w-0">
