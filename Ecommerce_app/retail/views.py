@@ -414,6 +414,8 @@ def checkout(request):
         
         # ✅ 1️⃣ Validate address consistency FIRST
         validate_shipping_address(shipping_country, shipping_postcode)
+        
+        logger.info("Incoming checkout items: %s", items)
 
         # ⚖️ Server-side calculations (authoritative)
         total_weight = calculate_cart_weight(items)

@@ -1,10 +1,15 @@
 from decimal import Decimal
 from retail.models import Product, Bundle
+import logging
+
+logger = logging.getLogger(__name__)
 
 def calculate_cart_weight(items):
     total_weight = Decimal("0.0")
 
     for item in items:
+        logger.info("Processing item for cart_weight calculation: %s", item)
+        
         qty = Decimal(item.get("quantity", 1))
 
         if item.get("type") == "product":
@@ -22,5 +27,7 @@ def calculate_cart_weight(items):
 
         else:
             raise ValueError(f"Unknown cart item type: {item}")
+    
+    logger.info("Total cart weight calculated: %s kg", total_weight)
 
     return total_weight
