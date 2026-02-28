@@ -45,24 +45,30 @@ export default function ShippingForm() {
       `}
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Shipping Details</h2>
+      <div className="space-y-2">
+        {/* Top Row */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Shipping Details</h2>
 
-        {isShippingComplete && (
-          <span className="text-sm font-medium text-green-600 flex items-center gap-1">
-            ✓ Completed
-          </span>
-        )}
+          {isShippingComplete && (
+            <span className="text-sm font-medium text-green-600 flex items-center gap-1">
+              ✓ Completed
+            </span>
+          )}
+        </div>
 
-        <label className="flex items-center space-x-2 text-sm">
-          <input
-            type="checkbox"
-            checked={formData.sameAsBilling}
-            onChange={(e) => setSameAsBilling(e.target.checked)}
-            className="accent-pink-600 w-4 h-4"
-          />
-          <span>Same as billing</span>
-        </label>
+        {/* Checkbox Row */}
+        <div className="flex justify-start sm:justify-end">
+          <label className="flex items-center space-x-2 text-sm">
+            <input
+              type="checkbox"
+              checked={formData.sameAsBilling}
+              onChange={(e) => setSameAsBilling(e.target.checked)}
+              className="accent-pink-600 w-4 h-4"
+            />
+            <span>Same as billing</span>
+          </label>
+        </div>
       </div>
 
       {/* Hide form if sameAsBilling */}
