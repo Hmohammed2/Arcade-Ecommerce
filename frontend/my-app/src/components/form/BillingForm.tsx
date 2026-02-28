@@ -199,6 +199,7 @@ export default function BillingForm({
             <option value="ES">Spain</option>
             <option value="IT">Italy</option>
             <option value="IE">Ireland</option>
+            <option value="FI">Finland</option>
           </select>
         </div>
       </div>
