@@ -22,6 +22,7 @@ interface CheckoutFormData {
   shippingMethod?: string;
   shippingCost?: number;
   cartWeightKg?: number;
+  marketingOptIn?: boolean;
 }
 
 interface CheckoutFormState {
@@ -31,6 +32,7 @@ interface CheckoutFormState {
     value: string | boolean | number | undefined,
   ) => void;
   setSameAsBilling: (value: boolean) => void;
+  marketingOptIn: boolean;
   resetForm: () => void;
   setCartWeight: (weightKg: number) => void;
 }
@@ -40,6 +42,7 @@ export const useCheckoutForm = create<CheckoutFormState>((set, get) => ({
     billingCountry: "GB",
     shippingCountry: "GB",
     sameAsBilling: true,
+    marketingOptIn: false,
   },
 
   updateField: (field, value) =>
@@ -76,6 +79,7 @@ export const useCheckoutForm = create<CheckoutFormState>((set, get) => ({
       });
     }
   },
+  marketingOptIn: false,
 
   resetForm: () =>
     set({

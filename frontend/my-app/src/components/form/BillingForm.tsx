@@ -131,6 +131,17 @@ export default function BillingForm({
           }
           fullWidth
         />
+        <div className="flex items-start gap-2 mt-3">
+          <input
+            type="checkbox"
+            checked={formData.marketingOptIn || false}
+            onChange={(e) => updateField("marketingOptIn", e.target.checked)}
+            className="mt-1 accent-green-600"
+          />
+          <span className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+            Email me about new drops and restocks.
+          </span>
+        </div>
 
         {/* Phone */}
         <InputField

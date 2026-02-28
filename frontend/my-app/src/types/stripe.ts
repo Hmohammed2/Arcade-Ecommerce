@@ -20,4 +20,5 @@ export interface CreatePaymentIntentPayload {
   email: string | undefined;
 
   coupon_code: string | null;
+  newsletter_opt_in: boolean;
 }

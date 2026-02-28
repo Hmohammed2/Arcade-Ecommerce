@@ -459,6 +459,23 @@ def checkout(request):
             shipping_cost=shipping["price"],
             total_weight_kg=total_weight,
         )
+        
+        newsletter_opt_in = data.get("newsletter_opt_in")
+        email = data.get("email")
+
+        if newsletter_opt_in and email:
+            try:
+                logger.info("[Checkout] Subscribing to newsletter: %s", email)
+                NewsletterSubscriber.objects.update_or_create(
+                    email=email,
+                    defaults={
+                        "is_active": True,
+                        "source": "checkout",
+                    },
+                )
+                logger.info("[Checkout] Newsletter subscription successful for email: %s", email)
+            except Exception:
+                logger.warning("[Checkout] Newsletter subscription failed")
 
         return Response(result, status=201)
 
@@ -538,6 +555,23 @@ def paypal_checkout(request):
 
             coupon_code=data.get("coupon_code"),
         )
+        
+        newsletter_opt_in = data.get("newsletter_opt_in")
+        email = data.get("email")
+
+        if newsletter_opt_in and email:
+            try:
+                logger.info("[Checkout] Subscribing to newsletter: email=%s", email)
+                NewsletterSubscriber.objects.update_or_create(
+                    email=email,
+                    defaults={
+                        "is_active": True,
+                        "source": "checkout",
+                    },
+                )
+                logger.info("[Checkout] Newsletter subscription successful for email: %s", email)
+            except Exception:
+                logger.warning("[Checkout] Newsletter subscription failed")
 
         return Response(result, status=status.HTTP_201_CREATED)
 

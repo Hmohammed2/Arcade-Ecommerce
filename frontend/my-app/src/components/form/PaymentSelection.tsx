@@ -83,6 +83,7 @@ export default function PaymentSelection({ paymentMethod, onChange }: Props) {
         shipping_address2: formData.shippingAddress2,
         shipping_city: formData.shippingCity,
         email: formData.billingEmail,
+        newsletter_opt_in: formData.marketingOptIn || false,
         coupon_code: isValid ? couponCode : null,
       };
 
