@@ -9,99 +9,92 @@ export function Hero() {
       className="
         relative
         bg-gradient-to-br
-        from-pink-50 to-white
+        from-white to-pink-50/40
         dark:from-gray-900 dark:to-gray-800
-        border-b-2 border-black dark:border-gray-700
         transition-colors
       "
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Text Content */}
-          <div className="space-y-6">
-            <h1
-              className="
-              text-5xl md:text-6xl font-bold leading-tight
-              text-black dark:text-white
-            "
-            >
-              UK Premium Arcade Stick Parts & Fightstick for{" "}
-              <span className="text-pink-600">True Enthusiasts</span>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+        <div className="grid md:grid-cols-2 gap-16 items-center">
+          {/* LEFT: TEXT CONTENT */}
+          <div className="space-y-8">
+            {/* Headline */}
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-tight text-gray-900 dark:text-white">
+              Build a{" "}
+              <span className="text-pink-600">Tournament-Ready Fightstick</span>{" "}
+              — Without Import Hassle
             </h1>
 
-            <p
-              className="
-              text-lg
-              text-gray-700 dark:text-gray-300
-            "
-            >
-              ArcadeStickLabs is the UK home for arcade stick parts, Sanwa
-              buttons, Brook PCBs, joystick upgrades and custom fightstick
-              components for Tekken, Street Fighter, Guilty Gear and the FGC
-              community. Build, mod and upgrade your arcade stick with fast UK
-              shipping and builder-approved parts.
+            {/* Subheading */}
+            <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-xl">
+              Genuine Sanwa buttons, Brook PCBs and trusted arcade components —
+              stocked in the UK with fast dispatch and no surprise fees.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            {/* Trust Strip */}
+            <div className="flex flex-wrap gap-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+              <span>🚚 Fast UK Shipping</span>
+              <span>🔒 Secure Checkout</span>
+              <span>🎮 FGC Trusted Parts</span>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap gap-4 pt-2">
               <Link
                 href="/shop"
                 className="
                   inline-flex items-center gap-2
                   bg-pink-600 text-white
                   px-8 py-3
-                  border-2 border-black dark:border-gray-700
+                  rounded-md
+                  font-semibold
                   hover:bg-pink-700
                   transition-colors
                 "
               >
-                Shop Now
+                Shop Parts
                 <ArrowRight className="w-5 h-5" />
               </Link>
 
               <Link
-                href="#products"
+                href="/bundles"
                 className="
                   inline-flex items-center gap-2
                   bg-white dark:bg-gray-800
-                  text-black dark:text-white
+                  text-gray-900 dark:text-white
                   px-8 py-3
-                  border-2 border-black dark:border-gray-700
-                  hover:bg-pink-700 hover:text-white
+                  rounded-md
+                  border border-gray-300 dark:border-gray-600
+                  hover:bg-gray-100 dark:hover:bg-gray-700
                   transition-colors
                 "
               >
-                View Catalog
+                View Starter Kits
               </Link>
             </div>
           </div>
 
-          {/* Hero Image */}
+          {/* RIGHT: HERO IMAGE */}
           <div className="relative">
-            <div
-              className="
-              relative border-4
-              border-black dark:border-gray-700
-              overflow-hidden
-              aspect-[2/3] md:aspect-[5/4]
-            "
-            >
+            <div className="relative aspect-[4/5] md:aspect-[5/4] rounded-xl overflow-hidden shadow-xl">
               <Image
                 src="/hero-image.webp"
-                alt="ArcadeStickLabs arcade stick parts hero"
+                alt="ArcadeStickLabs arcade stick parts"
                 fill
                 priority
                 className="object-cover object-center"
               />
             </div>
 
-            {/* Decorative block */}
+            {/* Soft accent shape */}
             <div
               className="
-              absolute -bottom-4 -right-4
-              w-32 h-32
-              bg-pink-600
-              border-2 border-black dark:border-gray-700
-              -z-10"
+                absolute -bottom-6 -right-6
+                w-32 h-32
+                bg-pink-600/10
+                rounded-xl
+                -z-10
+              "
             />
           </div>
         </div>

@@ -1,7 +1,5 @@
 "use client";
 
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
 import Image from "next/image";
 import Link from "next/link";
 import { getImageUrl } from "@/library/getImageUrl";
@@ -22,180 +20,78 @@ export function ProductCarousel({
   if (!featuredProducts?.length) return null;
 
   return (
-    <section
-      id="products"
-      className="
-        py-20
-        bg-white dark:bg-gray-900
-        text-black dark:text-white
-        transition-colors
-      "
-    >
+    <section className="py-20 bg-white dark:bg-gray-900 transition-colors">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2
-            className="
-            text-4xl font-bold mb-3
-            text-black dark:text-white
-          "
-          >
-            Featured <span className="text-pink-600">Products</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">
+            Popular <span className="text-pink-600">UK Stocked Parts</span>
           </h2>
 
-          <p
-            className="
-            text-lg
-            text-gray-700 dark:text-gray-300
-          "
-          >
-            Check out our most popular arcade parts and components
+          <p className="mt-3 text-gray-600 dark:text-gray-300">
+            Trusted components chosen by the UK fighting game community.
           </p>
         </div>
 
-        {/* Carousel */}
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={24}
-          slidesPerView={1}
-          breakpoints={{
-            640: { slidesPerView: 1 },
-            768: { slidesPerView: 2 },
-            1024: { slidesPerView: 3 },
-          }}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{
-            delay: 3000,
-            disableOnInteraction: false,
-          }}
-          className="pb-12"
-        >
-          {featuredProducts.map((product) => {
+        {/* Grid (no autoplay distraction) */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {featuredProducts.slice(0, 4).map((product) => {
             const isSoldOut = product.stock <= 0;
 
             return (
-              <SwiperSlide key={product.id}>
-                <div className="px-2">
-                  <Link
-                    href={`/products/${product.slug}`}
-                    className="block group"
-                  >
-                    <div
-                      className={`
-                        border-2 border-black dark:border-gray-700
-                        bg-white dark:bg-gray-800
-                        overflow-hidden
-                        transition-all duration-300 cursor-pointer
-                        ${
-                          !isSoldOut
-                            ? "group-hover:shadow-xl group-hover:-translate-y-1"
-                            : "opacity-60"
-                        }
-                      `}
-                    >
-                      {/* Image */}
-                      <div
-                        className="
-                        aspect-square
-                        bg-gray-100 dark:bg-gray-700
-                        overflow-hidden relative
-                      "
-                      >
-                        <Image
-                          src={getImageUrl(product.image)}
-                          alt={product.name}
-                          fill
-                          className={`
-                            object-cover
-                            transition-transform duration-300
-                            ${!isSoldOut ? "group-hover:scale-105" : ""}
-                          `}
-                        />
+              <Link
+                key={product.id}
+                href={`/products/${product.slug}`}
+                className="group"
+              >
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition overflow-hidden">
+                  {/* Image */}
+                  <div className="relative aspect-square bg-gray-100 dark:bg-gray-700">
+                    <Image
+                      src={getImageUrl(product.image)}
+                      alt={product.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
 
-                        {/* NEW badge */}
-                        {product.is_new && !isSoldOut && (
-                          <div
-                            className="
-                            absolute top-3 left-3
-                            bg-pink-600 text-white
-                            text-xs font-bold
-                            px-3 py-1
-                            border-2 border-black dark:border-gray-700
-                          "
-                          >
-                            NEW
-                          </div>
-                        )}
-
-                        {/* SOLD OUT overlay */}
-                        {isSoldOut && (
-                          <div
-                            className="
-                            absolute inset-0
-                            bg-black/70
-                            flex items-center justify-center
-                          "
-                          >
-                            <span
-                              className="
-                              bg-black dark:bg-gray-800
-                              text-white
-                              px-4 py-2
-                              border-2 border-white dark:border-gray-600
-                              font-bold text-sm
-                            "
-                            >
-                              SOLD OUT
-                            </span>
-                          </div>
-                        )}
+                    {product.is_new && !isSoldOut && (
+                      <div className="absolute top-3 left-3 bg-pink-600 text-white text-xs font-bold px-3 py-1 rounded">
+                        NEW
                       </div>
+                    )}
 
-                      {/* Content */}
-                      <div className="p-6">
-                        <h3
-                          className="
-                          text-xl font-bold mb-2
-                          text-black dark:text-white
-                          group-hover:text-pink-600
-                          transition-colors
-                        "
-                        >
-                          {product.name}
-                        </h3>
-
-                        <span
-                          className="
-                          text-2xl font-bold text-pink-600
-                        "
-                        >
-                          £{product.price}
+                    {isSoldOut && (
+                      <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                        <span className="text-white font-semibold text-sm">
+                          SOLD OUT
                         </span>
                       </div>
-                    </div>
-                  </Link>
+                    )}
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5">
+                    <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-pink-600 transition-colors">
+                      {product.name}
+                    </h3>
+
+                    <p className="mt-2 text-pink-600 font-bold text-lg">
+                      £{product.price}
+                    </p>
+                  </div>
                 </div>
-              </SwiperSlide>
+              </Link>
             );
           })}
-        </Swiper>
+        </div>
 
         {/* CTA */}
-        <div className="text-center mt-10">
+        <div className="text-center mt-12">
           <Link
             href="/shop"
-            className="
-              inline-block
-              bg-pink-600 text-white
-              px-6 py-3
-              border-2 border-black dark:border-gray-700
-              font-bold
-              hover:bg-pink-700
-              transition-colors
-            "
+            className="inline-block bg-pink-600 text-white px-8 py-3 rounded-md font-semibold hover:bg-pink-700 transition"
           >
-            View All Products
+            Browse All Parts
           </Link>
         </div>
       </div>

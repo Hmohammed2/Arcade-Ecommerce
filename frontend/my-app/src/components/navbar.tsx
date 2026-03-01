@@ -55,14 +55,15 @@ const Navbar = () => {
   };
 
   return (
-    <header
+    <nav
       className="
-        sticky top-0 z-50
-        bg-pink-50 dark:bg-gray-900
-        text-black dark:text-white
-        border-b-2 border-black dark:border-gray-700
-        transition-colors
-      "
+  sticky top-0 z-50
+  bg-white dark:bg-gray-900
+  text-gray-900 dark:text-white
+  border-b border-pink-200
+  shadow-sm
+  transition-colors
+"
     >
       <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
         {/* Logo */}
@@ -538,7 +539,7 @@ const Navbar = () => {
           </nav>
         </div>
       )}
-    </header>
+    </nav>
   );
 };
 

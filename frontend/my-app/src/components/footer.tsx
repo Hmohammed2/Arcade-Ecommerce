@@ -136,36 +136,54 @@ const Footer = () => {
 
           {/* ✉️ Newsletter & Social */}
           <div>
-            <h4 className="text-xl font-semibold mb-4">Stay Connected</h4>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
-              Subscribe to our newsletter for updates and product launches.
+            <h4 className="text-xl font-semibold mb-2">
+              Get 10% Off Your First Order
+            </h4>
+
+            <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">
+              Join the ArcadeStickLabs newsletter and receive a 10% discount
+              code instantly. No spam. Just parts, restocks and build tips.
             </p>
 
             <form onSubmit={handleSubscribe} className="flex">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 rounded-l-full text-black dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-pink-600 border border-gray-300 dark:border-gray-600"
+                className="
+        w-full px-4 py-2 rounded-l-full
+        text-black dark:text-gray-100
+        bg-white dark:bg-gray-800
+        border border-gray-300 dark:border-gray-600
+        focus:outline-pink-600
+      "
                 required
               />
+
               <button
                 type="submit"
                 disabled={status === "loading"}
-                className="bg-pink-600 text-white px-6 rounded-r-full font-semibold hover:bg-pink-700 dark:hover:bg-pink-500 transition-colors duration-200 disabled:opacity-50"
+                className="
+        bg-pink-600 text-white
+        px-6 rounded-r-full font-semibold
+        hover:bg-pink-700
+        transition
+        disabled:opacity-50
+      "
               >
-                {status === "loading" ? "…" : "Subscribe"}
+                {status === "loading" ? "…" : "Unlock 10%"}
               </button>
             </form>
 
             {status === "success" && (
-              <p className="text-green-600 dark:text-green-400 mt-2">
-                Thanks for subscribing! 🎉
+              <p className="text-green-600 dark:text-green-400 mt-3 text-sm">
+                🎉 Check your inbox for your 10% discount code.
               </p>
             )}
+
             {status === "error" && (
-              <p className="text-red-600 dark:text-red-400 mt-2">
+              <p className="text-red-600 dark:text-red-400 mt-3 text-sm">
                 Please enter a valid email address.
               </p>
             )}
@@ -175,7 +193,7 @@ const Footer = () => {
                 href="https://www.instagram.com/arcadesticklabs/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-pink-600 dark:hover:text-pink-400 transition-colors duration-200"
+                className="hover:text-pink-600 dark:hover:text-pink-400 transition"
               >
                 <Instagram className="w-6 h-6" />
               </a>

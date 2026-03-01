@@ -8,17 +8,23 @@ import { getColourTextClass } from "../utils/colour-text";
 import Breadcrumbs from "@/components/BreadCrumb";
 import { gaEvent } from "@/library/ga";
 
+const FREE_SHIPPING_THRESHOLD = 45;
+
 export default function CartPage() {
   const { items, removeItem, clearCart, updateQuantity, getTotalPrice } =
     useCart();
 
+  const subtotal = getTotalPrice();
+  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  const progress = Math.min((subtotal / FREE_SHIPPING_THRESHOLD) * 100, 100);
+
   if (items.length === 0) {
     return (
-      <div className="min-h-screen max-w-3xl mx-auto py-16 text-center px-4 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
+      <div className="min-h-screen max-w-3xl mx-auto py-16 text-center px-4">
         <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
         <Link
           href="/shop"
-          className="text-pink-600 dark:text-pink-400 hover:underline font-medium"
+          className="text-pink-600 hover:underline font-medium"
         >
           Continue shopping
         </Link>
@@ -27,111 +33,111 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 transition-colors duration-300">
-      {/* Breadcrumbs */}
+    <div className="min-h-screen max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Cart" }]} />
-      <h1 className="text-3xl font-bold mb-8 text-center sm:text-left">
-        Shopping Cart
-      </h1>
 
-      {/* 🛒 Cart Items */}
-      <div className="space-y-6">
+      <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
+
+      {/* 🚚 FREE SHIPPING BANNER */}
+      <div className="mb-8 p-4 rounded-xl bg-pink-50 border border-pink-200">
+        {subtotal < FREE_SHIPPING_THRESHOLD ? (
+          <>
+            <p className="font-medium">
+              You're £{remaining.toFixed(2)} away from FREE UK shipping 🚚
+            </p>
+
+            <div className="mt-3 h-2 bg-white rounded-full overflow-hidden">
+              <div
+                className="h-full bg-pink-600 transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </>
+        ) : (
+          <p className="font-medium text-green-600">
+            🎉 You’ve unlocked FREE UK shipping!
+          </p>
+        )}
+      </div>
+
+      {/* 🛒 CART ITEMS */}
+      <div className="space-y-8">
         {items.map((item) => {
           const isBundle = item.type === "bundle";
 
           return (
             <div
               key={`${item.id}-${item.colour || "bundle"}`}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 pb-4 gap-4 sm:gap-6"
+              className="flex flex-col sm:flex-row justify-between border-b pb-6 gap-6"
             >
               {/* IMAGE + TITLE */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
+              <div className="flex gap-6">
                 {item.image && (
                   <Image
                     src={getImageUrl(item.image)}
                     alt={item.title}
                     width={150}
-                    height={100}
-                    className="rounded-md border border-gray-200 dark:border-gray-700 object-contain w-32 h-32 sm:w-40 sm:h-40"
+                    height={150}
+                    className="rounded-md object-contain"
                   />
                 )}
 
-                <div className="flex flex-col">
-                  <span className="text-base font-medium text-gray-800 dark:text-gray-100">
+                <div>
+                  <h3 className="font-semibold text-lg">
                     {isBundle ? "🧰 " : ""} {item.title}
-                    {!isBundle && item.colour && (
-                      <span
-                        className={`${getColourTextClass(
-                          item.colour,
-                        )} text-sm ml-1`}
-                      >
-                        ({item.colour})
-                      </span>
-                    )}
-                  </span>
+                  </h3>
 
-                  {/* PRICE */}
-                  <span className="text-pink-600 dark:text-pink-400 font-semibold mt-1">
-                    £{item.price}
-                  </span>
-
-                  {/* 🟣 BUNDLE OPTIONS PREVIEW */}
-                  {isBundle && item.option_values && item.option_meta && (
-                    <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-                      <p className="font-semibold text-xs uppercase tracking-wide mb-1">
-                        Your selection:
-                      </p>
-
-                      <ul className="list-disc ml-5 space-y-1">
-                        {item.option_meta.map((opt: any) => {
-                          const selected =
-                            item.option_values?.[opt.option_id] ?? {};
-
-                          return Object.entries(selected).map(
-                            ([valueId, qty]: any) => {
-                              const meta = opt.values[valueId];
-
-                              return (
-                                <li key={`${opt.option_id}-${valueId}`}>
-                                  {qty} × {meta.label} {opt.product_name}
-                                </li>
-                              );
-                            },
-                          );
-                        })}
-                      </ul>
-                    </div>
+                  {!isBundle && item.colour && (
+                    <p
+                      className={`${getColourTextClass(
+                        item.colour,
+                      )} text-sm mt-1`}
+                    >
+                      {item.colour}
+                    </p>
                   )}
+
+                  <p className="text-pink-600 font-bold mt-2">£{item.price}</p>
+
+                  <button
+                    onClick={() => removeItem(item.id, item.colour || "")}
+                    className="text-red-600 text-sm mt-3 hover:underline"
+                  >
+                    Remove
+                  </button>
                 </div>
               </div>
 
-              {/* QUANTITY + REMOVE */}
-              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <label htmlFor={`qty-${item.id}`} className="sr-only">
-                    Quantity
-                  </label>
-                  <input
-                    id={`qty-${item.id}`}
-                    type="number"
-                    min={1}
-                    value={item.quantity}
-                    onChange={(e) =>
-                      updateQuantity(
-                        item.id,
-                        item.colour || "",
-                        Number(e.target.value) || 1,
-                      )
-                    }
-                    className="w-16 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-center text-sm bg-white dark:bg-gray-800"
-                  />
-                </div>
+              {/* QUANTITY CONTROLS */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() =>
+                    updateQuantity(
+                      item.id,
+                      item.colour || "",
+                      Math.max(item.quantity - 1, 1),
+                    )
+                  }
+                  className="w-8 h-8 border rounded flex items-center justify-center"
+                >
+                  −
+                </button>
+
+                <span className="w-6 text-center font-medium">
+                  {item.quantity}
+                </span>
 
                 <button
-                  onClick={() => removeItem(item.id, item.colour || "")}
-                  className="text-red-600 dark:text-red-400 hover:underline text-sm"
+                  onClick={() =>
+                    updateQuantity(
+                      item.id,
+                      item.colour || "",
+                      item.quantity + 1,
+                    )
+                  }
+                  className="w-8 h-8 border rounded flex items-center justify-center"
                 >
-                  Remove
+                  +
                 </button>
               </div>
             </div>
@@ -139,42 +145,48 @@ export default function CartPage() {
         })}
       </div>
 
-      {/* 🧾 Cart Summary */}
-      <div className="mt-8 flex flex-col items-center sm:items-end gap-4">
-        <p className="text-xl font-semibold">
-          Subtotal: £{getTotalPrice().toFixed(2)}
-        </p>
+      {/* 🧾 SUMMARY */}
+      <div className="mt-10 flex flex-col sm:flex-row justify-between items-center gap-6">
+        <div className="text-xl font-semibold">
+          Subtotal: £{subtotal.toFixed(2)}
+          <p className="text-sm text-gray-500 mt-1">
+            Shipping calculated at checkout • Fast UK delivery
+          </p>
+        </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <button
             onClick={clearCart}
-            className="cursor-pointer px-4 py-2 rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-sm font-medium w-full sm:w-auto border border-gray-200 dark:border-gray-700 transition"
+            className="px-4 py-2 rounded border text-sm"
           >
             Clear Cart
           </button>
+
           <button
             onClick={() => {
-              const total = getTotalPrice();
-
               gaEvent("begin_checkout", {
                 currency: "GBP",
-                value: total,
-                items: items.map((i) => ({
-                  item_id: i.id,
-                  item_name: i.title,
-                  item_variant: i.colour || "default",
-                  price: i.price,
-                  quantity: i.quantity,
-                })),
+                value: subtotal,
               });
 
               window.location.href = "/checkout";
             }}
-            className="cursor-pointer px-6 py-2 rounded bg-pink-600 text-white hover:bg-pink-700 dark:hover:bg-pink-500 text-sm font-medium text-center w-full sm:w-auto transition"
+            className="px-6 py-3 rounded bg-pink-600 text-white font-semibold hover:bg-pink-700 transition"
           >
-            Checkout
+            🔒 Secure Checkout
           </button>
         </div>
+      </div>
+
+      {/* 📱 MOBILE STICKY CHECKOUT */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex justify-between items-center sm:hidden shadow-lg">
+        <span className="font-semibold">£{subtotal.toFixed(2)}</span>
+        <button
+          onClick={() => (window.location.href = "/checkout")}
+          className="bg-pink-600 text-white px-4 py-2 rounded font-medium"
+        >
+          Checkout
+        </button>
       </div>
     </div>
   );
