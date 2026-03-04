@@ -177,6 +177,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "import_export",
     "nested_admin",
+    "django_json_widget",
 
     # Local apps
     "marketing",

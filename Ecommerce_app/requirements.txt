@@ -18,6 +18,7 @@ google-auth==2.42.1
 pillow==11.0.0
 django-import-export==4.3.10
 django-debug-toolbar==6.0.0
+django-json-widget==1.1.1
 
 # Payments
 stripe==13.1.0
@@ -28,3 +29,4 @@ gunicorn==22.0.0
 # Background jobs / automation
 celery==5.4.0
 redis==5.0.4
+

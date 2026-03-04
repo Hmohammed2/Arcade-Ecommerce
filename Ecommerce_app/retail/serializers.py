@@ -20,11 +20,18 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         model = ProductVariant
         fields = ["id", "colour", "stock"]
 
+class ProductMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ["id", "name", "slug", "price", "image"]
+
 class ProductSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     variants = ProductVariantSerializer(many=True, read_only=True)
+    frequently_bought_together = ProductMiniSerializer(many=True, read_only=True)
     image = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = Product

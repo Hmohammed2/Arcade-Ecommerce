@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django_json_widget.widgets import JSONEditorWidget
+from django.db import models
 import nested_admin
 from .models import (
     Category, Product, Order, OrderItem, Payment,
@@ -212,6 +214,10 @@ class ProductVariantInline(admin.TabularInline):
 
 @admin.register(Product)
 class ProductAdmin(ImportExportModelAdmin):
+    formfield_overrides = {
+        models.JSONField: {"widget": JSONEditorWidget}
+    }
+    filter_horizontal = ("frequently_bought_together",)
     resource_class = ProductResource
     inlines = [ProductImageInline, ProductVariantInline]
 

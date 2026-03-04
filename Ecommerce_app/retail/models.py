@@ -37,11 +37,28 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     description = models.TextField(blank=True)
     overview = models.TextField(blank=True)
-    features = models.JSONField(blank=True, default=list)
+    features = models.JSONField(
+        blank=True,
+        default=list,
+        help_text="Technical specifications"
+    )
     price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal("0"))])
     short_description = models.TextField(blank=True)
     is_featured = models.BooleanField(default=False)
     is_new = models.BooleanField(default=False)
+    marketing = models.JSONField(
+        blank=True,
+        default=dict,
+        help_text="Highlights, compatibility, trust signals"
+    )
+    sku = models.CharField(max_length=100, blank=True)
+    brand = models.CharField(max_length=100, blank=True)
+    frequently_bought_together = models.ManyToManyField(
+        "self",
+        blank=True,
+        symmetrical=False,
+        related_name="recommended_with"
+    )
     weight_kg = models.DecimalField(
         max_digits=6,
         decimal_places=3,
