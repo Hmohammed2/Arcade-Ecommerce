@@ -37,6 +37,8 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="products")
     description = models.TextField(blank=True)
     overview = models.TextField(blank=True)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
+    review_count = models.PositiveIntegerField(default=0)
     features = models.JSONField(
         blank=True,
         default=list,

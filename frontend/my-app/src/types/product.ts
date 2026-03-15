@@ -48,6 +48,8 @@ export interface Product {
 
   description?: string;
   overview?: string;
+  rating?: number;
+  review_count?: number;
 
   price: number;
   stock?: number;

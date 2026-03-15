@@ -76,8 +76,8 @@ export interface BundleOptionMetaValue {
 }
 
 export interface BundleOptionMeta {
-  option_id: number;
-  product_name: string;
+  id: number;
+  name: string;
   values: Record<number, BundleOptionMetaValue>;
 }
 

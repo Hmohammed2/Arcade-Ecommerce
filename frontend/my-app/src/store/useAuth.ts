@@ -25,12 +25,22 @@ interface AuthState {
     password: string,
     turnstileToken: string,
   ) => Promise<void>;
+
   logout: () => void;
+
   fetchUser: () => Promise<void>;
-  refreshAccessToken: () => Promise<void>;
+
+  refreshAccessToken: () => Promise<string | null>;
+
   setAccessToken: (token: string) => void;
+
   setAuthReady: (v: boolean) => void;
 }
+
+/*
+Prevent multiple refresh calls racing
+*/
+let refreshPromise: Promise<string | null> | null = null;
 
 export const useAuth = create<AuthState>()(
   devtools(
@@ -43,6 +53,10 @@ export const useAuth = create<AuthState>()(
         authReady: false,
 
         setAuthReady: (v) => set({ authReady: v }),
+
+        /*
+        LOGIN
+        */
         login: async (identifier, password, turnstileToken) => {
           try {
             if (!turnstileToken) throw new Error("Please complete the CAPTCHA");
@@ -61,9 +75,9 @@ export const useAuth = create<AuthState>()(
             );
 
             const data = await res.json();
+
             if (!res.ok) throw new Error(data.detail || "Login failed");
 
-            // Save tokens
             set({
               accessToken: data.access,
               refreshToken: data.refresh,
@@ -76,19 +90,25 @@ export const useAuth = create<AuthState>()(
             await get().fetchUser();
           } catch (err: unknown) {
             console.error("Login error:", err);
+
             const message =
               err instanceof Error
                 ? err.message
                 : typeof err === "string"
                   ? err
                   : "Invalid credentials";
+
             toast.error(message);
+
             set({ isAuthenticated: false });
+
             throw err;
           }
         },
 
-        // ✅ Logout
+        /*
+        LOGOUT
+        */
         logout: () => {
           set({
             user: null,
@@ -96,12 +116,16 @@ export const useAuth = create<AuthState>()(
             refreshToken: null,
             isAuthenticated: false,
           });
+
           toast.success("Logged out 👋");
         },
 
-        // ✅ Fetch authenticated user
+        /*
+        FETCH AUTHENTICATED USER
+        */
         fetchUser: async () => {
           const { accessToken } = get();
+
           if (!accessToken) return;
 
           try {
@@ -114,54 +138,102 @@ export const useAuth = create<AuthState>()(
               },
             );
 
-            if (!res.ok) {
-              if (res.status === 401) {
-                // Token expired → try refresh
-                await get().refreshAccessToken();
-                return get().fetchUser();
-              }
-              throw new Error("Failed to fetch user");
+            /*
+            Access token expired
+            */
+            if (res.status === 401) {
+              const newToken = await get().refreshAccessToken();
+
+              if (!newToken) return;
+
+              return get().fetchUser();
             }
 
+            if (!res.ok) throw new Error("Failed to fetch user");
+
             const user = await res.json();
-            set({ user, isAuthenticated: true });
+
+            set({
+              user,
+              isAuthenticated: true,
+            });
           } catch (err) {
             console.error("fetchUser error:", err);
-            set({ user: null, isAuthenticated: false });
+
+            set({
+              user: null,
+              isAuthenticated: false,
+            });
           }
         },
 
         setAccessToken: (token: string) => {
-          set({ accessToken: token, isAuthenticated: true });
+          set({
+            accessToken: token,
+            isAuthenticated: true,
+          });
         },
 
-        // ✅ Refresh access token
+        /*
+        REFRESH ACCESS TOKEN
+        */
         refreshAccessToken: async () => {
           const { refreshToken } = get();
-          if (!refreshToken) return;
 
-          try {
-            const newAccessToken = await refreshTokenAPI(refreshToken);
-            set({ accessToken: newAccessToken, isAuthenticated: true });
-            return newAccessToken;
-          } catch (err) {
-            console.error("Token refresh failed:", err);
-            get().logout();
-            return null;
+          if (!refreshToken) return null;
+
+          /*
+          Lock refresh so multiple requests don't trigger multiple refresh calls
+          */
+          if (!refreshPromise) {
+            refreshPromise = (async () => {
+              try {
+                const newAccessToken = await refreshTokenAPI(refreshToken);
+
+                set({
+                  accessToken: newAccessToken,
+                  isAuthenticated: true,
+                });
+
+                return newAccessToken;
+              } catch (err) {
+                console.error("Token refresh failed:", err);
+
+                get().logout();
+
+                return null;
+              } finally {
+                refreshPromise = null;
+              }
+            })();
           }
+
+          return refreshPromise;
         },
       }),
+
+      /*
+      Persist settings
+      */
       {
         name: "auth-storage",
-        // ✅ Keep only necessary fields
+
         partialize: (state) => ({
           accessToken: state.accessToken,
           refreshToken: state.refreshToken,
           user: state.user,
           isAuthenticated: state.isAuthenticated,
         }),
+
+        /*
+        Ensure hydration finishes before auth logic runs
+        */
+        onRehydrateStorage: () => (state) => {
+          state?.setAuthReady(true);
+        },
       },
     ),
+
     { name: "AuthStore" },
   ),
 );
