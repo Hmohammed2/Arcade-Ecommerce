@@ -13,7 +13,8 @@ export interface ProductImage {
 
 export interface ProductVariant {
   id: number;
-  colour: string;
+  name: string; // 👈 ADD THIS
+  colour?: string;
   stock: number;
   sku?: string;
   price?: number;
