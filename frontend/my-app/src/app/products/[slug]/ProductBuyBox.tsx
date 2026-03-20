@@ -156,7 +156,7 @@ export default function ProductBuyBox({
                   : "bg-[#14485A] hover:bg-[#0f3a48] text-white"
               }`}
             >
-              {hasVariants && !selectedVariant ? "Select" : "Add"}
+              {hasVariants && !selectedVariant ? "Select" : "Add to Basket"}
             </button>
           </div>
         </div>
