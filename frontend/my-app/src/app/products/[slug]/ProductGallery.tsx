@@ -47,7 +47,7 @@ export default function ProductGallery({ product }: { product: Product }) {
   };
 
   return (
-    <div className="md:col-span-5 flex flex-col gap-4">
+    <div className="md:col-span-5 flex flex-col gap-2 md:gap-4">
       {/* ===================== */}
       {/* DESKTOP */}
       {/* ===================== */}
@@ -168,7 +168,10 @@ export default function ProductGallery({ product }: { product: Product }) {
                 src={getImageUrl(img)}
                 alt={product.name}
                 trigger={(open) => (
-                  <button onClick={open} className="relative w-full h-[400px]">
+                  <button
+                    onClick={open}
+                    className="relative w-full h-[45vh] max-h-[360px] min-h-[240px]"
+                  >
                     <Image
                       src={getImageUrl(img)}
                       alt={`${product.name} view ${i + 1}`}

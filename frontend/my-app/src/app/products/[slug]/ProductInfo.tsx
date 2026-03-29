@@ -19,7 +19,7 @@ export default function ProductInfo({
   const reviewCount = Number(product.review_count ?? 12);
 
   return (
-    <div className="md:col-span-4 space-y-3 md:space-y-4">
+    <div className="md:col-span-4 space-y-2 md:space-y-4">
       {/* Title */}
       <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 line-clamp-2">
         {product.name}
