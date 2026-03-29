@@ -73,7 +73,7 @@ export default function ProductGallery({ product }: { product: Product }) {
                   open(); // open modal on double click
                 }}
                 className={`
-                  relative w-full h-[500px] overflow-hidden
+                  relative w-full h-[45vh] max-h-[400px] min-h-[250px] overflow-hidden
                   ${isZoomed ? "cursor-zoom-out" : "cursor-zoom-in"}
                 `}
               >
@@ -81,7 +81,7 @@ export default function ProductGallery({ product }: { product: Product }) {
                   src={getImageUrl(selected)}
                   alt={product.name}
                   fill
-                  className="object-cover transition-transform duration-200"
+                  className="object-contain transition-transform duration-200"
                   style={{
                     transformOrigin: `${zoomPos.x}% ${zoomPos.y}%`,
                     transform: isZoomed ? "scale(2)" : "scale(1)",
@@ -149,7 +149,7 @@ export default function ProductGallery({ product }: { product: Product }) {
                   src={getImageUrl(img)}
                   alt={`${product.name} thumb ${i}`}
                   fill
-                  className="object-cover"
+                  className="object-contain"
                 />
               </button>
             );
@@ -173,7 +173,7 @@ export default function ProductGallery({ product }: { product: Product }) {
                       src={getImageUrl(img)}
                       alt={`${product.name} view ${i + 1}`}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                     />
                   </button>
                 )}

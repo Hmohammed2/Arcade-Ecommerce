@@ -30,6 +30,7 @@ export type ProductMarketing = {
   compatibility?: string[];
   trust_notes?: string[];
   shipping_info?: string;
+  quantity_hint?: string;
 };
 
 export type ProductMini = {

@@ -26,6 +26,7 @@ from django.conf import settings
 from .utils.shipping import resolve_shipping_method
 from .utils.calculate_subtotal import calculate_cart_subtotal
 from .utils.shipping_validation import validate_shipping_address
+from .tasks import send_welcome_email_task
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -685,6 +686,9 @@ def subscribe_newsletter(request):
     if not created and not subscriber.is_active:
         subscriber.is_active = True
         subscriber.save(update_fields=["is_active"])
+    
+    if created:
+        send_welcome_email_task.delay(email)
 
     logger.info(
         "[Newsletter] %s | email=%s source=%s",

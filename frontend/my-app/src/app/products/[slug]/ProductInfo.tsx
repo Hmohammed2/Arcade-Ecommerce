@@ -41,7 +41,7 @@ export default function ProductInfo({
       {/* 🔥 MOBILE: small highlights (keep persuasion, reduce height) */}
       {highlights.length > 0 && (
         <ul className="md:hidden text-xs text-gray-600 dark:text-gray-400 space-y-1">
-          {highlights.slice(0, 2).map((h, i) => (
+          {highlights.slice(0, 4).map((h, i) => (
             <li key={i}>✔ {h}</li>
           ))}
         </ul>
