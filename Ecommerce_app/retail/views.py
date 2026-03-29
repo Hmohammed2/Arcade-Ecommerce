@@ -26,7 +26,7 @@ from django.conf import settings
 from .utils.shipping import resolve_shipping_method
 from .utils.calculate_subtotal import calculate_cart_subtotal
 from .utils.shipping_validation import validate_shipping_address
-from .tasks import send_welcome_email_task
+from .tasks import send_welcome_email_task, send_followup_email_1_task, send_followup_email_2_task
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -689,6 +689,8 @@ def subscribe_newsletter(request):
     
     if created:
         send_welcome_email_task.delay(email)
+        send_followup_email_1_task.apply_async((email,), countdown=86400)   # 24h
+        send_followup_email_2_task.apply_async((email,), countdown=172800)  # 48h
 
     logger.info(
         "[Newsletter] %s | email=%s source=%s",
