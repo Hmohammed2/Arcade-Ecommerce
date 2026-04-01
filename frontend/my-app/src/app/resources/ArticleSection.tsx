@@ -8,8 +8,16 @@ import { getImageUrl } from "@/library/getImageUrl";
 
 function estimateReadingTime(text?: string) {
   if (!text) return "2 min read";
-  const words = text.split(/\s+/).length;
+
+  const plainText = text
+    .replace(/<[^>]*>/g, " ")
+    .replace(/[#_*`>\-\[\]\(\)]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const words = plainText.split(" ").filter(Boolean).length;
   const minutes = Math.max(1, Math.round(words / 200));
+
   return `${minutes} min read`;
 }
 
@@ -93,7 +101,7 @@ export default function ArticlesSection() {
                   {article.published_at
                     ? new Date(article.published_at).toLocaleDateString()
                     : "Draft"}{" "}
-                  • {estimateReadingTime(article.excerpt)}
+                  • {estimateReadingTime(article.content)}
                 </div>
 
                 {/* Title */}

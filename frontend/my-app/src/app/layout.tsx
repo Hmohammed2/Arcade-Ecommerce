@@ -11,7 +11,7 @@ import "./globals.css";
 import TopBanner from "@/components/TopBanner";
 import NewsletterPopup from "@/components/NewsLetterPopup";
 
-const baseUrl = "https://arcadesticklabs.co.uk"; // hard canonical
+const baseUrl = "https://arcadesticklabs.co.uk";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,13 +28,20 @@ export const metadata: Metadata = {
   alternates: {
     canonical: baseUrl,
   },
-  title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
+  icons: {
+    icon: [{ url: "/favicon.ico" }],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  title: "Arcade Stick Parts UK | Fight Stick Parts & Guides | ArcadeStickLabs",
   description:
-    "UK specialist store for premium arcade sticks, custom parts, Brook boards, Sanwa and Seimitsu components.",
+    "Shop arcade stick parts in the UK, including Sanwa, Seimitsu, Crown and Brook components for custom builds, upgrades, and fight stick mods.",
   openGraph: {
-    title: "ArcadeStickLabs — Custom Arcade Parts & Fightstick Kits",
+    title:
+      "Arcade Stick Parts UK | Fight Stick Parts & Guides | ArcadeStickLabs",
     description:
-      "Build your arcade stick with curated Sanwa, Seimitsu, Brook and Crown parts. Fast UK dispatch.",
+      "Shop arcade stick parts in the UK, including Sanwa, Seimitsu, Brook and Crown components for custom builds and upgrades.",
     url: baseUrl,
     siteName: "ArcadeStickLabs",
     images: [
@@ -50,9 +57,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "ArcadeStickLabs",
+    title: "Arcade Stick Parts UK | ArcadeStickLabs",
     description:
-      "UK specialist arcade parts store for competitive fighting-game players.",
+      "Shop Sanwa, Seimitsu, Crown and Brook arcade stick parts in the UK for custom builds, upgrades, and fight stick mods.",
     images: [`${baseUrl}/og-image.png`],
   },
 };
@@ -65,7 +72,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Global Business / Merchant Schema */}
         <Script
           id="business-schema"
           type="application/ld+json"
@@ -74,20 +80,53 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Store",
+              "@id": `${baseUrl}/#store`,
               name: "ArcadeStickLabs",
               url: baseUrl,
               logo: `${baseUrl}/logo.png`,
               image: `${baseUrl}/og-image.png`,
               description:
-                "UK specialist store for premium arcade sticks and fighting game accessories.",
+                "ArcadeStickLabs is a UK specialist store for arcade stick parts, fight stick components, and custom build accessories from brands including Sanwa, Seimitsu, Crown, and Brook.",
               address: {
                 "@type": "PostalAddress",
                 addressCountry: "GB",
+              },
+              areaServed: {
+                "@type": "Country",
+                name: "United Kingdom",
+              },
+              brand: {
+                "@type": "Brand",
+                name: "ArcadeStickLabs",
               },
               sameAs: [
                 "https://www.yelp.co.uk/biz/arcadesticklabs",
                 "https://instagram.com/arcadesticklabs",
               ],
+              keywords: [
+                "arcade stick parts uk",
+                "fight stick parts",
+                "sanwa buttons uk",
+                "seimitsu parts",
+                "crown levers",
+                "brook boards",
+                "arcade stick upgrades",
+              ],
+              knowsAbout: [
+                "Arcade stick parts",
+                "Fight stick components",
+                "Sanwa buttons",
+                "Seimitsu buttons",
+                "Korean levers",
+                "Brook boards",
+                "Fight stick upgrades",
+              ],
+              contactPoint: {
+                "@type": "ContactPoint",
+                contactType: "customer support",
+                areaServed: "GB",
+                availableLanguage: ["en-GB", "en"],
+              },
             }),
           }}
         />
