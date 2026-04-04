@@ -14,6 +14,7 @@ export interface Article {
   author_name?: string;
   is_published: boolean;
   published_at: string | null;
+  featured?: boolean;
   cta_label?: string;
   cta_url?: string;
   created_at: string;
@@ -33,7 +34,7 @@ const API_BASE =
  * GET /articles/
  */
 export async function fetchArticles(): Promise<Article[]> {
-  const res = await fetch(`${baseUrlServer}/articles/fetcharticles/`, {
+  const res = await fetch(`${API_BASE}/articles/fetcharticles/`, {
     next: { revalidate: 60 }, // ISR friendly
   });
 

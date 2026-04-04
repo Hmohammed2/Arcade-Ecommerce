@@ -4,7 +4,7 @@ import { Star, CheckCircle } from "lucide-react";
 
 export function Testimonials() {
   return (
-    <section className="py-20 bg-gray-50 dark:bg-gray-800 transition-colors">
+    <section className="py-20 bg-gray-50 dark:bg-gray-900 transition-colors">
       <div className="max-w-4xl mx-auto px-6 text-center">
         {/* Section Header */}
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">

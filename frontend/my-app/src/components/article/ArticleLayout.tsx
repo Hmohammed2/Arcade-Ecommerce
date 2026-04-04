@@ -126,9 +126,6 @@ export default function ArticleLayout({
                 {children}
               </ReactMarkdown>
             </div>
-
-            {/* Mobile comments */}
-            <div className="mt-16 lg:hidden">{comments}</div>
           </div>
 
           {/* Desktop Sidebar */}
@@ -136,10 +133,6 @@ export default function ArticleLayout({
             <div className="sticky top-24 space-y-8">
               <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-xl p-6 shadow ring-1 ring-black/5 dark:ring-white/10">
                 <TableOfContents />
-              </div>
-              <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur rounded-xl p-6 shadow ring-1 ring-black/5 dark:ring-white/10">
-                <h3 className="font-semibold mb-4">Comments</h3>
-                {comments}
               </div>
             </div>
           </aside>

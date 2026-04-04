@@ -40,7 +40,7 @@ export default function StickyCTA({ label, href }: StickyCTAProps) {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           {/* Text */}
           <div className="text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100">
-            Ready to upgrade your setup?
+            Need help choosing the right parts?
           </div>
 
           {/* Button */}

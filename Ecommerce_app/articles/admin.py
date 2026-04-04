@@ -7,6 +7,7 @@ class ArticleAdmin(admin.ModelAdmin):
         "title",
         "author",
         "is_published",
+        "featured",
         "published_at",
         "updated_at",
     )
@@ -30,6 +31,6 @@ class ArticleAdmin(admin.ModelAdmin):
             "description": "Leave blank to disable sticky CTA for this article."
         }),
         ("Publishing", {
-            "fields": ("is_published", "published_at")
+            "fields": ("is_published", "featured", "published_at")
         }),
     )

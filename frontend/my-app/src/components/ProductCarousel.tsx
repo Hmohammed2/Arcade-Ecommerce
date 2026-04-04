@@ -20,7 +20,7 @@ export function ProductCarousel({
   if (!featuredProducts?.length) return null;
 
   return (
-    <section className="py-20 bg-white dark:bg-gray-900 transition-colors">
+    <section className="py-20 bg-white dark:bg-gray-800 transition-colors">
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-12">
