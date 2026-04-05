@@ -18,6 +18,7 @@ class ArticleListSerializer(serializers.ModelSerializer):
             "title",
             "excerpt",
             "thumbnail",
+            "featured",
             "published_at",
             "author_name",
         )
