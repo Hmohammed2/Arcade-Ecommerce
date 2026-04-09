@@ -15,6 +15,7 @@ import TopBanner from "@/components/TopBanner";
 import NewsletterPopup from "@/components/NewsLetterPopup";
 
 import "./globals.css";
+import { Suspense } from "react";
 
 const baseUrl = "https://arcadesticklabs.co.uk";
 
@@ -144,7 +145,10 @@ export default function RootLayout({
         <QueryProvider>
           <GoogleAnalytics />
           <HotjarProvider />
-          <RouteTracker />
+          <Suspense fallback={null}>
+            <RouteTracker />
+          </Suspense>
+
           <AuthHydration />
 
           <TopBanner />
