@@ -1,15 +1,20 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
+
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import AuthHydration from "@/components/middleware/AuthHydration";
 import QueryProvider from "./providers/providers";
-import Script from "next/script";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
+import GoogleConsentMode from "@/components/GoogleConsentMode";
 import RouteTracker from "@/components/RouteTracker";
-import "./globals.css";
+import CookieBanner from "@/components/CookieBanner";
+import HotjarProvider from "@/components/Hotjar";
 import TopBanner from "@/components/TopBanner";
 import NewsletterPopup from "@/components/NewsLetterPopup";
+
+import "./globals.css";
 
 const baseUrl = "https://arcadesticklabs.co.uk";
 
@@ -66,12 +71,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="en">
       <head>
+        <GoogleConsentMode />
         <Script
           id="business-schema"
           type="application/ld+json"
@@ -137,13 +143,18 @@ export default function RootLayout({
       >
         <QueryProvider>
           <GoogleAnalytics />
+          <HotjarProvider />
           <RouteTracker />
           <AuthHydration />
+
           <TopBanner />
           <Navbar />
           <NewsletterPopup />
+
           {children}
+
           <Footer />
+          <CookieBanner />
         </QueryProvider>
       </body>
     </html>
