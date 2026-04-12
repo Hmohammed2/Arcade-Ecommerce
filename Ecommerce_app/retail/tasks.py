@@ -42,9 +42,8 @@ def send_welcome_email_task(self, email):
 
 @shared_task
 def send_followup_email_1_task(email):
-    send_followup_email_1(email)
-
+    return
 
 @shared_task
 def send_followup_email_2_task(email):
-    send_followup_email_2(email)
+    return
