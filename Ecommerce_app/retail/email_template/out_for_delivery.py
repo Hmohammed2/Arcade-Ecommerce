@@ -9,11 +9,11 @@ def out_for_delivery_email(order):
 <html>
 <body style="font-family:Segoe UI, Arial; background:#f9fafb; padding:20px;">
   <div style="max-width:600px;margin:auto;background:white;border-radius:12px;padding:24px;">
-    <h2 style="color:#4f46e5;">🚚 Your order is out for delivery!</h2>
+    <h2 style="color:#4f46e5;">🚚 Your order has been dispatched and is out for delivery!</h2>
 
     <p>Hi {order.first_name},</p>
 
-    <p>Your ArcadeStickLabs order <strong>#{order.public_id}</strong> is now <strong>out for delivery</strong>.</p>
+    <p>Your ArcadeStickLabs order <strong>#{order.public_id}</strong> has been dispatched and is now <strong>out for delivery</strong>.</p>
 
     <p><strong>Tracking number:</strong> {tracking or "Pending"}</p>
 

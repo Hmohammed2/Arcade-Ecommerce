@@ -91,6 +91,28 @@ services:
       - django
       - redis
       - db
+  celery-beat:
+    container_name: celery-beat
+    build:
+      context: ./Ecommerce_app
+      dockerfile: Dockerfile.prod
+    command: celery -A Ecommerce_app beat -l info
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      DJANGO_ENV: ${DJANGO_ENV}
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      GRAPH_TENANT_ID: ${GRAPH_TENANT_ID}
+      GRAPH_CLIENT_ID: ${GRAPH_CLIENT_ID}
+      GRAPH_CLIENT_SECRET: ${GRAPH_CLIENT_SECRET}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND}
+    depends_on:
+      - django
+      - redis
+      - db
   stripe:
     image: stripe/stripe-cli
     container_name: stripe
@@ -100,6 +122,7 @@ services:
       - stripe-cli-config-2:/root/.config/stripe
     depends_on:
       - django
+
 volumes:
   postgres_data:
   stripe-cli-config-2:

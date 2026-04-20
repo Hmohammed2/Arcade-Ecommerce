@@ -688,9 +688,7 @@ def subscribe_newsletter(request):
         subscriber.save(update_fields=["is_active"])
     
     if created:
-        send_welcome_email_task.delay(email)
-        send_followup_email_1_task.apply_async((email,), countdown=86400)   # 24h
-        send_followup_email_2_task.apply_async((email,), countdown=172800)  # 48h
+        send_welcome_email_task.delay(subscriber.id)
 
     logger.info(
         "[Newsletter] %s | email=%s source=%s",

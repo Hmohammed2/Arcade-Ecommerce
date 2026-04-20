@@ -510,6 +510,9 @@ class NewsletterSubscriber(models.Model):
         default="footer",
         help_text="Where the signup came from (footer, checkout, popup, etc.)",
     )
+    welcome_sent_at = models.DateTimeField(null=True, blank=True)
+    followup_1_sent_at = models.DateTimeField(null=True, blank=True)
+    followup_2_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

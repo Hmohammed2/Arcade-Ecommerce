@@ -44,17 +44,14 @@ export function ProductCard({
       </Link>
 
       <div className="p-4 flex flex-col flex-1">
-        {/* Product title */}
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2 min-h-[3.5rem]">
           {product.name}
         </h3>
 
-        {/* Price */}
         <p className="text-pink-600 dark:text-pink-400 font-bold">
           £{product.price}
         </p>
 
-        {/* Stock */}
         <p
           className={`text-sm ${
             inStock
@@ -65,28 +62,24 @@ export function ProductCard({
           {inStock ? "In Stock" : "Out of Stock"}
         </p>
 
-        {/* Conversion hint */}
         {hasVariants && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
             {variantCount} colours available
           </p>
         )}
 
-        {/* Action */}
         {inStock &&
           (hasVariants ? (
             <Link
               href={`/products/${product.slug}`}
-              className="mt-auto pt-4 text-center bg-[#14485A] text-white py-2 rounded-md
-              hover:bg-[#0e2f3d] dark:bg-[#1b5f75] dark:hover:bg-[#14485A] transition"
+              className="mt-auto text-center bg-[#14485A] text-white py-2 rounded-md hover:bg-[#0e2f3d] dark:bg-[#1b5f75] dark:hover:bg-[#14485A] transition"
             >
               View Options
             </Link>
           ) : (
             <button
               onClick={handleAdd}
-              className="mt-auto pt-4 bg-[#14485A] text-white py-2 rounded-md
-              hover:bg-[#0e2f3d] dark:bg-[#1b5f75] dark:hover:bg-[#14485A] transition"
+              className="mt-auto text-center bg-[#14485A] text-white py-2 rounded-md hover:bg-[#0e2f3d] dark:bg-[#1b5f75] dark:hover:bg-[#14485A] transition"
             >
               Add to Cart
             </button>
