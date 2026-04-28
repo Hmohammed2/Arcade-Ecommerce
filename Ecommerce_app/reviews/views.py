@@ -66,9 +66,15 @@ class ApprovedReviewsListView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
-        # Optional filters: ?limit=20
-        limit = int(request.GET.get("limit", "50"))
+        try:
+            limit = int(request.GET.get("limit", "50"))
+        except ValueError:
+            limit = 50
+
         limit = max(1, min(limit, 200))
 
-        qs = Review.objects.filter(status=Review.Status.APPROVED).order_by("-created_at")[:limit]
+        qs = Review.objects.filter(
+            status=Review.Status.APPROVED
+        ).order_by("-created_at")[:limit]
+
         return Response(ReviewPublicSerializer(qs, many=True).data)

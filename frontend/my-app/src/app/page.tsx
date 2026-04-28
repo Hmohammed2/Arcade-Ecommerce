@@ -9,7 +9,6 @@ import { Hero } from "@/components/hero";
 import { Testimonials } from "@/components/Testimonials";
 import About from "@/components/AboutSection";
 import BrandVideo from "@/components/BrandVideo";
-import Footer from "@/components/footer";
 
 const SITE_URL = "https://arcadesticklabs.co.uk";
 
@@ -114,8 +113,6 @@ export default async function LandingPage() {
 
           {/* About Us */}
           <About />
-
-          <Footer />
         </main>
       </div>
     </>

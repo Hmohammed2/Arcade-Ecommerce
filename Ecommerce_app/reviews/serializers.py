@@ -18,6 +18,8 @@ class ReviewSubmitSerializer(serializers.Serializer):
 
 
 class ReviewPublicSerializer(serializers.ModelSerializer):
+    display_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Review
         fields = [
@@ -25,7 +27,12 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
             "title",
             "body",
             "display_name",
-            "consent_to_publish_name",
             "verified_purchase",
             "created_at",
         ]
+
+    def get_display_name(self, obj):
+        if not obj.consent_to_publish_name:
+            return "Verified Customer"
+
+        return obj.display_name or "Verified Customer"
