@@ -300,6 +300,56 @@ class PaymentService:
             ),
         }
         
+        
+    @staticmethod
+    @transaction.atomic
+    def mark_payment_failed(intent: dict) -> None:
+        intent_id = intent.get("id")
+
+        if not intent_id:
+            logger.error("[Webhook] Stripe failed without intent id")
+            return
+
+        try:
+            payment = Payment.objects.select_related("order").get(
+                stripe_payment_intent=intent_id
+            )
+        except Payment.DoesNotExist:
+            logger.error(
+                "[Webhook] No payment found for failed Stripe intent | intent=%s",
+                intent_id,
+            )
+            return
+
+        # Idempotency guard
+        if payment.status == "failed":
+            logger.info(
+                "[Webhook] Stripe payment already marked failed | order_id=%s intent=%s",
+                payment.order.id,
+                intent_id,
+            )
+            return
+
+        payment.status = "failed"
+        payment.save(update_fields=["status"])
+
+        order = payment.order
+
+        # Only mark the order failed if it has not already succeeded/processing.
+        # This avoids a delayed failure webhook messing with a paid order.
+        if order.status not in ["processing", "completed", "fulfilled"]:
+            order.status = "failed"
+            order.save(update_fields=["status"])
+
+        logger.warning(
+            "[Webhook] Stripe payment failed | order_id=%s intent=%s",
+            order.id,
+            intent_id,
+        )
+
+        send_slack_message(
+            f"❌ Stripe payment failed — Order #{order.id}"
+        )
     # =====================================================
     # 🟢 PAYMENT FINALIZATION
     # =====================================================
