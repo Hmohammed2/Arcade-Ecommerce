@@ -51,12 +51,36 @@ export default function TermsClient() {
         </p>
 
         <h2 className="text-2xl font-semibold mt-8">
-          4. Shipping and Delivery
+          4. Shipping, Delivery and Customs
         </h2>
         <p>
           Orders are dispatched to the delivery address you provide. Delivery
-          times are estimates only and may vary depending on location and
-          courier.
+          times are estimates only and may vary depending on location, courier,
+          customs processing, and other factors outside of our control.
+        </p>
+
+        <p>
+          For international orders, you are responsible for any customs duties,
+          import taxes, VAT, handling fees, clearance charges, or other charges
+          applied by your country’s customs authority or delivery provider.
+          These charges are not included in the product price or shipping cost
+          unless clearly stated otherwise at checkout.
+        </p>
+
+        <p>
+          ArcadeStickLabs has no control over these charges and cannot predict
+          the exact amount that may be due. If you are ordering from outside the
+          United Kingdom, we recommend checking with your local customs office
+          before placing your order.
+        </p>
+
+        <p>
+          If an international order is refused, returned, delayed, or abandoned
+          due to unpaid customs charges, import duties, taxes, or failure to
+          complete customs clearance, we are not responsible for any resulting
+          loss, delay, or additional cost. Any refund issued in such cases may
+          exclude shipping costs, return shipping fees, customs charges, and any
+          other costs incurred.
         </p>
 
         <h2 className="text-2xl font-semibold mt-8">5. Returns & Refunds</h2>
