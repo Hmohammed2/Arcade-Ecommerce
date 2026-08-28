@@ -11,6 +11,7 @@ import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductSpecs from "./ProductSpecs";
 import FrequentlyBoughtTogether from "./frequentlyBoughtTogether";
+import ProductDeliveryInfo from "./ProductDeliveryInfo";
 
 type Props = { slug: string };
 
@@ -75,13 +76,17 @@ export default function ProductPageClient({ slug }: Props) {
         setSelectedVariant={setSelectedVariant}
       />
 
-      <ProductBuyBox
-        product={product}
-        quantity={quantity}
-        setQuantity={setQuantity}
-        selectedVariant={selectedVariant}
-        handleAddToCart={handleAddToCart}
-      />
+      <div className="md:col-span-3 space-y-4">
+        <ProductBuyBox
+          product={product}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          selectedVariant={selectedVariant}
+          handleAddToCart={handleAddToCart}
+        />
+
+        <ProductDeliveryInfo product={product} />
+      </div>
 
       <ProductSpecs product={product} />
 
