@@ -32,9 +32,6 @@ RUN pip install --no-cache /wheels/*
 # Copy Django project
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
 # Expose port for Gunicorn
 EXPOSE 8000
 

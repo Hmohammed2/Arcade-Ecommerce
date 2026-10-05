@@ -11,7 +11,6 @@ import ProductInfo from "./ProductInfo";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductSpecs from "./ProductSpecs";
 import FrequentlyBoughtTogether from "./frequentlyBoughtTogether";
-import ProductDeliveryInfo from "./ProductDeliveryInfo";
 
 type Props = { slug: string };
 
@@ -84,8 +83,6 @@ export default function ProductPageClient({ slug }: Props) {
           selectedVariant={selectedVariant}
           handleAddToCart={handleAddToCart}
         />
-
-        <ProductDeliveryInfo product={product} />
       </div>
 
       <ProductSpecs product={product} />
