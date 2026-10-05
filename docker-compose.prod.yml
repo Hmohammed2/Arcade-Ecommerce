@@ -20,7 +20,7 @@ services:
       sh -c "
         python manage.py migrate &&
         python manage.py collectstatic --noinput &&
-        gunicorn Ecommerce_app.wsgi:application --bind 0.0.0.0:8000 --workers=4
+        gunicorn Ecommerce_app.wsgi:application --bind 0.0.0.0:8000 --workers=2
       "
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -59,16 +59,14 @@ services:
       - app_net
   redis:
     container_name: redis
-    image: redis:7
+    image: redis:7-alpine
     restart: unless-stopped
     networks:
       - app_net
   celery:
     container_name: celery-worker
-    build:
-      context: ./Ecommerce_app
-      dockerfile: Dockerfile.prod
-    command: celery -A Ecommerce_app worker -l info
+    image: ecommerce-backend:prod
+    command: celery -A Ecommerce_app worker -l info --concurrency=1
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -89,10 +87,8 @@ services:
       - app_net
   celery-beat:
     container_name: celery-beat
-    build:
-      context: ./Ecommerce_app
-      dockerfile: Dockerfile.prod
-    command: celery -A Ecommerce_app beat -l info
+    image: ecommerce-backend:prod
+    command: celery -A Ecommerce_app worker -l info --concurrency=1
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
