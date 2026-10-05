@@ -16,6 +16,7 @@ services:
     build:
       context: ./Ecommerce_app
       dockerfile: Dockerfile.prod
+    image: django-backend-prod
     command: >
       sh -c "
         python manage.py migrate &&
@@ -65,7 +66,7 @@ services:
       - app_net
   celery:
     container_name: celery-worker
-    image: ecommerce-backend:prod
+    image: django-backend-prod
     command: celery -A Ecommerce_app worker -l info --concurrency=1
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -87,7 +88,7 @@ services:
       - app_net
   celery-beat:
     container_name: celery-beat
-    image: ecommerce-backend:prod
+    image: django-backend-prod
     command: celery -A Ecommerce_app worker -l info --concurrency=1
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
